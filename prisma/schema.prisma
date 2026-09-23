@@ -1,0 +1,860 @@
+// RCMS Operations Academy — one schema behind all four applications.
+//
+// Grouped by concern, in the order the build plan introduces them. Two conventions hold
+// everywhere and are set here in Phase 0 precisely because retrofitting them later is
+// painful:
+//
+//   1. Every table carries createdAt / updatedAt.
+//   2. Every mutation writes an AuditLog row naming the actor, the entity and the change.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Identity. The four user-facing shapes: visitor, student, trainer, admin.
+// User / Session / Account / Verification match what Better Auth expects.
+// ---------------------------------------------------------------------------
+
+enum Role {
+  STUDENT
+  TRAINER
+  ADMIN
+  OWNER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          Role      @default(STUDENT)
+
+  // Career context, which is what the ladder is measured against.
+  currentRole   String?
+  experience    Int? // years
+  phone         String?
+  whatsapp      String?
+
+  bannedAt      DateTime?
+  lastSeenAt    DateTime?
+
+  sessions      Session[]
+  accounts      Account[]
+  enrolments    Enrolment[]
+  progress      Progress[]
+  quizAttempts  QuizAttempt[]
+  orders        Order[]
+  bookings      Booking[]
+  labAttempts   LabAttempt[]
+  posts         Post[]
+  threads       Thread[]
+  notifications Notification[]
+  auditLogs     AuditLog[]     @relation("AuditActor")
+  ownedLeads    Lead[]         @relation("LeadOwner")
+  trainer       Trainer?
+  orgMembers    OrgMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+/// Corporate cohorts. A company buys seats and a manager watches progress.
+model Organisation {
+  id       String @id @default(cuid())
+  name     String
+  slug     String @unique
+  gstin    String?
+  seats    Int    @default(0)
+  members  OrgMember[]
+  orders   Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrgMember {
+  id     String @id @default(cuid())
+  orgId  String
+  userId String
+  isManager Boolean @default(false)
+
+  org  Organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([orgId, userId])
+}
+
+// ---------------------------------------------------------------------------
+// Academy. Programs contain modules contain lessons.
+// ---------------------------------------------------------------------------
+
+enum PublishState {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Program {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  tier        String // "TIER 01"
+  name        String
+  level       Int
+  who         String
+  artefact    String
+  weeks       String
+  flag        String?
+  outcomes    String[]
+  state       PublishState @default(DRAFT)
+  sortOrder   Int          @default(0)
+
+  modules    Module[]
+  products   Product[]
+  enrolments Enrolment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([state, sortOrder])
+}
+
+model Module {
+  id        String @id @default(cuid())
+  programId String
+  title     String
+  summary   String?
+  sortOrder Int    @default(0)
+
+  program Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([programId, sortOrder])
+}
+
+model Lesson {
+  id          String       @id @default(cuid())
+  moduleId    String
+  title       String
+  body        String?
+  videoAssetId String? // provider-side id; playback URLs are always signed
+  durationSec Int?
+  sortOrder   Int          @default(0)
+  state       PublishState @default(DRAFT)
+
+  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  resources Resource[]
+  quizzes   Quiz[]
+  progress  Progress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([moduleId, sortOrder])
+}
+
+model Resource {
+  id       String @id @default(cuid())
+  lessonId String
+  title    String
+  fileKey  String
+  mimeType String
+  sizeBytes Int?
+  watermark Boolean @default(true)
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([lessonId])
+}
+
+model Quiz {
+  id           String @id @default(cuid())
+  lessonId     String
+  title        String
+  passingScore Int    @default(70)
+
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lessonId])
+}
+
+model QuizQuestion {
+  id        String   @id @default(cuid())
+  quizId    String
+  prompt    String
+  options   String[]
+  correct   Int
+  rationale String?
+  sortOrder Int      @default(0)
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId, sortOrder])
+}
+
+model QuizAttempt {
+  id       String   @id @default(cuid())
+  quizId   String
+  userId   String
+  score    Int
+  passed   Boolean
+  answers  Json
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, quizId])
+}
+
+enum EnrolmentState {
+  ACTIVE
+  COMPLETED
+  REFUNDED
+  EXPIRED
+}
+
+model Enrolment {
+  id        String         @id @default(cuid())
+  userId    String
+  programId String
+  orderId   String?
+  state     EnrolmentState @default(ACTIVE)
+  startedAt DateTime       @default(now())
+  completedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program Program @relation(fields: [programId], references: [id])
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, programId])
+  @@index([state])
+}
+
+model Progress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime?
+  secondsIn   Int       @default(0)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+}
+
+// ---------------------------------------------------------------------------
+// Commerce. Razorpay at launch; the shape allows a second gateway later.
+// ---------------------------------------------------------------------------
+
+enum ProductKind {
+  PROGRAM
+  TRACK
+  MENTORING
+  CORPORATE
+}
+
+model Product {
+  id        String      @id @default(cuid())
+  sku       String      @unique
+  kind      ProductKind
+  name      String
+  /// Minor units. Rupees are stored as paise so no float ever touches money.
+  amount    Int
+  currency  String      @default("INR")
+  active    Boolean     @default(true)
+  programId String?
+
+  program Program? @relation(fields: [programId], references: [id])
+  orders  Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OrderState {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id        String     @id @default(cuid())
+  userId    String
+  orgId     String?
+  productId String
+  state     OrderState @default(CREATED)
+  amount    Int
+  currency  String     @default("INR")
+  couponId  String?
+  /// Razorpay order id. Unique so a replayed webhook cannot create a second order.
+  gatewayRef String?   @unique
+
+  user       User          @relation(fields: [userId], references: [id])
+  org        Organisation? @relation(fields: [orgId], references: [id])
+  product    Product       @relation(fields: [productId], references: [id])
+  coupon     Coupon?       @relation(fields: [couponId], references: [id])
+  payments   Payment[]
+  invoice    Invoice?
+  refunds    Refund[]
+  enrolments Enrolment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, state])
+}
+
+model Payment {
+  id         String   @id @default(cuid())
+  orderId    String
+  /// Razorpay payment id. Unique: the idempotency key for webhook replay.
+  gatewayRef String   @unique
+  amount     Int
+  method     String?
+  status     String
+  rawPayload Json?
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  number    String   @unique
+  gstin     String?
+  hsnSac    String?
+  taxAmount Int      @default(0)
+  totalAmount Int
+  pdfKey    String?
+  issuedAt  DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Refund {
+  id         String   @id @default(cuid())
+  orderId    String
+  amount     Int
+  reason     String
+  gatewayRef String?  @unique
+  approvedBy String?
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  percentOff  Int?
+  amountOff   Int?
+  maxRedemptions Int?
+  redeemed    Int       @default(0)
+  expiresAt   DateTime?
+  active      Boolean   @default(true)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Sales. Every enquiry becomes a scored lead with an owner.
+// ---------------------------------------------------------------------------
+
+enum LeadStage {
+  NEW
+  QUALIFIED
+  CONSULTATION
+  WON
+  LOST
+}
+
+model Lead {
+  id           String    @id @default(cuid())
+  name         String
+  email        String
+  phone        String?
+  whatsapp     String?
+  currentRole  String?
+  experience   Int?
+  interestedIn String?
+  source       String    @default("website")
+  stage        LeadStage @default(NEW)
+  score        Int       @default(0)
+  ownerId      String?
+  companyId    String?
+  notes        String?
+  lastContactAt DateTime?
+  convertedUserId String?
+
+  owner      User?          @relation("LeadOwner", fields: [ownerId], references: [id])
+  company    Company?       @relation(fields: [companyId], references: [id])
+  activities LeadActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stage, score])
+  @@index([ownerId])
+}
+
+model LeadActivity {
+  id     String @id @default(cuid())
+  leadId String
+  /// "brochure_download", "pricing_view", "mentoring_booked", "whatsapp_reply", "purchase"
+  kind   String
+  detail String?
+  points Int    @default(0)
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+model Company {
+  id       String @id @default(cuid())
+  name     String
+  domain   String?
+  size     String?
+  industry String?
+
+  leads Lead[]
+
+  createdAt DateTime @default(now())
+}
+
+model Campaign {
+  id       String   @id @default(cuid())
+  name     String
+  channel  String
+  startsAt DateTime?
+  endsAt   DateTime?
+  spend    Int      @default(0)
+
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Mentoring. Replaces the external scheduler.
+// ---------------------------------------------------------------------------
+
+model Trainer {
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  headline String?
+  bio      String?
+  active   Boolean @default(true)
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availability Availability[]
+  bookings     Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Availability {
+  id        String @id @default(cuid())
+  trainerId String
+  /// 0 = Sunday
+  weekday   Int
+  startMin  Int
+  endMin    Int
+  timezone  String @default("Asia/Kolkata")
+
+  trainer Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@index([trainerId, weekday])
+}
+
+enum BookingState {
+  HELD
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Booking {
+  id        String       @id @default(cuid())
+  userId    String
+  trainerId String
+  productId String?
+  startsAt  DateTime
+  minutes   Int
+  state     BookingState @default(HELD)
+  topic     String?
+  artefactKey String?
+
+  user    User          @relation(fields: [userId], references: [id])
+  trainer Trainer       @relation(fields: [trainerId], references: [id])
+  session MentorSession?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([trainerId, startsAt])
+  @@index([userId])
+}
+
+model MentorSession {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  notes      String?
+  actionPlan String?
+  followUpAt DateTime?
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Governance Labs. The differentiator: assessed operational judgement.
+// ---------------------------------------------------------------------------
+
+model Scenario {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  clientName  String
+  specialty   String
+  providers   Int
+  reviewPeriod String
+  /// The whole telemetry model for this engagement: metrics, denials, pods, escalations.
+  telemetry   Json
+  state       PublishState @default(DRAFT)
+
+  attempts LabAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum LabState {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+model LabAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  scenarioId  String
+  state       LabState @default(IN_PROGRESS)
+  submittedAt DateTime?
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenario Scenario @relation(fields: [scenarioId], references: [id])
+
+  capacityRuns   CapacityRun[]
+  rcaBoard       RcaBoard?
+  actionItems    ActionItem[]
+  executiveNote  ExecutiveNote?
+  rubricScores   RubricScore[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, scenarioId])
+  @@index([state])
+}
+
+model CapacityRun {
+  id        String @id @default(cuid())
+  attemptId String
+  analysts  Int
+  qaBar     Int
+  automation Int
+  /// The computed result, stored so a graded attempt cannot drift if the model changes.
+  result    Json
+
+  attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([attemptId])
+}
+
+model RcaBoard {
+  id        String @id @default(cuid())
+  attemptId String @unique
+  subject   String
+  /// Five whys: [{ question, answer, evidence }]
+  steps     Json
+  conclusion String?
+
+  attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActionItem {
+  id          String @id @default(cuid())
+  attemptId   String
+  action      String
+  owner       String
+  dueDate     String
+  status      String @default("not-started")
+  blockedReason String?
+  expectedImpact String?
+
+  attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([attemptId])
+}
+
+model ExecutiveNote {
+  id        String @id @default(cuid())
+  attemptId String @unique
+  whatChanged String
+  whyChanged  String
+  financialImpact String
+  rootCause   String
+  recommendedAction String
+  owner       String
+  deadline    String
+
+  attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RubricScore {
+  id         String @id @default(cuid())
+  attemptId  String
+  criterion  String
+  score      Int
+  maxScore   Int    @default(5)
+  comment    String?
+  gradedById String?
+
+  attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([attemptId])
+}
+
+// ---------------------------------------------------------------------------
+// Community. Five moderated channels, not a social feed.
+// ---------------------------------------------------------------------------
+
+model Channel {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  houseRule   String
+  membersOnly Boolean @default(true)
+
+  threads Thread[]
+
+  createdAt DateTime @default(now())
+}
+
+model Thread {
+  id        String  @id @default(cuid())
+  channelId String
+  authorId  String
+  title     String
+  body      String
+  pinned    Boolean @default(false)
+  closed    Boolean @default(false)
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+  posts   Post[]
+  reports Report[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([channelId, createdAt])
+}
+
+model Post {
+  id       String @id @default(cuid())
+  threadId String
+  authorId String
+  body     String
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([threadId, createdAt])
+}
+
+model Report {
+  id         String @id @default(cuid())
+  threadId   String
+  reason     String
+  resolvedAt DateTime?
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Platform. Audit from day one, because retrofitting it is painful.
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id       String  @id @default(cuid())
+  actorId  String?
+  /// "create" | "update" | "delete" | "login" | "refund" | ...
+  action   String
+  entity   String
+  entityId String?
+  /// Before/after for updates. Never store secrets or payment instruments here.
+  diff     Json?
+  ip       String?
+  userAgent String?
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId, createdAt])
+}
+
+/// Behavioural events. Lead scoring in Phase 5 reads these, so they are captured from Phase 2.
+model Event {
+  id        String  @id @default(cuid())
+  userId    String?
+  anonId    String?
+  name      String
+  props     Json?
+  path      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([userId])
+}
+
+model Notification {
+  id     String    @id @default(cuid())
+  userId String
+  kind   String
+  title  String
+  body   String?
+  href   String?
+  readAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model FeatureFlag {
+  key         String   @id
+  enabled     Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+}

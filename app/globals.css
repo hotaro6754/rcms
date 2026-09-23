@@ -1,0 +1,287 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Cabinet Grotesk + Satoshi, self-hosted from Fontshare.
+   ITF Free Font License: free for personal and commercial use. */
+@font-face { font-family: "Cabinet Grotesk"; src: url("/fonts/cabinet-grotesk-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Cabinet Grotesk"; src: url("/fonts/cabinet-grotesk-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Cabinet Grotesk"; src: url("/fonts/cabinet-grotesk-800.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Satoshi"; src: url("/fonts/satoshi-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Satoshi"; src: url("/fonts/satoshi-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Satoshi"; src: url("/fonts/satoshi-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+
+/* ===========================================================================
+   RCMS Operations Academy — token contract.
+
+   The full shadcn/ui variable set, so every shadcn component drops in and
+   inherits this identity instead of the stock neutral theme.
+
+   Warm light. Warm paper ground, warm ink, and one terracotta accent spent
+   only on action, state and signal. No navy, no corporate blue: the site
+   should feel like a steady mentor's desk, not a bank. Danger leans crimson
+   and warning leans mustard so neither is mistaken for the accent. Light
+   only by product decision; one committed theme beats two half-tuned ones.
+
+   Contrast measured against #FFFFFF card and #F6F3ED canvas. AA or better.
+   =========================================================================== */
+:root {
+  --background: #f6f3ed;            /* warm paper */
+  --foreground: #1b1815;            /* warm near-black, 15.9:1 on card */
+  --card: #ffffff;
+  --card-foreground: #1b1815;
+  --popover: #ffffff;
+  --popover-foreground: #1b1815;
+
+  --muted: #f0ebe2;
+  --muted-foreground: #5b534a;      /* 8.0:1 on card */
+  --subtle: #736a5f;                /* 5.4:1 on card, smallest text still passes */
+
+  --primary: #9c4221;               /* terracotta. 6.5:1 on card; white on it 6.5:1 */
+  --primary-hover: #83361a;
+  --primary-foreground: #ffffff;
+  --signal: #c2562c;                /* marks and strokes only, never text */
+
+  --secondary: #f0ebe2;
+  --secondary-foreground: #332e28;
+
+  --accent: #f8ebe1;
+  --accent-foreground: #8a3a1c;     /* 6.7:1 on accent */
+
+  --border: #e6dfd4;
+  --input: #d4ccbf;
+  --ring: #9c4221;
+  --radius: 0.625rem;
+
+  --chart-1: #9c4221;
+  --chart-2: #8a8074;
+  --chart-3: #16704f;
+  --chart-4: #3d6b7a;
+  --chart-5: #b0243a;
+
+  --success: #16704f;               /* 5.1:1 on card */
+  --success-bg: #e4efe7;
+  --warning: #7c6308;               /* 5.8:1 on card */
+  --warning-bg: #f6efd8;
+  --danger: #b0243a;                /* 6.7:1 on card */
+  --danger-bg: #fae6ea;
+  --destructive: #b0243a;
+
+  --sidebar: #fbf9f5;
+  --sidebar-foreground: #1b1815;
+  --sidebar-primary: #9c4221;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0ebe2;
+  --sidebar-accent-foreground: #332e28;
+  --sidebar-border: #e6dfd4;
+  --sidebar-ring: #9c4221;
+
+  --shadow-sm: 0 1px 2px rgb(27 24 21 / 0.05);
+  --shadow-md: 0 1px 2px rgb(27 24 21 / 0.06), 0 5px 12px -8px rgb(27 24 21 / 0.2);
+  --shadow-lift: 0 2px 4px rgb(27 24 21 / 0.05), 0 12px 28px -14px rgb(27 24 21 / 0.28);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-signal: var(--signal);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-display: "Cabinet Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Cabinet Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Satoshi", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  /* Digits line up in every table and every metric. */
+  .tabular,
+  table td,
+  table th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 5px;
+  }
+
+  /* Anything anchored to has to clear the floating navbar. */
+  [id] {
+    scroll-margin-top: 6.5rem;
+  }
+}
+
+@layer components {
+  /* Hover sweeps a selection highlight across a headline phrase, left to right, the way
+     a cursor drags through text. CSS owns hover; no animation library touches this. */
+  .phrase {
+    position: relative;
+    z-index: 0;
+    cursor: default;
+  }
+  .phrase::before {
+    content: "";
+    position: absolute;
+    inset: 0.02em -0.14em 0.1em -0.14em;
+    background: var(--accent);
+    border-radius: 3px;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.42s cubic-bezier(0.2, 0, 0.1, 1);
+    z-index: -1;
+  }
+  .phrase:hover::before {
+    transform: scaleX(1);
+  }
+
+  /* A pinned Governance stage is a fixed frame under exactly the media query that
+     creates the pin, so its height never changes when the pin toggles. That is what
+     stops the released section from overlapping the footer: ScrollTrigger's spacer
+     stays correct because nothing about the box moves. Long stages scroll inside. */
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .gov-panel {
+      height: calc(100vh - 340px);
+      min-height: 24rem;
+      max-height: 42rem;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-right: 6px;
+    }
+    .gov-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    .gov-panel::-webkit-scrollbar-thumb {
+      background: var(--input);
+      border-radius: 99px;
+    }
+    .gov-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  }
+
+  .hero-rows {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--border) 0 1px,
+      transparent 1px 88px
+    );
+    opacity: 0.5;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 88%, transparent 100%);
+  }
+}
+
+@layer utilities {
+  /* 12px floor for functional text; nothing in the product goes below it. */
+  .text-micro {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .text-data {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .label-caps {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+}
+
+/* The hero renders its resolved composition when motion is unwelcome. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .phrase::before {
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

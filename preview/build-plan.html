@@ -1,0 +1,498 @@
+<title>RCMS Platform Build Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F6F3ED; --card:#FFFFFF; --ink:#1B1815;
+  --muted:#5B534A; --subtle:#736A5F;
+  --line:#E6DFD4; --rule:#D4CCBF;
+  --blue:#1D4ED8; --blue-wash:#EAF0FE; --blue-ink:#1A3FA8;
+  --green:#16704F; --green-wash:#E4EFE7;
+  --amber:#8A5A0B; --amber-wash:#F7EEDC;
+  --red:#A82A25; --red-wash:#F9E8E4;
+  --maxw:1080px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+  font-size:15px; line-height:1.62; letter-spacing:-.005em; -webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0; font-weight:700; letter-spacing:-.032em; text-wrap:balance}
+p{margin:0}
+a{color:var(--blue)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+.wrap{max-width:var(--maxw); margin-inline:auto; padding-inline:28px}
+.lab{font-family:"IBM Plex Mono",monospace; font-size:12.5px; font-weight:500; letter-spacing:.03em; color:var(--muted)}
+.card{background:var(--card); border:1px solid var(--line); border-radius:12px}
+
+header.top{border-bottom:1px solid var(--line); padding:64px 0 44px}
+header.top h1{font-size:clamp(2.1rem,4.6vw,3.3rem); line-height:1.03; margin-top:18px; max-width:20ch}
+header.top .sub{margin-top:20px; max-width:64ch; font-size:16px; color:var(--muted)}
+.meta{display:flex; flex-wrap:wrap; gap:10px 32px; margin-top:28px; padding-top:20px; border-top:1px solid var(--line); font-size:13px; color:var(--muted)}
+.meta b{color:var(--ink); font-weight:600}
+
+section{border-bottom:1px solid var(--line); padding:52px 0}
+section > .wrap > .lab + h2{margin-top:14px}
+h2{font-size:clamp(1.5rem,2.6vw,2rem); line-height:1.1}
+h2 + .lead{margin-top:14px; max-width:66ch; color:var(--muted); font-size:15px}
+
+/* decisions */
+.decisions{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:26px}
+@media (max-width:720px){.decisions{grid-template-columns:1fr}}
+.dec{padding:18px 20px}
+.dec .q{font-size:12.5px; color:var(--subtle)}
+.dec .a{margin-top:8px; font-size:16px; font-weight:600}
+.dec .why{margin-top:8px; font-size:13px; line-height:1.55; color:var(--muted)}
+
+/* timeline */
+.gantt{margin-top:28px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--card)}
+.gantt-row{display:grid; grid-template-columns:minmax(0,15rem) minmax(0,1fr); gap:16px; align-items:center;
+  padding:11px 18px; border-bottom:1px solid var(--line)}
+.gantt-row:last-child{border-bottom:0}
+.gantt-row .name{font-size:13.5px; font-weight:500}
+.gantt-row .name span{display:block; font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--subtle); font-weight:400}
+.bar-track{position:relative; height:22px; background:linear-gradient(to right, var(--line) 0 1px, transparent 1px) repeat-x; background-size:calc(100%/28) 100%}
+.bar{position:absolute; top:3px; height:16px; border-radius:4px; background:var(--blue); opacity:.9}
+.bar.build{background:var(--blue)}
+.bar.ops{background:var(--green)}
+.bar.hard{background:var(--amber)}
+.scale{display:grid; grid-template-columns:minmax(0,15rem) minmax(0,1fr); gap:16px; padding:8px 18px; background:var(--bg); border-bottom:1px solid var(--line)}
+.scale .ticks{display:flex; justify-content:space-between; font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--subtle)}
+
+/* phases */
+.phase{margin-top:16px; padding:22px 24px}
+.phase-hd{display:flex; flex-wrap:wrap; align-items:baseline; gap:12px}
+.phase-hd .n{font-family:"IBM Plex Mono",monospace; font-size:12.5px; font-weight:600; color:var(--blue)}
+.phase-hd h3{font-size:1.25rem}
+.phase-hd .wks{margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--muted)}
+.phase .goal{margin-top:10px; font-size:14.5px; color:var(--muted); max-width:70ch}
+.cols{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:18px}
+@media (max-width:720px){.cols{grid-template-columns:1fr}}
+.cols h4{font-size:12.5px; font-family:"IBM Plex Mono",monospace; letter-spacing:.03em; color:var(--muted); font-weight:600}
+.cols ul{list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:7px}
+.cols li{display:flex; gap:9px; font-size:13.5px; line-height:1.5}
+.cols li::before{content:""; width:4px; height:4px; border-radius:1px; background:var(--blue); flex:none; margin-top:8px}
+.gate{margin-top:18px; padding:12px 14px; border-radius:8px; background:var(--green-wash); font-size:13.5px; line-height:1.55; color:#0F5B41}
+.gate b{color:#0B4632}
+
+/* tables */
+.tbl-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--card); margin-top:22px; padding:6px}
+table{border-collapse:collapse; width:100%; min-width:38rem}
+th{text-align:left; font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:600; letter-spacing:.02em;
+  color:var(--muted); padding:12px 16px; border-bottom:1px solid var(--line); white-space:nowrap}
+td{padding:12px 16px; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono, th.mono{font-family:"IBM Plex Mono",monospace}
+.pill{display:inline-block; padding:2px 9px; border-radius:99px; font-size:12px; font-weight:600}
+.pill.have{background:var(--green-wash); color:var(--green)}
+.pill.part{background:var(--amber-wash); color:var(--amber)}
+.pill.none{background:var(--red-wash); color:var(--red)}
+
+/* schema */
+.schema{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:22px}
+@media (max-width:900px){.schema{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.schema{grid-template-columns:1fr}}
+.grp{padding:14px 16px}
+.grp h4{font-size:12.5px; font-family:"IBM Plex Mono",monospace; color:var(--blue); letter-spacing:.05em}
+.grp ul{list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:5px}
+.grp li{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--muted)}
+
+.callout{margin-top:24px; padding:18px 20px; border-radius:12px; border:1px solid var(--rule); background:var(--card)}
+.callout.warn{border-color:#E3C98F; background:var(--amber-wash)}
+.callout h4{font-size:14.5px}
+.callout p{margin-top:8px; font-size:13.5px; line-height:1.6; color:var(--muted); max-width:74ch}
+.callout.warn p{color:#6E4708}
+
+ol.asks{list-style:none; counter-reset:a; margin:22px 0 0; padding:0; display:flex; flex-direction:column; gap:10px}
+ol.asks li{counter-increment:a; display:grid; grid-template-columns:2rem 1fr; gap:14px; padding:16px 18px; background:var(--card); border:1px solid var(--line); border-radius:10px}
+ol.asks li::before{content:counter(a,decimal-leading-zero); font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--blue); font-weight:600; padding-top:2px}
+ol.asks strong{display:block; font-size:14.5px}
+ol.asks span{display:block; margin-top:5px; font-size:13.5px; color:var(--muted); line-height:1.55}
+
+footer{padding:44px 0 64px; font-size:13px; color:var(--muted)}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="lab">Implementation plan · v1 draft · 7 September 2026</p>
+    <h1>Building the RCMS operations platform</h1>
+    <p class="sub">
+      Four applications on one data layer, built in nine gated phases. Every phase ends in
+      software you could ship on its own, so the build can pause after any of them without
+      leaving a half-finished product.
+    </p>
+    <div class="meta">
+      <div><b>~29 weeks</b> to full scope</div>
+      <div><b>9 phases</b>, each independently shippable</div>
+      <div><b>Revenue from week 8</b></div>
+      <div><b>Stack</b> Next.js 15 · Postgres · Prisma · Razorpay</div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="lab">Locked decisions</p>
+    <h2>What you chose, and what it means</h2>
+    <div class="decisions">
+      <div class="card dec">
+        <p class="q">Scope against budget</p>
+        <p class="a">Full architecture, raised budget</p>
+        <p class="why">All four applications as specified. This is a 6 to 7 month build, not a 10 week one. The ₹50,000 figure from the earlier plan buys roughly Phase 0 and Phase 1.</p>
+      </div>
+      <div class="card dec">
+        <p class="q">Foundation</p>
+        <p class="a">Continue the current repository</p>
+        <p class="why">Nothing gets thrown away. The public site, hero, Governance Room, design system and telemetry model already exist and are the defensible part. We add a database, auth and payments beneath them.</p>
+      </div>
+      <div class="card dec">
+        <p class="q">Payments</p>
+        <p class="a">Razorpay only at launch</p>
+        <p class="why">UPI, cards, netbanking and GST invoicing for an Indian learner base. Stripe gets added in Phase 8 only if international corporate clients actually appear.</p>
+      </div>
+      <div class="card dec">
+        <p class="q">Build order</p>
+        <p class="a">Student and Admin together, thin</p>
+        <p class="why">Phase 2 closes the whole loop at minimum depth: an enquiry becomes a lead, a lead becomes a paying student, a student takes a lesson, and you see all of it in the admin. Depth comes after.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="lab">Starting position</p>
+    <h2>What already exists</h2>
+    <p class="lead">
+      Honest accounting of the current repository, because the plan only makes sense against it.
+      Everything below is built, typechecked, linted and building clean across 24 routes.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Surface</th><th>State</th><th>Detail</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Public marketing site</td><td><span class="pill have">Built</span></td><td>Home, learning paths, programs, pricing, mentoring, community, writing, contact, four legal pages</td></tr>
+          <tr><td>Design system</td><td><span class="pill have">Built</span></td><td>Warm light tokens on the full shadcn contract, Cabinet Grotesk + Satoshi, 14 shadcn primitives</td></tr>
+          <tr><td>Cinematic hero</td><td><span class="pill have">Built</span></td><td>GSAP timeline: DrawSVG, SplitText, MotionPath, CustomEase, Flip into the dashboard metric</td></tr>
+          <tr><td>Governance Room</td><td><span class="pill have">Built</span></td><td>Seven scroll-pinned stages, KPI table, escalations, five-whys RCA, risk matrix, capacity model, executive notes</td></tr>
+          <tr><td>Telemetry model</td><td><span class="pill have">Built</span></td><td>Single source of truth, capacity engine, CARC/RARC denial data, pod roster, verdict engine</td></tr>
+          <tr><td>Operations console</td><td><span class="pill part">Shell only</span></td><td>Overview, metrics, queues, roster, activity, policy updates — real UI, static data, no persistence</td></tr>
+          <tr><td>Database, auth, payments</td><td><span class="pill none">Not started</span></td><td>Everything is static. No user can sign in, buy, or save anything</td></tr>
+          <tr><td>Trainer Studio, CRM, Finance</td><td><span class="pill none">Not started</span></td><td>Specified in this plan, no code yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn">
+      <h4>The real bottleneck is not code</h4>
+      <p>
+        The platform can be finished and still have nothing to sell. Five programs at six to
+        fourteen weeks each is a large amount of video, SOP templates and quiz material that only
+        you can produce. Content production should start in parallel at Phase 1, not after
+        Phase 9, or the launch date is set by recording rather than by engineering.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="lab">Sequence</p>
+    <h2>Nine phases, twenty-nine weeks</h2>
+    <p class="lead">
+      Blue is product build, green is operational tooling, amber is hardening. Each bar is
+      elapsed weeks for one full-time developer; two developers compress the middle phases but
+      not Phase 0.
+    </p>
+
+    <div class="gantt">
+      <div class="scale">
+        <span class="lab" style="font-size:11px">Phase</span>
+        <div class="ticks"><span>W1</span><span>W7</span><span>W14</span><span>W21</span><span>W29</span></div>
+      </div>
+      <div class="gantt-row"><div class="name">Foundations<span>P0 · 3 wks</span></div><div class="bar-track"><div class="bar build" style="left:0%;width:10.3%"></div></div></div>
+      <div class="gantt-row"><div class="name">Commerce spine<span>P1 · 2 wks</span></div><div class="bar-track"><div class="bar build" style="left:10.3%;width:6.9%"></div></div></div>
+      <div class="gantt-row"><div class="name">Thin loop: student + admin<span>P2 · 4 wks</span></div><div class="bar-track"><div class="bar build" style="left:17.2%;width:13.8%"></div></div></div>
+      <div class="gantt-row"><div class="name">Course engine + Trainer Studio<span>P3 · 4 wks</span></div><div class="bar-track"><div class="bar build" style="left:31%;width:13.8%"></div></div></div>
+      <div class="gantt-row"><div class="name">Governance Labs<span>P4 · 3 wks</span></div><div class="bar-track"><div class="bar build" style="left:44.8%;width:10.3%"></div></div></div>
+      <div class="gantt-row"><div class="name">CRM and lead engine<span>P5 · 4 wks</span></div><div class="bar-track"><div class="bar ops" style="left:55.1%;width:13.8%"></div></div></div>
+      <div class="gantt-row"><div class="name">Finance and analytics<span>P6 · 3 wks</span></div><div class="bar-track"><div class="bar ops" style="left:68.9%;width:10.3%"></div></div></div>
+      <div class="gantt-row"><div class="name">Mentoring operations<span>P7 · 3 wks</span></div><div class="bar-track"><div class="bar ops" style="left:79.2%;width:10.3%"></div></div></div>
+      <div class="gantt-row"><div class="name">Community, corporate, hardening<span>P8 · 3 wks</span></div><div class="bar-track"><div class="bar hard" style="left:89.5%;width:10.5%"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="lab">The phases</p>
+    <h2>What each one delivers and how we know it is done</h2>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 0</span><h3>Foundations</h3><span class="wks">3 weeks</span></div>
+      <p class="goal">Put a real backend under the site that already exists. Nothing user-visible changes except that people can create accounts.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>PostgreSQL (Neon or Supabase) with Prisma schema and migrations</li>
+          <li>Auth: email + password and Google, with verified email</li>
+          <li>Roles and permissions: visitor, student, trainer, admin, owner</li>
+          <li>Audit log written on every mutation, from day one</li>
+          <li>Seed the existing telemetry, catalog and ladder data into the database</li>
+          <li>Staging and production environments, secrets, CI on every push</li>
+        </div></ul>
+        <div><h4>Decisions to make here</h4><ul>
+          <li>Hosting: Vercel plus managed Postgres, or a single VPS</li>
+          <li>Transactional email provider (Resend assumed)</li>
+          <li>File storage for PDFs and SOPs (UploadThing or S3)</li>
+          <li>Error and uptime monitoring (Sentry plus a status ping)</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> a stranger can register, verify their email, sign in and land on an empty portal; every write is in the audit log; a rollback of the last migration is tested and works.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 1</span><h3>Commerce spine</h3><span class="wks">2 weeks</span></div>
+      <p class="goal">Take money correctly, including tax and refunds, before building anything that depends on it.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>Razorpay orders, checkout, webhook verification, idempotency</li>
+          <li>Products mapped to the five programs, three tracks and four mentoring tiers</li>
+          <li>GST-compliant invoice generation and email delivery</li>
+          <li>Enrolment granted automatically on verified payment</li>
+          <li>Refund flow matching the published policy: seven days, under 20 percent accessed</li>
+          <li>Reconciliation view: every payment tied to a person and a product</li>
+        </div></ul>
+        <div><h4>Risks</h4><ul>
+          <li>Webhook replay and double enrolment — solved with idempotency keys</li>
+          <li>GST registration and HSN/SAC codes must be confirmed before invoices go out</li>
+          <li>Refund window needs the access-percentage metric, which Phase 2 provides; ship manual approval first</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> a real ₹2,999 payment completes end to end on production, produces a valid GST invoice, grants access, and can be refunded. Revenue is possible from this point.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 2</span><h3>Thin loop: Student and Admin</h3><span class="wks">4 weeks</span></div>
+      <p class="goal">Close the entire business loop at minimum depth, so every later phase deepens something that already works rather than adding something new.</p>
+      <div class="cols">
+        <div><h4>Student Portal</h4><ul>
+          <li>My Academy: enrolled programs, resume where you left off</li>
+          <li>Lesson player: video, PDF downloads, mark complete</li>
+          <li>Progress framed as the ladder, not a percentage: current role, target role, skills completed</li>
+          <li>Profile, invoices, account settings</li>
+        </ul></div>
+        <div><h4>Admin OS, first slice</h4><ul>
+          <li>Leads list fed by the contact form, with owner and status</li>
+          <li>Students list with enrolments and payment history</li>
+          <li>Course and lesson records, managed but not yet authored in-app</li>
+          <li>Executive Overview KPI strip driven by real counts</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> an enquiry submitted on the public site appears as a lead, that person buys a program, watches a lesson, and all of it is visible in the admin without touching the database.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 3</span><h3>Course engine and Trainer Studio</h3><span class="wks">4 weeks</span></div>
+      <p class="goal">Stop needing a developer to publish a course. This is what turns the platform into an asset you operate rather than a site you commission.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>Curriculum builder: drag modules and lessons, reorder, draft and publish states</li>
+          <li>Video pipeline with signed playback URLs, not public links</li>
+          <li>Resource library: SOPs, templates, benchmark sheets, per-lesson attachments</li>
+          <li>Quiz builder: multiple choice and scenario questions, pass thresholds</li>
+          <li>Learning outcomes, difficulty, estimated duration per module</li>
+        </ul></div>
+        <div><h4>Decisions to make here</h4><ul>
+          <li>Video host: Bunny Stream, Mux or Cloudflare Stream — cost and DRM differ sharply</li>
+          <li>Whether quizzes gate progression or only inform</li>
+          <li>Watermarking policy for downloadable SOPs</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> you create and publish a complete module — video, resources, quiz — without a developer, and a student sees it immediately.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 4</span><h3>Governance Labs</h3><span class="wks">3 weeks</span></div>
+      <p class="goal">Turn the Governance Room from a demonstration into assessed coursework. This is the differentiator, and it is the reason the platform is not an LMS.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>Scenario engine: multiple client datasets, not one hard-coded engagement</li>
+          <li>Per-student lab state saved: capacity settings, action register edits, RCA answers</li>
+          <li>Executive Notes become a submitted, gradeable artefact</li>
+          <li>Trainer review surface with rubric and written feedback</li>
+          <li>Lab results attached to the student's ladder progression</li>
+        </ul></div>
+        <div><h4>Why this matters</h4><ul>
+          <li>Nothing in any competing platform does this</li>
+          <li>It converts 21 years of judgement into a repeatable assessment</li>
+          <li>It is the strongest argument for corporate pricing in Phase 8</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> a student completes a full governance review against a scenario they have not seen, submits executive notes, and a trainer grades it against a rubric.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 5</span><h3>CRM and lead engine</h3><span class="wks">4 weeks</span></div>
+      <p class="goal">Every enquiry becomes a scored lead with an owner and a next action. This is where the business stops leaking.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>Pipeline: new, qualified, consultation booked, won, lost</li>
+          <li>Lead record: role, experience, interested program, source, score, owner, notes</li>
+          <li>Activity timeline: page views, brochure downloads, pricing visits, replies</li>
+          <li>Scoring rules as specified: brochure +10, pricing ×3 +8, mentoring booked +30, WhatsApp reply +20, purchase +100</li>
+          <li>WhatsApp: click-to-chat first, Business API once volume justifies the approval process</li>
+          <li>Email sequences on Resend, unsubscribe handled properly</li>
+        </ul></div>
+        <div><h4>Risks</h4><ul>
+          <li>WhatsApp Business API approval takes weeks and needs a verified business — start the application at Phase 3</li>
+          <li>Behavioural scoring needs analytics events from Phase 2; verify they are captured before building rules on them</li>
+          <li>Consent and data retention: leads are personal data under DPDP</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> no enquiry from any channel can exist without an owner and a scored record, and you can answer "what happened to that person" for any lead in under ten seconds.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 6</span><h3>Finance and analytics</h3><span class="wks">3 weeks</span></div>
+      <p class="goal">Make the Executive Overview real. Every number on it traces to a row you can click into.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>Revenue by source: programs, tracks, mentoring, corporate</li>
+          <li>MRR and ARR where subscriptions exist, cash revenue where they do not</li>
+          <li>Refunds, failed payments, outstanding invoices</li>
+          <li>Funnel: visitor, lead, qualified, paid, with conversion at each step</li>
+          <li>Course performance: enrolments, completion, drop-off point per lesson</li>
+          <li>Trainer utilisation and mentoring revenue per trainer</li>
+        </ul></div>
+        <div><h4>Principle</h4><ul>
+          <li>Same standard as the Governance Room: every metric states what changed, why, how much it matters, who owns it and what happens next</li>
+          <li>No vanity metrics on the overview</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> you can close a month from the admin alone — revenue by source, refunds, conversion, top programs — without exporting anything to a spreadsheet.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 7</span><h3>Mentoring operations</h3><span class="wks">3 weeks</span></div>
+      <p class="goal">Replace the booking placeholder with a real scheduling system, and make sessions produce artefacts rather than just happening.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>Trainer availability rules, timezone-correct, IST and US shift friendly</li>
+          <li>Slot booking with payment, confirmation email and WhatsApp message</li>
+          <li>Reschedule and cancel honouring the 24 hour policy automatically</li>
+          <li>Session record: pre-read artefact, notes, action plan, follow-up date</li>
+          <li>Calendar views: day, week, month, per trainer</li>
+        </ul></div>
+        <div><h4>Decisions to make here</h4><ul>
+          <li>Google Calendar sync, or self-contained</li>
+          <li>Video call: external link, or embedded</li>
+          <li>Whether trainers other than you exist at launch</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> a mentoring session is booked, paid, held, documented and followed up entirely inside the platform, with no Calendly and no manual WhatsApp coordination.</p>
+    </article>
+
+    <article class="card phase">
+      <div class="phase-hd"><span class="n">PHASE 8</span><h3>Community, corporate and hardening</h3><span class="wks">3 weeks</span></div>
+      <p class="goal">Open the community, enable corporate cohorts, and make the whole thing safe to leave running.</p>
+      <div class="cols">
+        <div><h4>Build</h4><ul>
+          <li>Five moderated channels, threads, reporting, moderator tools</li>
+          <li>Organisation accounts: seats, manager dashboard, cohort progress</li>
+          <li>Corporate invoicing and purchase orders</li>
+          <li>Stripe added only if international corporate demand is real</li>
+        </ul></div>
+        <div><h4>Hardening</h4><ul>
+          <li>Security review: authorisation on every route, rate limiting, secrets rotation</li>
+          <li>Accessibility audit to WCAG AA across all four applications</li>
+          <li>Performance: Core Web Vitals on public pages, query budgets on admin</li>
+          <li>Backups with a tested restore, not just a backup</li>
+          <li>Load test at ten times expected concurrency</li>
+        </ul></div>
+      </div>
+      <p class="gate"><b>Gate:</b> restore from backup into a clean environment succeeds, the security review has no open high findings, and the accessibility audit passes AA.</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="lab">Data layer</p>
+    <h2>One schema behind all four applications</h2>
+    <p class="lead">
+      Grouped by concern. Every table carries created, updated and actor columns, and every
+      mutation writes an audit row — that is a Phase 0 decision precisely because retrofitting
+      it later is painful.
+    </p>
+    <div class="schema">
+      <div class="card grp"><h4>Identity</h4><ul>
+        <li>users</li><li>accounts</li><li>sessions</li><li>roles</li><li>permissions</li><li>organisations</li><li>org_members</li>
+      </ul></div>
+      <div class="card grp"><h4>Academy</h4><ul>
+        <li>programs</li><li>modules</li><li>lessons</li><li>resources</li><li>quizzes</li><li>quiz_attempts</li><li>enrolments</li><li>progress</li>
+      </ul></div>
+      <div class="card grp"><h4>Commerce</h4><ul>
+        <li>products</li><li>orders</li><li>payments</li><li>invoices</li><li>refunds</li><li>coupons</li>
+      </ul></div>
+      <div class="card grp"><h4>Sales</h4><ul>
+        <li>leads</li><li>lead_activities</li><li>lead_scores</li><li>deals</li><li>companies</li><li>campaigns</li>
+      </ul></div>
+      <div class="card grp"><h4>Mentoring</h4><ul>
+        <li>trainers</li><li>availability</li><li>bookings</li><li>sessions</li><li>session_notes</li>
+      </ul></div>
+      <div class="card grp"><h4>Governance</h4><ul>
+        <li>scenarios</li><li>lab_attempts</li><li>capacity_runs</li><li>rca_boards</li><li>action_registers</li><li>executive_notes</li><li>rubric_scores</li>
+      </ul></div>
+      <div class="card grp"><h4>Community</h4><ul>
+        <li>channels</li><li>threads</li><li>posts</li><li>reports</li><li>moderation_actions</li>
+      </ul></div>
+      <div class="card grp"><h4>Platform</h4><ul>
+        <li>audit_logs</li><li>events</li><li>notifications</li><li>settings</li><li>feature_flags</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="lab">Risks worth naming now</p>
+    <h2>What most likely goes wrong</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Risk</th><th>Why it bites</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>Content production lags the platform</td><td>The most likely cause of a missed launch. Engineering finishes, nothing is there to sell</td><td>Start recording at Phase 1. Launch with one complete program rather than five partial ones</td></tr>
+          <tr><td>WhatsApp Business API approval</td><td>Takes weeks, needs a verified business, and Phase 5 assumes it</td><td>Apply during Phase 3. Ship click-to-chat as the fallback and keep it permanently</td></tr>
+          <tr><td>Scope creep on the admin</td><td>The admin can absorb unlimited effort and produces no revenue directly</td><td>Every admin screen must answer a question you actually ask weekly, or it does not get built</td></tr>
+          <tr><td>Video hosting cost</td><td>Bandwidth on long-form video scales badly and is easy to underestimate</td><td>Model cost per student at Phase 3 before choosing a provider; prefer per-minute encoding plus cheap delivery</td></tr>
+          <tr><td>DPDP and data handling</td><td>Leads and students are personal data; the Governance Room must never touch real PHI</td><td>The disclaimers and retention rules already written need to become enforced behaviour, not just policy text</td></tr>
+          <tr><td>Solo dependency</td><td>The domain expertise and the content and the review rubric are all one person</td><td>Phase 4 exists partly to encode judgement into a rubric that someone else can eventually apply</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="lab">Blocking</p>
+    <h2>What I need from you before Phase 0 starts</h2>
+    <ol class="asks">
+      <li><strong>Hosting and database choice, or permission to choose</strong><span>Vercel plus Neon is the fastest path and costs roughly ₹2,000 a month at launch scale. A VPS is cheaper and more work. I will pick Vercel plus Neon unless you say otherwise.</span></li>
+      <li><strong>Domain and business entity</strong><span>The registered domain, the legal entity name, GST registration number and the HSN/SAC code for training services. Invoices cannot be generated without these.</span></li>
+      <li><strong>Razorpay account</strong><span>Merchant account with KYC completed, and test-mode keys shared through a password manager, never in chat.</span></li>
+      <li><strong>Real founder credentials</strong><span>Still outstanding from earlier: years, engagements led, team sizes, collections under governance. I removed the invented figures and will not put numbers on the site that you have not confirmed.</span></li>
+      <li><strong>WhatsApp number for the business</strong><span>Currently a placeholder in the code. Needed for click-to-chat now and for the API application in Phase 3.</span></li>
+      <li><strong>Which program is content-ready first</strong><span>Phase 2 needs one real program with real lessons to be a genuine test rather than a demo. Foundation is the obvious candidate.</span></li>
+      <li><strong>Who else will build this</strong><span>The estimates assume one full-time developer. If it stays only me in these sessions, the calendar stretches and the plan should be resequenced to put revenue-earning phases even earlier.</span></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    RCMS Operations Academy · implementation plan v1 · estimates are for one full-time developer
+    and exclude content production, which runs in parallel from Phase 1.
+  </div>
+</footer>
