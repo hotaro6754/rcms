@@ -24,7 +24,7 @@ export function ContactForm() {
         transition={{ duration: 0.24 }}
         className="rounded-[var(--radius)] border border-border bg-card p-8"
       >
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-success-bg text-success">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-[3px] bg-success-bg text-success">
           <Check className="h-5 w-5" aria-hidden />
         </span>
         <h2 className="mt-5 text-[1.4rem] leading-tight">That is with me</h2>
@@ -134,7 +134,7 @@ export function ContactForm() {
         </motion.p>
       )}
 
-      <Button type="submit" disabled={pending} className="mt-6 min-h-11 rounded-full">
+      <Button type="submit" disabled={pending} className="mt-6 min-h-11 rounded-[3px]">
         {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
         Send
       </Button>

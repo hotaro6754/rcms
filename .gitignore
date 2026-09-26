@@ -49,3 +49,6 @@ next-env.d.ts
 
 # local logs
 *.log
+
+# uploaded course materials (local storage driver)
+/storage/

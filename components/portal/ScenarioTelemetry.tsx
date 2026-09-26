@@ -137,7 +137,7 @@ export function ScenarioTelemetry({ scenario }: { scenario: LearnerScenario }) {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-micro font-semibold ${
+                    className={`rounded-[3px] px-2 py-0.5 text-micro font-semibold ${
                       e.severity === "high"
                         ? "bg-danger-bg text-danger"
                         : e.severity === "medium"

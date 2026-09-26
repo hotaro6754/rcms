@@ -30,7 +30,7 @@ export default async function StudentsPage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-6 p-4 lg:p-6">
+    <div className="mx-auto flex max-w-[1320px] flex-col gap-8 px-6 py-12 lg:py-16">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="label-caps">Students</p>
@@ -67,7 +67,7 @@ export default async function StudentsPage() {
                   <TableCell className="text-data px-4 text-micro">{u.role}</TableCell>
                   <TableCell className="px-4">
                     <Badge
-                      className={`rounded-full border-transparent text-micro ${
+                      className={`rounded-[2px] border-transparent text-micro ${
                         u.emailVerified
                           ? "bg-success-bg text-success"
                           : "bg-warning-bg text-warning"

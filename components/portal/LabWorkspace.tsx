@@ -177,7 +177,7 @@ export function LabWorkspace({
               />
             </div>
 
-            <Button type="submit" disabled={pending} className="mt-6 min-h-11 w-full rounded-full">
+            <Button type="submit" disabled={pending} className="mt-6 min-h-11 w-full rounded-[3px]">
               {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
               Run this configuration
             </Button>
@@ -297,7 +297,7 @@ export function LabWorkspace({
             />
           </div>
 
-          <Button type="submit" disabled={pending} className="mt-5 min-h-11 rounded-full">
+          <Button type="submit" disabled={pending} className="mt-5 min-h-11 rounded-[3px]">
             {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             Save analysis
           </Button>
@@ -377,7 +377,7 @@ export function LabWorkspace({
               <Field name="dueDate" label="Due" placeholder="e.g. 24 October" />
               <Field name="expectedImpact" label="Expected impact" placeholder="Optional — the number it moves" />
             </div>
-            <Button type="submit" disabled={pending} className="mt-5 min-h-11 w-full rounded-full">
+            <Button type="submit" disabled={pending} className="mt-5 min-h-11 w-full rounded-[3px]">
               <Plus className="h-4 w-4" aria-hidden />
               Add action
             </Button>
@@ -414,7 +414,7 @@ export function LabWorkspace({
             </div>
           </div>
 
-          <Button type="submit" disabled={pending} className="mt-6 min-h-11 rounded-full">
+          <Button type="submit" disabled={pending} className="mt-6 min-h-11 rounded-[3px]">
             {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             Submit for marking
           </Button>

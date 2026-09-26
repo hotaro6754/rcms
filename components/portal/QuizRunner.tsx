@@ -62,7 +62,7 @@ export function QuizRunner({
         <header className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
           <h3 className="text-[14px] font-semibold">{title}</h3>
           <span
-            className={`text-data rounded-full px-2.5 py-0.5 text-micro font-semibold ${
+            className={`text-data rounded-[3px] px-2.5 py-0.5 text-micro font-semibold ${
               result.passed ? "bg-success-bg text-success" : "bg-warning-bg text-warning"
             }`}
           >
@@ -107,7 +107,7 @@ export function QuizRunner({
         <div className="border-t border-border px-5 py-4">
           <Button
             variant="outline"
-            className="min-h-10 rounded-full"
+            className="min-h-10 rounded-[3px]"
             onClick={() => {
               setResult(null);
               setAnswers({});
@@ -163,7 +163,7 @@ export function QuizRunner({
       <div className="flex flex-wrap items-center gap-3 border-t border-border px-5 py-4">
         <Button
           disabled={!complete || pending}
-          className="min-h-10 rounded-full"
+          className="min-h-10 rounded-[3px]"
           onClick={() =>
             start(async () => {
               setError(null);

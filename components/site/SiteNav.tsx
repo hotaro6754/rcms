@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/lib/auth-client";
 
 const LINKS = [
   { href: "/courses", label: "Programs" },
@@ -36,6 +37,8 @@ export function SiteNav() {
   const anchorY = useRef(0);
   const { scrollY } = useScroll();
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const account = session?.user ? { href: "/academy", label: "My academy" } : { href: "/sign-in", label: "Sign in" };
 
   /**
    * Anchor is the last position at which the nav changed state. We use a generous
@@ -116,8 +119,14 @@ export function SiteNav() {
         </ul>
 
         <Link
+          href={account.href}
+          className="ml-auto hidden min-h-9 shrink-0 items-center text-[13px] text-muted-foreground transition-colors hover:text-foreground sm:inline-flex lg:ml-0"
+        >
+          {account.label}
+        </Link>
+        <Link
           href="/pricing"
-          className="ml-auto hidden shrink-0 items-center rounded-[3px] bg-primary px-4 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover sm:inline-flex sm:min-h-9 lg:ml-0"
+          className="hidden shrink-0 items-center rounded-[3px] bg-primary px-4 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover sm:inline-flex sm:min-h-9 lg:ml-0"
         >
           Enroll now
         </Link>
@@ -155,6 +164,13 @@ export function SiteNav() {
               </li>
             ))}
           </ul>
+          <Link
+            href={account.href}
+            onClick={() => setOpen(false)}
+            className="mt-2 flex min-h-11 items-center justify-center rounded-[3px] border border-border px-4 text-[14px]"
+          >
+            {account.label}
+          </Link>
           <Link
             href="/pricing"
             onClick={() => setOpen(false)}

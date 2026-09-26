@@ -22,7 +22,7 @@ export default async function AdminProgramsPage() {
   });
 
   return (
-    <div className="flex flex-col gap-6 p-4 lg:p-6">
+    <div className="mx-auto flex max-w-[1320px] flex-col gap-8 px-6 py-12 lg:py-16">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="label-caps">Academy</p>
@@ -53,11 +53,11 @@ export default async function AdminProgramsPage() {
               </CardHeader>
               <CardContent className="px-5 py-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="rounded-full border-transparent bg-secondary text-micro text-secondary-foreground">
+                  <Badge className="rounded-[2px] border-transparent bg-secondary text-micro text-secondary-foreground">
                     {p.modules.length} modules
                   </Badge>
                   <Badge
-                    className={`rounded-full border-transparent text-micro ${
+                    className={`rounded-[2px] border-transparent text-micro ${
                       published > 0
                         ? "bg-success-bg text-success"
                         : "bg-warning-bg text-warning"

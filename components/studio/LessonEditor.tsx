@@ -59,7 +59,7 @@ export function LessonEditor({
       </div>
 
       <div className="mt-5 flex items-center gap-3">
-        <Button type="submit" disabled={pending} className="min-h-10 rounded-full">
+        <Button type="submit" disabled={pending} className="min-h-10 rounded-[3px]">
           {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           Save
         </Button>

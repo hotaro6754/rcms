@@ -131,12 +131,12 @@ export function CurriculumBuilder({
 
                   <div className="flex items-center gap-2">
                     {l.questions > 0 && (
-                      <Badge className="rounded-full border-transparent bg-secondary text-micro text-secondary-foreground">
+                      <Badge className="rounded-[2px] border-transparent bg-secondary text-micro text-secondary-foreground">
                         {l.questions} questions
                       </Badge>
                     )}
                     <Badge
-                      className={`rounded-full border-transparent text-micro ${
+                      className={`rounded-[2px] border-transparent text-micro ${
                         l.state === "PUBLISHED"
                           ? "bg-success-bg text-success"
                           : "bg-warning-bg text-warning"
@@ -148,7 +148,7 @@ export function CurriculumBuilder({
 
                   <Button
                     size="sm" variant="outline" disabled={pending}
-                    className="min-h-9 rounded-full"
+                    className="min-h-9 rounded-[3px]"
                     onClick={() =>
                       run(() =>
                         setLessonState(l.id, l.state === "PUBLISHED" ? "DRAFT" : "PUBLISHED"),
@@ -202,7 +202,7 @@ export function CurriculumBuilder({
                   name="title" autoFocus required placeholder="Lesson title"
                   className="min-h-9 max-w-sm"
                 />
-                <Button type="submit" size="sm" disabled={pending} className="min-h-9 rounded-full">
+                <Button type="submit" size="sm" disabled={pending} className="min-h-9 rounded-[3px]">
                   Add
                 </Button>
                 <Button
@@ -235,7 +235,7 @@ export function CurriculumBuilder({
         className="flex flex-wrap items-center gap-2 rounded-[var(--radius)] border border-dashed border-input bg-card px-5 py-4"
       >
         <Input name="title" required placeholder="New module title" className="min-h-10 max-w-md" />
-        <Button type="submit" disabled={pending} className="min-h-10 rounded-full">
+        <Button type="submit" disabled={pending} className="min-h-10 rounded-[3px]">
           Add module
         </Button>
       </form>

@@ -81,7 +81,7 @@ export function GradeForm({
                   role="radio"
                   aria-checked={scores[r.criterion] === n}
                   onClick={() => setScores((s) => ({ ...s, [r.criterion]: n }))}
-                  className={`text-data min-h-10 min-w-10 rounded-full border text-[13.5px] transition-colors ${
+                  className={`text-data min-h-10 min-w-10 rounded-[3px] border text-[13.5px] transition-colors ${
                     scores[r.criterion] === n
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-input bg-card hover:bg-secondary"
@@ -110,7 +110,7 @@ export function GradeForm({
         </p>
       )}
 
-      <Button type="submit" disabled={pending} className="mt-6 min-h-11 rounded-full">
+      <Button type="submit" disabled={pending} className="mt-6 min-h-11 rounded-[3px]">
         {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
         {existing.length > 0 ? "Update marks" : "Release marks"}
       </Button>

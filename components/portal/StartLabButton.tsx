@@ -15,7 +15,7 @@ export function StartLabButton({ scenarioId }: { scenarioId: string }) {
     <div className="flex flex-wrap items-center gap-3">
       <Button
         disabled={pending}
-        className="min-h-11 rounded-full"
+        className="min-h-11 rounded-[3px]"
         onClick={() =>
           start(async () => {
             setError(null);

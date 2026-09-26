@@ -27,7 +27,7 @@ export default async function LeadsPage() {
   });
 
   return (
-    <div className="flex flex-col gap-6 p-4 lg:p-6">
+    <div className="mx-auto flex max-w-[1320px] flex-col gap-8 px-6 py-12 lg:py-16">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="label-caps">Sales</p>
@@ -83,7 +83,7 @@ export default async function LeadsPage() {
                     {l.owner?.name ?? "Unassigned"}
                   </TableCell>
                   <TableCell className="px-4">
-                    <Badge className={`rounded-full border-transparent text-micro font-semibold ${STAGE_TONE[l.stage]}`}>
+                    <Badge className={`rounded-[2px] border-transparent text-micro font-semibold ${STAGE_TONE[l.stage]}`}>
                       {l.stage.toLowerCase()}
                     </Badge>
                   </TableCell>

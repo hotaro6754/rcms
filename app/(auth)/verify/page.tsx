@@ -12,7 +12,7 @@ export default async function VerifyPage({
 
   return (
     <>
-      <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-accent text-accent-foreground">
+      <span className="inline-flex h-11 w-11 items-center justify-center rounded-[3px] bg-accent text-accent-foreground">
         <MailCheck className="h-5 w-5" aria-hidden />
       </span>
 

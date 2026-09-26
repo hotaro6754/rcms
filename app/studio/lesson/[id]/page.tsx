@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MaterialsManager } from "@/components/studio/MaterialsManager";
+import { humanSize, typeLabel } from "@/lib/storage";
 import { notFound } from "next/navigation";
 import { requireTrainer } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
@@ -44,7 +46,7 @@ export default async function StudioLessonPage({
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <p className="label-caps">{lesson.module.title}</p>
         <Badge
-          className={`rounded-full border-transparent text-micro ${
+          className={`rounded-[2px] border-transparent text-micro ${
             lesson.state === "PUBLISHED" ? "bg-success-bg text-success" : "bg-warning-bg text-warning"
           }`}
         >
@@ -65,24 +67,15 @@ export default async function StudioLessonPage({
         </div>
 
         <aside className="flex flex-col gap-4">
-          <div className="rounded-[var(--radius)] border border-border bg-card p-5">
-            <h2 className="text-[13px] font-semibold">Resources</h2>
-            {lesson.resources.length === 0 ? (
-              <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
-                None attached.
-              </p>
-            ) : (
-              <ul className="mt-3 flex flex-col gap-2">
-                {lesson.resources.map((r) => (
-                  <li key={r.id} className="text-micro leading-snug">{r.title}</li>
-                ))}
-              </ul>
-            )}
-            <p className="mt-4 border-t border-border pt-3 text-micro leading-relaxed text-muted-foreground">
-              Uploading needs a storage provider. Choose one and this becomes a file picker;
-              the records already exist.
-            </p>
-          </div>
+          <MaterialsManager
+            lessonId={lesson.id}
+            rows={lesson.resources.map((r) => ({
+              id: r.id,
+              title: r.title,
+              type: typeLabel(r.mimeType),
+              size: humanSize(r.sizeBytes),
+            }))}
+          />
 
           <div className="rounded-[var(--radius)] border border-border bg-card p-5">
             <h2 className="text-[13px] font-semibold">Video</h2>

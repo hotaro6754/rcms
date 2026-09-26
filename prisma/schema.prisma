@@ -47,6 +47,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   enrolments    Enrolment[]
+  certificates  Certificate[]
   progress      Progress[]
   quizAttempts  QuizAttempt[]
   orders        Order[]
@@ -167,8 +168,9 @@ model Program {
   sortOrder   Int          @default(0)
 
   modules    Module[]
-  products   Product[]
-  enrolments Enrolment[]
+  products     Product[]
+  enrolments   Enrolment[]
+  certificates Certificate[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -321,6 +323,30 @@ model Progress {
 // ---------------------------------------------------------------------------
 // Commerce. Razorpay at launch; the shape allows a second gateway later.
 // ---------------------------------------------------------------------------
+
+/// A certificate of completion. The holder's name and the program are frozen at issue, so
+/// a later rename of either never changes a certificate someone has already shared. The
+/// serial is the public identifier printed on the certificate and used to verify it.
+model Certificate {
+  id           String    @id @default(cuid())
+  serial       String    @unique
+  userId       String
+  programId    String
+  holderName   String
+  programName  String
+  issuedAt     DateTime  @default(now())
+  issuedById   String?
+  /// "completion" when the student met every requirement; "manual" when an admin issued it.
+  basis        String    @default("completion")
+  revokedAt    DateTime?
+  revokeReason String?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program Program @relation(fields: [programId], references: [id])
+
+  @@unique([userId, programId])
+  @@index([programId])
+}
 
 enum ProductKind {
   PROGRAM

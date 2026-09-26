@@ -72,7 +72,7 @@ export default async function GradingPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge
-                        className={`rounded-full border-transparent text-micro font-semibold ${
+                        className={`rounded-[2px] border-transparent text-micro font-semibold ${
                           a.state === "GRADED"
                             ? "bg-success-bg text-success"
                             : "bg-warning-bg text-warning"

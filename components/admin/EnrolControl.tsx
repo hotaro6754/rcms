@@ -35,7 +35,7 @@ export function EnrolControl({
         size="sm"
         variant="outline"
         disabled={pending || !programId}
-        className="min-h-9 rounded-full"
+        className="min-h-9 rounded-[3px]"
         onClick={() =>
           start(async () => {
             const res = await grantEnrolment(userId, programId);

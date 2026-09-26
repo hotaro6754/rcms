@@ -66,7 +66,7 @@ export default async function LabsPage() {
                   </div>
                   {attempt && (
                     <Badge
-                      className={`rounded-full border-transparent text-micro font-semibold ${
+                      className={`rounded-[2px] border-transparent text-micro font-semibold ${
                         STATE_TONE[attempt.state]
                       }`}
                     >
@@ -89,7 +89,7 @@ export default async function LabsPage() {
                     attempt ? (
                       <Link
                         href={`/labs/${attempt.id}`}
-                        className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+                        className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
                       >
                         {attempt.state === "IN_PROGRESS" ? "Continue the review" : "See your marks"}
                       </Link>
@@ -99,7 +99,7 @@ export default async function LabsPage() {
                   ) : (
                     <Link
                       href="/governance"
-                      className="inline-flex min-h-11 items-center rounded-full border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary"
+                      className="inline-flex min-h-11 items-center rounded-[3px] border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary"
                     >
                       Open the worked example
                     </Link>

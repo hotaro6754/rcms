@@ -22,7 +22,7 @@ export function LessonComplete({
       <Button
         disabled={pending}
         variant={complete ? "outline" : "default"}
-        className="min-h-11 rounded-full"
+        className="min-h-11 rounded-[3px]"
         onClick={() =>
           start(async () => {
             setError(null);

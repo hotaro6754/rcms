@@ -42,7 +42,7 @@ export default async function AccountPage() {
           <p className="text-data mt-2 text-micro text-muted-foreground">{user.email}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge className="rounded-full border-transparent bg-accent text-micro font-semibold text-accent-foreground">
+          <Badge className="rounded-[2px] border-transparent bg-accent text-micro font-semibold text-accent-foreground">
             {user.role ?? "STUDENT"}
           </Badge>
           <SignOutButton />
@@ -63,7 +63,7 @@ export default async function AccountPage() {
                 </p>
                 <Link
                   href="/learning-paths"
-                  className="mt-4 inline-flex min-h-10 items-center rounded-full bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+                  className="mt-4 inline-flex min-h-10 items-center rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
                 >
                   Find your level
                 </Link>
@@ -78,7 +78,7 @@ export default async function AccountPage() {
                       </span>
                       <span className="block text-[14px] font-medium">{e.program.name}</span>
                     </span>
-                    <Badge className="rounded-full border-transparent bg-secondary text-micro text-secondary-foreground">
+                    <Badge className="rounded-[2px] border-transparent bg-secondary text-micro text-secondary-foreground">
                       {e.state.toLowerCase()}
                     </Badge>
                   </li>

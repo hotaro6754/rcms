@@ -1,152 +1,120 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/rbac";
 import { prisma } from "@/lib/db";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { inr } from "@/lib/data/catalog";
+import { PageHead, Ruled } from "@/components/platform/PlatformShell";
 
 export const metadata = { title: "Admin overview" };
 
+const WHEN = new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
+
 /**
- * Executive overview.
+ * The owner's overview, set as the first page of a report.
  *
- * Every figure here is a real count against the database. Where a number cannot be real yet
- * — revenue, which needs Phase 1 — it says so rather than showing a plausible zero, because
- * a zero and "not wired up" look identical and only one of them is a problem.
+ * Every figure is a real count against the database. Revenue is absent rather than zero:
+ * payments are not live yet, and a zero would read as a business problem instead of an
+ * unbuilt feature. It says so in one line, in the page's own voice.
  */
 export default async function AdminOverviewPage() {
   await requireAdmin();
 
-  const [
-    students,
-    activeEnrolments,
-    leads,
-    newLeads,
-    programs,
-    publishedLessons,
-    completions,
-    recentLeads,
-    recentAudit,
-  ] = await Promise.all([
-    prisma.user.count({ where: { role: "STUDENT" } }),
-    prisma.enrolment.count({ where: { state: "ACTIVE" } }),
-    prisma.lead.count(),
-    prisma.lead.count({ where: { stage: "NEW" } }),
-    prisma.program.count({ where: { state: "PUBLISHED" } }),
-    prisma.lesson.count({ where: { state: "PUBLISHED" } }),
-    prisma.progress.count({ where: { completedAt: { not: null } } }),
-    prisma.lead.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: { id: true, name: true, email: true, stage: true, score: true, interestedIn: true },
-    }),
-    prisma.auditLog.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 8,
-      select: { id: true, action: true, entity: true, createdAt: true, actor: { select: { name: true } } },
-    }),
-  ]);
+  const [students, activeEnrolments, completedEnrolments, leads, newLeads, publishedLessons, certificates, completions, recentLeads, recentAudit] =
+    await Promise.all([
+      prisma.user.count({ where: { role: "STUDENT" } }),
+      prisma.enrolment.count({ where: { state: "ACTIVE" } }),
+      prisma.enrolment.count({ where: { state: "COMPLETED" } }),
+      prisma.lead.count(),
+      prisma.lead.count({ where: { stage: "NEW" } }),
+      prisma.lesson.count({ where: { state: "PUBLISHED" } }),
+      prisma.certificate.count({ where: { revokedAt: null } }),
+      prisma.progress.count({ where: { completedAt: { not: null } } }),
+      prisma.lead.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: { id: true, name: true, email: true, stage: true, score: true, interestedIn: true, source: true },
+      }),
+      prisma.auditLog.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: { id: true, action: true, entity: true, createdAt: true, actor: { select: { name: true } } },
+      }),
+    ]);
 
-  const kpis = [
-    { label: "Students", value: String(students), note: "verified accounts" },
-    { label: "Active enrolments", value: String(activeEnrolments), note: "across all programs" },
-    { label: "Leads", value: String(leads), note: `${newLeads} not yet worked` },
-    { label: "Lessons published", value: String(publishedLessons), note: `${programs} programs live` },
+  const figures = [
+    { label: "Students", value: students, note: "verified accounts", href: "/admin/students" },
+    { label: "Enrolled now", value: activeEnrolments, note: `${completedEnrolments} completed`, href: "/admin/students" },
+    { label: "Certificates", value: certificates, note: "valid, issued", href: "/admin/certificates" },
+    { label: "Leads", value: leads, note: `${newLeads} not yet worked`, href: "/admin/leads" },
+    { label: "Lessons live", value: publishedLessons, note: `${completions} completions`, href: "/admin/programs" },
   ];
 
   return (
-    <div className="flex flex-col gap-6 p-4 lg:p-6">
-      <header>
-        <p className="label-caps">Admin</p>
-        <h1 className="mt-2 text-[clamp(1.6rem,2.4vw,2rem)] leading-tight">Overview</h1>
-      </header>
+    <div className="mx-auto max-w-[1320px] px-6 py-12 lg:py-16">
+      <PageHead
+        kicker="Admin"
+        title="Overview"
+        lede="The Academy as it stands. Revenue appears here once payments are live; until then it is left out rather than shown as zero."
+      />
 
-      <dl className="grid gap-px overflow-hidden rounded-[var(--radius)] border border-border bg-border sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((k) => (
-          <div key={k.label} className="bg-card p-5">
-            <dt className="label-caps text-[11px]">{k.label}</dt>
-            <dd className="text-data mt-2.5 text-[30px] font-medium leading-none">{k.value}</dd>
-            <p className="mt-2 text-micro text-muted-foreground">{k.note}</p>
+      <dl className="mt-10 grid grid-cols-2 border-b border-border sm:grid-cols-3 lg:grid-cols-5">
+        {figures.map((f) => (
+          <div key={f.label} className="border-t-2 border-foreground pb-6 pr-6 pt-3">
+            <dt className="text-data text-[10.5px] tracking-[0.12em] text-subtle">{f.label.toUpperCase()}</dt>
+            <dd>
+              <Link href={f.href} className="font-serif-display mt-3 block text-[clamp(2.6rem,4vw,3.6rem)] leading-none hover:underline hover:decoration-1 hover:underline-offset-8">
+                {f.value}
+              </Link>
+              <span className="mt-2 block text-[13px] text-muted-foreground">{f.note}</span>
+            </dd>
           </div>
         ))}
       </dl>
 
-      <div className="rounded-[var(--radius)] border border-warning/30 bg-warning-bg px-4 py-3">
-        <p className="text-micro leading-relaxed text-warning">
-          Revenue, MRR and conversion are not on this page yet. Payments land in Phase 1 and
-          the finance surface in Phase 6. A zero here would look like a business problem
-          rather than an unbuilt feature, so the tiles are absent instead. Programs currently
-          price from {inr(2999)}.
-        </p>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="gap-0 py-0">
-          <CardHeader className="gap-0 border-b border-border px-5 py-4 [.border-b]:pb-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[13.5px] font-semibold">Latest enquiries</h2>
-              <Link href="/admin/leads" className="text-micro text-primary hover:underline">
-                All leads →
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="px-0 py-0">
-            {recentLeads.length === 0 ? (
-              <p className="px-5 py-6 text-micro text-muted-foreground">
-                No enquiries yet. The contact form writes here.
-              </p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {recentLeads.map((l) => (
-                  <li key={l.id} className="flex items-center gap-4 px-5 py-3.5">
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13.5px] font-medium">{l.name}</span>
-                      <span className="text-data block truncate text-micro text-muted-foreground">
-                        {l.email}
-                        {l.interestedIn ? ` · ${l.interestedIn}` : ""}
-                      </span>
+      <div className="mt-14 grid gap-14 lg:grid-cols-2">
+        <Ruled
+          label="Latest enquiries"
+          aside={
+            <Link href="/admin/leads" className="text-data text-[10.5px] tracking-[0.1em] text-subtle hover:text-foreground">
+              ALL LEADS →
+            </Link>
+          }
+        >
+          {recentLeads.length === 0 ? (
+            <p className="py-5 text-[14px] text-muted-foreground">No enquiries yet. The contact form and the monthly letter write here.</p>
+          ) : (
+            <ul>
+              {recentLeads.map((l) => (
+                <li key={l.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 border-b border-border py-3.5">
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14px]">{l.name}</span>
+                    <span className="block truncate text-[12.5px] text-muted-foreground">
+                      {l.email}
+                      {l.interestedIn ? ` · ${l.interestedIn}` : ""}
                     </span>
-                    <span className="text-data shrink-0 text-micro text-muted-foreground">
-                      {l.stage.toLowerCase()} · {l.score}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="gap-0 py-0">
-          <CardHeader className="gap-0 border-b border-border px-5 py-4 [.border-b]:pb-4">
-            <h2 className="text-[13.5px] font-semibold">Audit trail</h2>
-          </CardHeader>
-          <CardContent className="px-0 py-0">
-            <ul className="divide-y divide-border">
-              {recentAudit.map((a) => (
-                <li key={a.id} className="flex items-baseline justify-between gap-3 px-5 py-3">
-                  <span className="text-[13px]">
-                    {a.action} <span className="text-muted-foreground">{a.entity}</span>
-                    {a.actor?.name && (
-                      <span className="text-micro text-subtle"> · {a.actor.name}</span>
-                    )}
                   </span>
-                  <span className="text-data shrink-0 text-micro text-muted-foreground">
-                    {a.createdAt.toLocaleString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                  <span className="text-data text-right text-[10.5px] tracking-[0.08em] text-subtle">
+                    {l.source.replace("_", " ").toUpperCase()} · {l.stage} · {l.score}
                   </span>
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </Ruled>
 
-      <p className="text-micro text-muted-foreground">
-        {completions} lesson completions recorded.
-      </p>
+        <Ruled label="Audit trail">
+          <ul>
+            {recentAudit.map((a) => (
+              <li key={a.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 border-b border-border py-3">
+                <span className="text-[13.5px]">
+                  <span className="text-data mr-2 text-[10.5px] uppercase tracking-[0.08em] text-subtle">{a.action}</span>
+                  {a.entity}
+                  {a.actor?.name && <span className="text-muted-foreground"> · {a.actor.name}</span>}
+                </span>
+                <span className="text-data text-[11px] text-subtle">{WHEN.format(a.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
+        </Ruled>
+      </div>
     </div>
   );
 }

@@ -46,7 +46,10 @@ export type AuditAction =
   | "refund"
   | "grade"
   | "publish"
-  | "assign";
+  | "assign"
+  | "issue"
+  | "revoke"
+  | "download";
 
 export interface AuditInput {
   actorId?: string | null;

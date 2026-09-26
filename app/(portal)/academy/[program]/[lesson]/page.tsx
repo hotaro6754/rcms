@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { humanSize, isAvailable, typeLabel } from "@/lib/storage";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileText, PlayCircle } from "lucide-react";
 import { requireUser } from "@/lib/rbac";
@@ -134,7 +135,7 @@ export default async function LessonPage({
             {prev ? (
               <Link
                 href={`/academy/${program.slug}/${prev.id}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-input bg-card px-4 text-[13.5px] font-medium transition-colors hover:bg-secondary"
+                className="inline-flex min-h-11 items-center gap-2 rounded-[3px] border border-input bg-card px-4 text-[13.5px] font-medium transition-colors hover:bg-secondary"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden />
                 Previous
@@ -145,7 +146,7 @@ export default async function LessonPage({
             {next && (
               <Link
                 href={`/academy/${program.slug}/${next.id}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+                className="inline-flex min-h-11 items-center gap-2 rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
               >
                 Next lesson
                 <ArrowRight className="h-4 w-4" aria-hidden />
@@ -163,12 +164,26 @@ export default async function LessonPage({
                   {lesson.resources.map((r) => (
                     <li key={r.id} className="flex items-start gap-2.5">
                       <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                      <span className="text-micro leading-snug">{r.title}</span>
+                      {!isAvailable(r.fileKey) ? (
+                        <span className="min-w-0 flex-1 text-micro leading-snug text-muted-foreground">
+                          {r.title}
+                          <span className="text-data ml-2 text-[10.5px] text-subtle">NOT YET UPLOADED</span>
+                        </span>
+                      ) : (
+                      <a href={`/api/materials/${r.id}`} className="min-w-0 flex-1 text-micro leading-snug underline-offset-4 hover:underline">
+                        {r.title}
+                        <span className="text-data ml-2 text-[10.5px] text-subtle">
+                          {typeLabel(r.mimeType)}
+                          {r.sizeBytes ? ` · ${humanSize(r.sizeBytes)}` : ""}
+                        </span>
+                      </a>
+                      )}
                     </li>
                   ))}
                 </ul>
                 <p className="mt-4 border-t border-border pt-3 text-micro leading-relaxed text-muted-foreground">
-                  Downloads open up once a storage provider is chosen. The records already exist.
+                  Every material from your programs is also in your{" "}
+                  <Link href="/library" className="underline underline-offset-4">library</Link>.
                 </p>
               </CardContent>
             </Card>

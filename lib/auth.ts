@@ -26,11 +26,15 @@ export const auth = betterAuth({
 
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
+  // Development servers run on more than one local port; production trusts only baseURL.
+  trustedOrigins: process.env.NODE_ENV === "production" ? [] : ["http://localhost:3000", "http://localhost:3100"],
 
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
     minPasswordLength: 10,
+    // A reset is often a response to a compromise: end every other session with it.
+    revokeSessionsOnPasswordReset: true,
     async sendResetPassword({ user, url }) {
       await sendMail({
         to: user.email,

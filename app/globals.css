@@ -55,7 +55,7 @@
   --border: #dddbd4;
   --input: #c9c6bd;
   --ring: #3f6e5e;
-  --radius: 0.625rem;
+  --radius: 0.25rem;                /* editorial: nearly square corners everywhere */
 
   --chart-1: #3f6e5e;
   --chart-2: #8a8378;
@@ -449,4 +449,27 @@
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3.2 2.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
   -webkit-mask-size: 120px 120px;
   mask-size: 120px 120px;
+}
+
+/* Certificates print as one landscape sheet and nothing else. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .certificate-sheet,
+  .certificate-sheet * {
+    visibility: visible;
+  }
+  .certificate-sheet {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 }

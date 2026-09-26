@@ -43,21 +43,21 @@ export default async function StudioPage() {
               </CardHeader>
               <CardContent className="px-5 py-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="rounded-full border-transparent bg-secondary text-micro text-secondary-foreground">
+                  <Badge className="rounded-[2px] border-transparent bg-secondary text-micro text-secondary-foreground">
                     {p.modules.length} modules
                   </Badge>
-                  <Badge className="rounded-full border-transparent bg-success-bg text-micro text-success">
+                  <Badge className="rounded-[2px] border-transparent bg-success-bg text-micro text-success">
                     {published} published
                   </Badge>
                   {drafts > 0 && (
-                    <Badge className="rounded-full border-transparent bg-warning-bg text-micro text-warning">
+                    <Badge className="rounded-[2px] border-transparent bg-warning-bg text-micro text-warning">
                       {drafts} draft
                     </Badge>
                   )}
                 </div>
                 <Link
                   href={`/studio/${p.slug}`}
-                  className="mt-5 inline-flex min-h-10 items-center rounded-full bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+                  className="mt-5 inline-flex min-h-10 items-center rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
                 >
                   Open curriculum
                 </Link>

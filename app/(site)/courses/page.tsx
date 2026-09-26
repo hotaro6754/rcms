@@ -38,7 +38,7 @@ export default function CoursesPage() {
                       Level {p.level} · {level.verb}
                     </span>
                     {p.flag && (
-                      <span className="rounded-full bg-accent px-2.5 py-0.5 text-micro font-semibold text-accent-foreground">
+                      <span className="rounded-[3px] bg-accent px-2.5 py-0.5 text-micro font-semibold text-accent-foreground">
                         {p.flag}
                       </span>
                     )}

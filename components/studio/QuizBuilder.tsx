@@ -59,7 +59,7 @@ export function QuizBuilder({ lessonId, quiz }: { lessonId: string; quiz: Studio
             <label htmlFor="pass" className="text-micro font-medium">Pass mark %</label>
             <Input id="pass" name="passingScore" type="number" min={0} max={100} defaultValue={70} className="min-h-10 w-28" />
           </div>
-          <Button type="submit" disabled={pending} className="min-h-10 rounded-full">
+          <Button type="submit" disabled={pending} className="min-h-10 rounded-[3px]">
             Add quiz
           </Button>
         </form>
@@ -184,7 +184,7 @@ export function QuizBuilder({ lessonId, quiz }: { lessonId: string; quiz: Studio
             </div>
 
             <div className="flex gap-2">
-              <Button type="submit" disabled={pending} className="min-h-10 rounded-full">
+              <Button type="submit" disabled={pending} className="min-h-10 rounded-[3px]">
                 Add question
               </Button>
               <Button type="button" variant="ghost" className="min-h-10" onClick={() => setAdding(false)}>

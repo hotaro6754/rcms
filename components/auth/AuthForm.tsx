@@ -4,10 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { Loader2 } from "lucide-react";
 import { signIn, signUp } from "@/lib/auth-client";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 /**
  * Sign-up and sign-in share a shape, so they share a component. Motion owns the feedback
@@ -16,6 +13,9 @@ import { Button } from "@/components/ui/button";
  * Errors say what went wrong and what to do about it. No apologies, no "something went
  * wrong", and the message never reveals whether an email is registered.
  */
+const FIELD =
+  "min-h-11 w-full border-b border-input bg-transparent text-[16px] outline-none transition-colors focus:border-foreground";
+
 export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const router = useRouter();
   const isSignUp = mode === "sign-up";
@@ -50,7 +50,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
               : "That email and password do not match an account.",
           );
         }
-        router.push("/account");
+        router.push("/academy");
         router.refresh();
       }
     } catch (err) {
@@ -60,50 +60,50 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-6">
       {isSignUp && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="name" className="text-[13px] font-medium">
-            Name
+          <label htmlFor="name" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
+            NAME
           </label>
-          <Input
+          <input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
             required
-            className="min-h-11"
+            className={FIELD}
           />
         </div>
       )}
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-[13px] font-medium">
-          Email
-        </label>
-        <Input
+        <label htmlFor="email" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
+            EMAIL
+          </label>
+        <input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
           required
-          className="min-h-11"
+          className={FIELD}
         />
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
-          <label htmlFor="password" className="text-[13px] font-medium">
-            Password
+          <label htmlFor="password" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
+            PASSWORD
           </label>
           {!isSignUp && (
-            <Link href="/forgot-password" className="text-micro text-primary hover:underline">
+            <Link href="/forgot-password" className="text-[12.5px] text-muted-foreground underline underline-offset-4 hover:text-foreground">
               Forgotten it?
             </Link>
           )}
         </div>
-        <Input
+        <input
           id="password"
           type="password"
           value={password}
@@ -112,7 +112,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           required
           minLength={isSignUp ? 10 : undefined}
           aria-describedby={isSignUp ? "pw-hint" : undefined}
-          className="min-h-11"
+          className={FIELD}
         />
         {isSignUp && (
           <p id="pw-hint" className="text-micro text-muted-foreground">
@@ -127,22 +127,25 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18 }}
-          className="rounded-md border border-danger/30 bg-danger-bg px-3 py-2.5 text-micro leading-relaxed text-danger"
+          className="border-l-2 border-danger pl-3 text-[13.5px] leading-relaxed text-danger"
         >
           {error}
         </motion.p>
       )}
 
-      <Button type="submit" disabled={busy} className="mt-1 min-h-11 rounded-full">
-        {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-        {isSignUp ? "Create account" : "Sign in"}
-      </Button>
+      <button
+        type="submit"
+        disabled={busy}
+        className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-50"
+      >
+        {busy ? (isSignUp ? "Creating…" : "Signing in…") : isSignUp ? "Create account" : "Sign in"}
+      </button>
 
-      <p className="text-micro text-muted-foreground">
+      <p className="text-[13.5px] text-muted-foreground">
         {isSignUp ? "Already have an account? " : "No account yet? "}
         <Link
           href={isSignUp ? "/sign-in" : "/sign-up"}
-          className="font-medium text-primary hover:underline"
+          className="text-foreground underline underline-offset-4"
         >
           {isSignUp ? "Sign in" : "Create one"}
         </Link>
