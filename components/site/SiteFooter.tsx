@@ -1,15 +1,18 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
-import { LEVELS, inr, PROGRAMS } from "@/lib/data/catalog";
+import { inr, NEXT_COHORT, PROGRAMS } from "@/lib/data/catalog";
+import { FooterLive } from "./footer/FooterLive";
+import { FooterNotes } from "./footer/FooterNotes";
+import { FooterWordmark } from "./footer/FooterWordmark";
 
-const COLUMNS = [
+/** The site's index: one ruled row per section, set like the index of a book. */
+const INDEX = [
   {
     title: "Learn",
     links: [
       { href: "/learning-paths", label: "Learning paths" },
       { href: "/courses", label: "Programs" },
-      { href: "/pricing", label: "Pricing and tracks" },
-      { href: "/mentoring", label: "One-to-one mentoring" },
+      { href: "/pricing", label: "Pricing" },
+      { href: "/mentoring", label: "1:1 mentoring" },
       { href: "/pricing#corporate", label: "Corporate cohorts" },
     ],
   },
@@ -26,146 +29,111 @@ const COLUMNS = [
   {
     title: "Academy",
     links: [
-      { href: "/about", label: "About the founder" },
+      { href: "/about", label: "About the author" },
       { href: "/community", label: "Community" },
       { href: "/blog", label: "Writing" },
-      { href: "/contact", label: "Contact" },
+    ],
+  },
+  {
+    title: "Contact",
+    links: [
+      { href: "/contact", label: "Write to us" },
+      { href: "https://wa.me/919999999999", label: "WhatsApp" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { href: "/legal/privacy", label: "Privacy policy" },
-      { href: "/legal/terms", label: "Terms and conditions" },
-      { href: "/legal/refund", label: "Refund policy" },
+      { href: "/legal/privacy", label: "Privacy" },
+      { href: "/legal/terms", label: "Terms" },
+      { href: "/legal/refund", label: "Refunds" },
       { href: "/legal/disclaimer", label: "Disclaimer" },
     ],
   },
 ];
 
+/**
+ * The file closes. One ink piece, not a CTA band stacked on a link directory: the claim
+ * that opened the page is marked closed and the closing statement answers the hero. Then
+ * the monthly letter beside the live facts (the time in India, days to the next cohort),
+ * the site's index as ruled rows, the colophon, and the name set as wide as the page and
+ * cut off by its bottom edge. No cards, no pills, no second background.
+ */
 export function SiteFooter() {
   const cheapest = Math.min(...PROGRAMS.map((p) => p.price));
 
   return (
-    <footer className="editorial border-t border-border">
-      {/* Closing argument, set in ink: the one dark band on the page, so the last call to
-          action has weight. A static radial and grain, not a second canvas. */}
-      <section data-env="ink" className="env-ink relative isolate bg-background">
-        <div aria-hidden="true" className="field field-radial is-ink" />
-        <div aria-hidden="true" className="grain absolute inset-0 -z-10" />
-        <div className="mx-auto max-w-[1320px] px-6 py-20">
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-end">
-            <div>
-              <p className="text-data text-[12.5px] tracking-[0.02em] text-subtle">
-                Next cohort opens 6 October 2026
-              </p>
-              <h2 className="mt-6 max-w-[20ch] text-[clamp(2.1rem,4.6vw,3.6rem)] leading-[1.02]">
-                The revenue cycle is complicated. <em>Learning it doesn&rsquo;t have to be.</em>
-              </h2>
-            </div>
-            <div>
-              <p className="max-w-[46ch] text-[14.5px] leading-relaxed text-muted-foreground">
-                Start where you actually are. The five levels map what you own now against what
-                the role above expects, and programs begin at {inr(cheapest)}.
-              </p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  href="/learning-paths"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-                >
-                  Explore programs
-                  <ArrowUpRight className="h-4 w-4" aria-hidden />
-                </Link>
-                <Link
-                  href="/mentoring"
-                  className="inline-flex min-h-11 items-center rounded-full border border-input px-5 text-sm font-medium transition-colors hover:bg-secondary"
-                >
-                  Talk to an advisor
-                </Link>
-              </div>
-            </div>
-          </div>
+    <footer data-env="ink" className="editorial env-ink bg-background">
+      <div className="mx-auto max-w-[1320px] px-6 pt-24 lg:pt-32">
+        <p className="text-data text-[11px] tracking-[0.12em] text-subtle">
+          CLAIM #20481 <span aria-hidden="true" className="mx-1.5">·</span> PAID{" "}
+          <span aria-hidden="true" className="mx-1.5">·</span> RECONCILED{" "}
+          <span aria-hidden="true" className="mx-1.5">·</span> <span className="text-foreground">CLOSED</span>
+        </p>
 
-          {/* The five levels restated as the closing thesis. */}
-          <ol id="levels" className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
-            {LEVELS.map((l) => (
-              <li
-                key={l.n}
-                className="group bg-background/80 px-5 py-5 backdrop-blur-sm transition-colors duration-[var(--dur-med)] hover:bg-card"
-              >
-                <span className="text-data text-micro text-subtle transition-colors group-hover:text-brand">
-                  {String(l.n).padStart(2, "0")}
-                </span>
-                <p className="mt-2 text-[15px] font-semibold">{l.verb}</p>
-                <p className="mt-1.5 text-micro leading-relaxed text-muted-foreground">{l.title}</p>
-              </li>
-            ))}
-          </ol>
+        <h2 className="mt-8 max-w-[18ch] text-[clamp(2.6rem,6vw,5.6rem)] leading-[1]">
+          The revenue cycle is complicated. <em>Learning it doesn&rsquo;t have to be.</em>
+        </h2>
+
+        <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
+          <Link
+            href="/learning-paths"
+            className="inline-flex min-h-12 items-center rounded-[3px] bg-primary px-6 text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+          >
+            See the five levels
+          </Link>
+          <Link
+            href="/mentoring"
+            className="inline-flex min-h-12 items-center text-[15px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
+          >
+            Or talk it through, 1:1
+          </Link>
+          <p className="text-data text-[12px] text-subtle">Programs from {inr(cheapest)} · next cohort {NEXT_COHORT.label}</p>
         </div>
-      </section>
 
-      {/* Directory */}
-      <div className="bg-secondary">
-        <div className="mx-auto max-w-[1320px] px-6 py-14">
-          <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
-            <div>
-              <Link href="/" className="flex items-center gap-2.5">
-                <span className="text-data rounded-full bg-foreground px-2.5 py-1.5 text-[11px] font-semibold leading-none text-background">
-                  RCMS
-                </span>
-                <span className="text-[15px] font-semibold tracking-tight">
-                  Operations <span className="font-normal text-muted-foreground">Academy</span>
-                </span>
-              </Link>
-              <p className="mt-4 max-w-[38ch] text-micro leading-relaxed text-muted-foreground">
-                Structured training for US healthcare revenue cycle professionals, from first job
-                to executive accountability. Built by a practitioner still on the floor.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                <a
-                  href="https://wa.me/919999999999"
-                  className="inline-flex min-h-10 items-center rounded-full border border-input bg-card px-4 text-micro font-medium transition-colors hover:bg-background"
-                >
-                  WhatsApp
-                </a>
-                <Link
-                  href="/contact"
-                  className="inline-flex min-h-10 items-center rounded-full border border-input bg-card px-4 text-micro font-medium transition-colors hover:bg-background"
-                >
-                  Email
-                </Link>
-              </div>
-            </div>
-
-            {COLUMNS.map((col) => (
-              <nav key={col.title} aria-label={col.title}>
-                <h3 className="label-caps">{col.title}</h3>
-                <ul className="mt-4 flex flex-col gap-2.5">
-                  {col.links.map((l) => (
-                    <li key={l.href}>
-                      <Link
-                        href={l.href}
-                        className="text-[13.5px] text-secondary-foreground transition-colors hover:text-primary"
-                      >
-                        {l.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ))}
-          </div>
-
-          <div className="mt-14 flex flex-col gap-4 border-t border-border pt-6 text-micro text-muted-foreground lg:flex-row lg:items-start lg:justify-between">
-            <span>© 2026 RCMS Operations Academy. All rights reserved.</span>
-            <p className="max-w-[70ch] leading-relaxed">
-              Console and Governance Room figures are illustrative teaching data; no real patient,
-              provider or payer information is used anywhere on this site. Benchmarks referenced
-              from HFMA MAP Keys, no affiliation. Training content does not replace payer, CMS,
-              HIPAA, legal, compliance or employer-specific guidance.
-            </p>
+        <div className="mt-24 grid gap-14 border-t border-foreground/60 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">
+          <FooterNotes />
+          <div className="lg:pt-1">
+            <FooterLive />
           </div>
         </div>
+
+        {/* Index */}
+        <nav aria-label="Site index" className="mt-20 border-t border-foreground/60">
+          {INDEX.map((row) => (
+            <div key={row.title} className="grid gap-2 border-b border-border py-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6">
+              <h3 className="text-data text-[11px] tracking-[0.12em] text-subtle sm:pt-[3px]">{row.title.toUpperCase()}</h3>
+              <ul className="flex flex-wrap gap-x-7 gap-y-2">
+                {row.links.map((l) => (
+                  <li key={l.href}>
+                    <Link href={l.href} className="text-[15px] text-foreground/85 transition-colors hover:text-foreground hover:underline hover:underline-offset-4">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
+
+        {/* Colophon */}
+        <div className="text-data mt-12 grid gap-6 text-[11px] leading-relaxed text-subtle lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto]">
+          <p>
+            <span className="text-foreground">RCMS Operations Academy</span>
+            <br />© 2026. Set in Newsreader and Satoshi.
+          </p>
+          <p className="max-w-[80ch]">
+            Every claim, console and review figure on this site is illustrative teaching data; no
+            real patient, provider or payer information is used. Benchmarks referenced from HFMA
+            MAP Keys, no affiliation. Training content does not replace payer, CMS, HIPAA, legal,
+            compliance or employer-specific guidance.
+          </p>
+          <a href="#top" className="inline-flex min-h-10 items-start text-foreground transition-opacity hover:opacity-70 lg:justify-self-end">
+            BACK TO TOP ↑
+          </a>
+        </div>
+
+        <FooterWordmark />
       </div>
     </footer>
   );

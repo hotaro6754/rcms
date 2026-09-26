@@ -3,11 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap, useGSAP, SplitText, ScrollTrigger } from "@/lib/gsap/register";
 import { EASE } from "@/lib/gsap/eases";
-import { LevelStrip } from "./LevelStrip";
-import { AuroraField } from "@/components/environment/AuroraField";
-import { WaveSeam } from "@/components/environment/WaveSeam";
 import { ClaimDocument } from "@/components/illustration/ClaimDocument";
-import { aurora } from "@/lib/environment";
 import { introDone } from "@/lib/intro";
 
 /**
@@ -22,13 +18,13 @@ import { introDone } from "@/lib/intro";
  * The illustration builds in parallel, never first. Resting state is the finished headline,
  * so without JavaScript or under reduced motion there is nothing to wait for.
  *
- * Behind both: the daylight sky (AuroraField), a scrim that keeps the text column calm,
- * grain, and a wave seam that hands over to the page.
+ * No sky, no blobs, no grain behind it: a plain desk, so the one warm object on screen is
+ * the claim. The hero ends on a hairline, the way a page ends, not on a decorative wave.
  */
 export function HeroSequence() {
   const root = useRef<HTMLDivElement>(null);
 
-  // Scroll through the hero lifts and quietens the sky, and retires the scroll cue.
+  // The scroll cue retires as soon as the reader starts scrolling.
   useEffect(() => {
     const el = root.current;
     if (!el) return;
@@ -38,14 +34,10 @@ export function HeroSequence() {
       start: "top top",
       end: "bottom top",
       onUpdate: (self) => {
-        aurora.scroll = self.progress;
         if (cue) cue.style.opacity = String(Math.max(0, 1 - self.progress * 6));
       },
     });
-    return () => {
-      st.kill();
-      aurora.scroll = 0;
-    };
+    return () => st.kill();
   }, []);
 
   useGSAP(
@@ -104,20 +96,10 @@ export function HeroSequence() {
   );
 
   return (
-    <div ref={root} data-gsap-scope className="hero-root relative isolate bg-background">
-      <AuroraField className="-z-10" />
-      {/* Scrim: the text column sits on calmer sky than the drawing. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(244_239_230/0.85)_0%,rgb(244_239_230/0.5)_40%,transparent_66%)] max-lg:bg-[linear-gradient(180deg,rgb(244_239_230/0.7)_0%,rgb(244_239_230/0.45)_65%,transparent_100%)]"
-      />
-      <div aria-hidden="true" className="grain absolute inset-0 -z-10" />
-
-      <div className="relative mx-auto grid max-w-[1320px] items-center gap-10 px-6 pb-[calc(clamp(40px,5vw,84px)+1.5rem)] pt-24 lg:min-h-[100svh] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14 lg:pt-24">
+    <div ref={root} data-gsap-scope className="hero-root relative border-b border-border bg-background">
+      <div className="relative mx-auto grid max-w-[1320px] items-center gap-12 px-6 pb-14 pt-24 lg:min-h-[100svh] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-16 lg:pb-16">
         <div>
-          <p className="hero-after label-caps">RCMS Operations Academy</p>
-
-          <h1 className="mt-5 text-[clamp(2.5rem,min(5.4vw,8.8vh),5rem)] leading-[1.02]">
+          <h1 className="text-[clamp(2.5rem,min(5vw,8.4vh),4.75rem)] leading-[1.02]">
             <span className="hero-phrase block w-fit whitespace-nowrap">From RCM</span>
             <span className="hero-phrase hero-accent block w-fit whitespace-nowrap pb-[0.06em] italic">
               beginner.
@@ -128,45 +110,54 @@ export function HeroSequence() {
             </span>
           </h1>
 
-          <p className="hero-after mt-6 max-w-[50ch] text-[15.5px] leading-relaxed text-muted-foreground">
-            End-to-end learning and practical mentoring for people building careers in US
-            healthcare revenue cycle operations, from your first claim to leading teams, clients
-            and the operation itself. One level at a time, each built on the last.
+          <p className="hero-after mt-7 max-w-[40ch] text-[16px] leading-relaxed text-secondary-foreground">
+            Training and mentoring in US healthcare revenue cycle operations. You learn it the way
+            it is worked: one claim, every stage it passes through, and every decision that can
+            stop it.
           </p>
 
-          <div className="hero-after mt-7 flex flex-wrap gap-3">
+          <div className="hero-after mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             <a
               href="#tracks"
-              className="inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+              className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
-              Explore learning paths
+              See the five levels
             </a>
             <a
               href="/mentoring"
-              className="inline-flex min-h-11 items-center rounded-md border border-input bg-card/70 px-5 text-sm font-medium backdrop-blur-sm transition-colors hover:bg-card"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium underline decoration-input underline-offset-[6px] transition-colors hover:decoration-foreground"
             >
-              1:1 mentoring
+              Or talk it through, 1:1
             </a>
           </div>
 
-          <div className="hero-after">
-            <LevelStrip area={root} />
-          </div>
+          {/* File metadata: the hero reads as the first page of a case file. */}
+          <dl className="hero-after text-data mt-14 grid max-w-[26rem] grid-cols-3 gap-4 border-t border-border pt-4 text-[11px] leading-snug">
+            <div>
+              <dt className="text-subtle">CASE</dt>
+              <dd className="mt-1">20481</dd>
+            </div>
+            <div>
+              <dt className="text-subtle">SPECIALTY</dt>
+              <dd className="mt-1">Cardiology</dd>
+            </div>
+            <div>
+              <dt className="text-subtle">STAGES</dt>
+              <dd className="mt-1">13, one denial</dd>
+            </div>
+          </dl>
         </div>
 
         {/* The Academy's signature visual: one claim, filled in as it moves round the cycle. */}
-        <ClaimDocument className="mx-auto w-full max-w-[40rem]" />
+        <ClaimDocument className="w-full" />
       </div>
 
       <a
-        href="#metrics"
-        className="scroll-cue absolute bottom-[calc(clamp(40px,5vw,84px)+0.5rem)] left-1/2 hidden -translate-x-1/2 items-center gap-2.5 text-micro text-muted-foreground transition-colors hover:text-foreground lg:flex"
+        href="#problem"
+        className="scroll-cue absolute bottom-5 left-6 hidden items-center gap-2 text-data text-[11px] tracking-[0.08em] text-subtle transition-colors hover:text-foreground lg:flex xl:left-[max(1.5rem,calc((100vw-1320px)/2+1.5rem))]"
       >
-        <span className="label-caps">Scroll to explore</span>
-        <span aria-hidden="true" className="h-6 w-px bg-input" />
+        FOLLOW THE CLAIM <span aria-hidden="true">↓</span>
       </a>
-
-      <WaveSeam className="absolute inset-x-0 bottom-0" />
     </div>
   );
 }

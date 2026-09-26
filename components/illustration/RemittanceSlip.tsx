@@ -22,7 +22,7 @@ const usd = (n: number) => "$" + n.toLocaleString("en-US");
 export function RemittanceSlip({ className }: { className?: string }) {
   return (
     <figure className={cn("relative", className)}>
-      <div className="relative rotate-[0.6deg] overflow-hidden rounded-[6px] border border-border bg-[#fcfaf5] shadow-[0_1px_2px_rgb(22_21_19/0.05),0_24px_48px_-24px_rgb(22_21_19/0.35)]">
+      <div className="env-paper relative rotate-[0.6deg] overflow-hidden rounded-[6px] border border-border bg-[#fcfaf5] text-foreground shadow-[0_1px_2px_rgb(22_21_19/0.05),0_24px_48px_-24px_rgb(22_21_19/0.35)]">
         <div aria-hidden="true" className="grain absolute inset-0 !opacity-[0.1]" />
         <header className="relative flex items-start justify-between gap-4 border-b border-foreground/15 px-5 pb-3 pt-4">
           <div>
@@ -40,21 +40,21 @@ export function RemittanceSlip({ className }: { className?: string }) {
           <thead>
             <tr className="border-b border-dashed border-foreground/12">
               {["Claim", "Date", "Billed", "Paid", "CARC", "RARC"].map((h) => (
-                <th key={h} className="text-data px-3 py-2 text-[9.5px] font-medium uppercase tracking-[0.1em] text-subtle first:pl-5 last:pr-5">
+                <th key={h} className="text-data whitespace-nowrap px-2 py-2 text-[9.5px] font-medium uppercase tracking-[0.1em] text-subtle sm:px-3 first:!pl-5 last:!pr-5">
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="text-data text-[12px]">
+          <tbody className="text-data whitespace-nowrap text-[11.5px] sm:text-[12px]">
             {LINES.map((l) => (
               <tr key={l.claim} className="border-b border-dashed border-foreground/12">
-                <td className="px-3 py-2 pl-5">{l.claim}</td>
-                <td className="px-3 py-2 text-muted-foreground">{l.date}</td>
-                <td className="px-3 py-2">{l.billed}</td>
-                <td className="px-3 py-2 text-muted-foreground">0.00</td>
-                <td className="px-3 py-2 font-medium text-danger">{LAB.code}</td>
-                <td className="px-3 py-2 pr-5 text-danger">N706</td>
+                <td className="py-2 pl-5 pr-2 sm:pr-3">{l.claim}</td>
+                <td className="px-2 py-2 text-muted-foreground sm:px-3">{l.date}</td>
+                <td className="px-2 py-2 sm:px-3">{l.billed}</td>
+                <td className="px-2 py-2 text-muted-foreground sm:px-3">0.00</td>
+                <td className="px-2 py-2 font-medium text-danger sm:px-3">{LAB.code}</td>
+                <td className="py-2 pl-2 pr-5 text-danger sm:pl-3">N706</td>
               </tr>
             ))}
             <tr>

@@ -178,7 +178,7 @@ export function ClaimDocument({ className }: { className?: string }) {
 
       {/* The claim. Margin notes live inside their row, so each one sits beside its line. */}
       <div className="sm:mr-[10.5rem]">
-        <div className="cd-paper relative -rotate-[0.8deg] rounded-[6px] border border-border bg-[#fcfaf5] shadow-[0_1px_2px_rgb(22_21_19/0.05),0_24px_48px_-24px_rgb(22_21_19/0.35)]">
+        <div className="cd-paper env-paper relative -rotate-[0.8deg] rounded-[6px] border border-border bg-[#fcfaf5] shadow-[0_1px_2px_rgb(22_21_19/0.05),0_24px_48px_-24px_rgb(22_21_19/0.35)]">
           <div aria-hidden="true" className="grain absolute inset-0 rounded-[6px] !opacity-[0.1]" />
 
           <header className="relative flex items-start justify-between gap-4 border-b border-foreground/15 px-5 pb-3 pt-4">

@@ -16,7 +16,8 @@ const LINKS = [
 ];
 
 /**
- * Floating pill navigation.
+ * A ruled masthead: full-width rule and surface once the page has moved, content on the
+ * page column.
  *
  * Motion-owned: it hides on downward scroll and returns on upward scroll, so the page
  * gets its full height back while reading and the nav is one gesture away. It stays put
@@ -24,8 +25,8 @@ const LINKS = [
  *
  * Under reduced motion it simply never hides.
  *
- * Over the ink band ([data-env="ink"]) it takes the ink tokens, so the pill reads as part
- * of that band rather than a light lozenge floating on it. CSS owns that swap; Motion only ever owns the hide/show transform.
+ * Over the ink band ([data-env="ink"]) it takes the ink tokens, so the masthead reads as
+ * part of that band. CSS owns that swap; Motion only ever owns the hide/show transform.
  */
 export function SiteNav() {
   const [hidden, setHidden] = useState(false);
@@ -43,10 +44,7 @@ export function SiteNav() {
   useMotionValueEvent(scrollY, "change", (y) => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     setLifted(y > 20);
-
-    // A section can ask the nav to stay put (the review's sticky agenda sits under it).
-    const held = document.documentElement.dataset.holdNav === "true";
-    if (y < 200 || reduced || open || held) {
+    if (y < 200 || reduced || open) {
       setHidden(false);
       anchorY.current = y;
     } else if (y > anchorY.current + 50) {
@@ -84,22 +82,17 @@ export function SiteNav() {
       initial={false}
       animate={{ y: hidden ? "-160%" : "0%" }}
       transition={{ duration: 0.32, ease: [0.2, 0, 0.1, 1] }}
-      className={cn("fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6", ink && "env-ink")}
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color] duration-300",
+        lifted ? "border-border bg-background/95 backdrop-blur-sm" : "border-transparent bg-transparent",
+        ink && "env-ink",
+      )}
     >
-      <nav
-        aria-label="Primary"
-        className={cn(
-          "mx-auto flex max-w-[76rem] items-center gap-3 rounded-full border border-border px-2 py-2 pl-4 transition-[background-color,border-color,box-shadow] duration-300",
-          lifted ? "bg-card/92 shadow-[var(--shadow-lift)] backdrop-blur-xl" : "bg-card/70 backdrop-blur-md",
-        )}
-      >
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="text-data rounded-full bg-foreground px-2.5 py-1.5 text-[11px] font-semibold leading-none text-background">
-            RCMS
-          </span>
-          <span className="hidden text-[15px] font-semibold tracking-tight sm:inline">
-            Operations <span className="font-normal text-muted-foreground">Academy</span>
-          </span>
+      <nav aria-label="Primary" className="mx-auto flex h-14 max-w-[1320px] items-center gap-6 px-6">
+        {/* Masthead wordmark: set like the header of the claim it teaches from. */}
+        <Link href="/" className="flex shrink-0 items-baseline gap-2.5">
+          <span className="text-data text-[13px] font-semibold tracking-[0.18em]">RCMS</span>
+          <span className="font-serif-display hidden text-[17px] leading-none sm:inline">Operations Academy</span>
         </Link>
 
         <ul className="mx-auto hidden items-center gap-1 lg:flex">
@@ -111,8 +104,8 @@ export function SiteNav() {
                   href={l.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "relative inline-flex min-h-9 items-center rounded-full px-3.5 text-[13.5px] font-medium transition-colors",
-                    active ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                    "relative inline-flex min-h-9 items-center px-3 text-[13px] transition-colors after:absolute after:inset-x-3 after:bottom-1.5 after:h-px after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-[var(--dur-med)] hover:after:scale-x-100",
+                    active ? "text-foreground after:scale-x-100" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <span className="relative">{l.label}</span>
@@ -124,7 +117,7 @@ export function SiteNav() {
 
         <Link
           href="/pricing"
-          className="ml-auto hidden shrink-0 items-center rounded-full bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover sm:inline-flex sm:min-h-10 lg:ml-0"
+          className="ml-auto hidden shrink-0 items-center rounded-[3px] bg-primary px-4 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover sm:inline-flex sm:min-h-9 lg:ml-0"
         >
           Enroll now
         </Link>
@@ -135,7 +128,7 @@ export function SiteNav() {
           aria-expanded={open}
           aria-controls="nav-mobile"
           aria-label={open ? "Close menu" : "Open menu"}
-          className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-foreground lg:hidden"
+          className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-border text-foreground lg:hidden"
         >
           {open ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
         </button>
@@ -147,7 +140,7 @@ export function SiteNav() {
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="mx-auto mt-2 max-w-[76rem] overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-lift)] lg:hidden"
+          className="mx-auto max-w-[1320px] border-b border-border bg-background px-4 pb-3 lg:hidden"
         >
           <ul className="flex flex-col">
             {LINKS.map((l) => (
@@ -155,7 +148,7 @@ export function SiteNav() {
                 <Link
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-11 items-center rounded-xl px-3 text-[14px] font-medium text-secondary-foreground transition-colors hover:bg-secondary"
+                  className="flex min-h-11 items-center border-b border-border px-1 text-[15px] text-secondary-foreground transition-colors hover:text-foreground"
                 >
                   {l.label}
                 </Link>
@@ -165,14 +158,14 @@ export function SiteNav() {
           <Link
             href="/pricing"
             onClick={() => setOpen(false)}
-            className="mt-2 flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 text-[14px] font-medium text-primary-foreground"
+            className="mt-2 flex min-h-11 items-center justify-center rounded-[3px] bg-primary px-4 text-[14px] font-medium text-primary-foreground"
           >
             Enroll now
           </Link>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border text-[13.5px] text-muted-foreground"
+            className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-[3px] border border-border text-[13.5px] text-muted-foreground"
           >
             <X className="h-3.5 w-3.5" aria-hidden />
             Close

@@ -24,6 +24,7 @@ export const LEAD_POINTS = {
   whatsapp_reply: 20,
   purchase: 100,
   contact_form: 15,
+  newsletter: 5,
 } as const;
 
 export type LeadSignal = keyof typeof LEAD_POINTS;
@@ -146,6 +147,38 @@ export async function submitContact(formData: FormData): Promise<ContactResult> 
 }
 
 /** Admin only. Moves a lead along the pipeline and records who moved it. */
+const NotesInput = z.object({ email: z.string().trim().email("That email address does not look right.") });
+
+/**
+ * Public. The footer's monthly letter. A subscriber is a lead from source "newsletter";
+ * a known address gains the signal instead of a duplicate row. Same response either way.
+ */
+export async function subscribeNotes(formData: FormData): Promise<ContactResult> {
+  const parsed = NotesInput.safeParse({ email: formData.get("email") });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message, field: "email" };
+  const { email } = parsed.data;
+  try {
+    const existing = await prisma.lead.findFirst({ where: { email }, orderBy: { createdAt: "desc" } });
+    const lead = existing
+      ? await prisma.lead.update({
+          where: { id: existing.id },
+          data: { score: { increment: LEAD_POINTS.newsletter }, lastContactAt: new Date() },
+        })
+      : await prisma.lead.create({
+          data: { name: email.split("@")[0], email, source: "newsletter", score: LEAD_POINTS.newsletter, lastContactAt: new Date() },
+        });
+    await prisma.leadActivity.create({
+      data: { leadId: lead.id, kind: "newsletter", detail: null, points: LEAD_POINTS.newsletter },
+    });
+    await prisma.event.create({ data: { name: "newsletter_subscribed", props: {}, path: "/" } });
+    revalidatePath("/admin/leads");
+    return { ok: true };
+  } catch (error) {
+    console.error("[subscribeNotes] failed", error);
+    return { ok: false, error: "That did not go through. Try again in a moment." };
+  }
+}
+
 export async function setLeadStage(leadId: string, stage: LeadStage) {
   const admin = await requireAdmin();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { MENTORING } from "@/lib/data/catalog";
 import { useStepper } from "./useStepper";
 import { cn } from "@/lib/utils";
@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
  * where they actually run: weekday evenings and Saturday mornings, India time, so they fit
  * around US-shift work.
  *
- * One slot at a time holds a session from the catalogue. The slot fills in proportion to
- * the session's length (30, 45, 60 or 90 of 90 minutes) and says it, so the picture shows
- * when, how long and what kind at a glance. Point at a session in the list beside it
+ * Drawn like a diary page: hairline rules, open time hatched in pencil, and the booked
+ * session inked in from the top of its slot, as deep as its share of the longest session
+ * (30, 45, 60 or 90 of 90 minutes), with its length written beside it. Point at a session in the list beside it
  * (`focus`) and the calendar shows that one; otherwise it cycles gently while on screen.
  */
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -33,6 +33,7 @@ const RH = 62;
 
 export function AdvisoryWeek({ className, focus = null }: { className?: string; focus?: number | null }) {
   const root = useRef<HTMLDivElement>(null);
+  const hatch = `hatch-${useId().replace(/:/g, "")}`;
   const { step, done } = useStepper(root, MENTORING.length, {
     interval: 1800,
     pause: 1800,
@@ -45,13 +46,25 @@ export function AdvisoryWeek({ className, focus = null }: { className?: string; 
   return (
     <div ref={root} className={cn("ill", className)}>
       <svg viewBox="0 0 520 300" className="block h-auto w-full" role="img" aria-label="A week of mentoring slots: weekday evenings and Saturday mornings, India time.">
+        <defs>
+          <pattern id={hatch} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="5" style={{ stroke: "var(--brand)", strokeOpacity: 0.32 }} strokeWidth="1" />
+          </pattern>
+        </defs>
+        {/* Rules: the diary's grid, not boxes. */}
+        {Array.from({ length: DAYS.length + 1 }, (_, c) => (
+          <line key={`v${c}`} x1={X0 + c * CW} x2={X0 + c * CW} y1={Y0 - 6} y2={Y0 + ROWS.length * RH} style={{ stroke: "var(--border)" }} />
+        ))}
+        {Array.from({ length: ROWS.length + 1 }, (_, r) => (
+          <line key={`h${r}`} x1={X0 - 70} x2={X0 + DAYS.length * CW} y1={Y0 + r * RH} y2={Y0 + r * RH} style={{ stroke: r === 0 ? "var(--foreground)" : "var(--border)" }} />
+        ))}
         {DAYS.map((d, c) => (
           <text key={d} x={X0 + c * CW + CW / 2} y={Y0 - 16} textAnchor="middle" className="ill-caps">
             {d.toUpperCase()}
           </text>
         ))}
         {ROWS.map((r, row) => (
-          <text key={r} x={X0 - 14} y={Y0 + row * RH + RH / 2} textAnchor="end" dominantBaseline="middle" className="ill-label">
+          <text key={r} x={X0 - 70} y={Y0 + row * RH + 16} className="ill-label">
             {r}
           </text>
         ))}
@@ -60,39 +73,33 @@ export function AdvisoryWeek({ className, focus = null }: { className?: string; 
             const openIdx = OPEN.findIndex(([dc, dr]) => dc === c && dr === row);
             const open = openIdx >= 0;
             const booked = openIdx === bookedSlot;
-            const x = X0 + c * CW + 4;
-            const y = Y0 + row * RH + 4;
-            const w = CW - 8;
-            const h = RH - 8;
+            if (!open) return null;
+            const x = X0 + c * CW + 1;
+            const y = Y0 + row * RH + 1;
+            const w = CW - 2;
+            const h = RH - 2;
             const fillH = (h * session.minutes) / LONGEST;
+            const inside = fillH > 26;
             return (
               <g key={`${c}-${row}`}>
-                <rect
-                  x={x}
-                  y={y}
-                  width={w}
-                  height={h}
-                  rx={8}
-                  style={{
-                    fill: open ? "var(--accent)" : "transparent",
-                    stroke: booked ? "var(--brand)" : open ? "color-mix(in oklab, var(--brand) 30%, transparent)" : "var(--border)",
-                    strokeWidth: booked ? 2 : 1.5,
-                    transition: "stroke var(--dur-med)",
-                  }}
-                />
+                <rect x={x} y={y} width={w} height={h} fill={`url(#${hatch})`} />
                 {booked && (
                   <>
-                    {/* The session's length, as a share of the longest session. */}
+                    {/* The session's length, inked from the top of the slot. */}
                     <rect
-                      x={x + 3}
-                      y={y + h - fillH + 3}
-                      width={w - 6}
-                      height={Math.max(0, fillH - 6)}
-                      rx={5}
-                      style={{ fill: "var(--brand)", transition: "y var(--dur-med) var(--ease-exec), height var(--dur-med) var(--ease-exec)" }}
+                      x={x}
+                      y={y}
+                      width={w}
+                      height={fillH}
+                      style={{ fill: "var(--foreground)", transition: "height var(--dur-med) var(--ease-exec)" }}
                     />
-                    <text x={x + w / 2} y={y + h / 2 + 4} textAnchor="middle" className="ill-caps" style={{ fill: fillH > h / 2 ? "#fff" : "var(--foreground)" }}>
-                      {session.minutes}M
+                    <text
+                      x={x + 7}
+                      y={inside ? y + 15 : y + fillH + 13}
+                      className="ill-caps"
+                      style={{ fill: inside ? "var(--background)" : "var(--foreground)" }}
+                    >
+                      {session.minutes} MIN
                     </text>
                   </>
                 )}

@@ -37,7 +37,7 @@ export const LOTTIE_ASSETS = {
     source: "https://lottiefiles.com/free-animation/reporting-kbvmxZNIhR",
     creator: "chetna bothra (LottieFiles)",
     license: "Lottie Simple License",
-    usage: "Homepage, 05 The monthly review: beside the section heading.",
+    usage: "Homepage, 05 The review: beside the chapter heading, above the board-pack page. Withdrawn once in the art-direction pass, restored at the founder's request.",
     format: "Lottie JSON (extracted from the .lottie download)",
     file: "/lottie/reporting.json",
     size: "111 KB (about 15 KB gzipped)",

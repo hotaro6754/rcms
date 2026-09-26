@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AGENDA, ACTIONS, ESCALATIONS, RCA, RISKS, type AgendaId } from "@/lib/data/governance";
 import {
@@ -25,71 +25,20 @@ const HEADLINE: MetricId[] = ["sla-adherence", "days-in-ar", "ar-over-90", "deni
 /**
  * A simulated monthly client review the learner conducts.
  *
- * Two layouts, one review:
+ * One stage at a time; the agenda rail switches stages. The homepage shows a one-page
+ * excerpt of this review instead (components/home/ReviewPack).
  *
- *   tabs (default, /governance)  one stage at a time; the agenda rail switches stages.
- *   flow (homepage)              every stage in order, in normal document flow, fully
- *                                visible. The agenda rail sticks under the nav and follows
- *                                the stage being read; a click scrolls to that stage.
- *
- * The homepage used to pin the room and advance stages on scroll. Long stages then had to
- * scroll inside a fixed frame, which read as the page being stuck. Flow mode never holds
- * the scroll and never clips a stage.
- *
- * Motion owns the agenda indicator and, in tabs mode, stage presence. No GSAP here.
+ * Motion owns the agenda indicator and stage presence. No GSAP here.
  */
-export function GovernanceRoom({ flow = false }: { flow?: boolean }) {
+export function GovernanceRoom() {
   const [stage, setStage] = useState<AgendaId>("snapshot");
   const index = AGENDA.findIndex((a) => a.id === stage);
   const current = AGENDA[index];
-  const root = useRef<HTMLDivElement>(null);
-
-  // Flow mode: follow the stage in the reading band, and keep the site nav on screen while
-  // the review is in view so the sticky agenda rail always sits in the same place under it.
-  useEffect(() => {
-    if (!flow || !root.current) return;
-    const el = root.current;
-    const html = document.documentElement;
-    const sections = AGENDA.map((a) => el.querySelector<HTMLElement>(`#review-${a.id}`)).filter(
-      (n): n is HTMLElement => !!n,
-    );
-    const spy = new IntersectionObserver(
-      (entries) => {
-        const hit = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (hit) setStage(hit.target.id.replace("review-", "") as AgendaId);
-      },
-      { rootMargin: "-35% 0px -55% 0px" },
-    );
-    sections.forEach((s) => spy.observe(s));
-    const hold = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) html.dataset.holdNav = "true";
-      else delete html.dataset.holdNav;
-    });
-    hold.observe(el);
-    return () => {
-      spy.disconnect();
-      hold.disconnect();
-      delete html.dataset.holdNav;
-    };
-  }, [flow]);
-
-  const goToStage = (id: AgendaId) => {
-    if (!flow) {
-      setStage(id);
-      return;
-    }
-    root.current?.querySelector(`#review-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   const rail = (
     <nav
       aria-label="Review agenda"
-      className={cn(
-        "sticky z-30 -my-1 overflow-x-auto py-1 backdrop-blur-md [scrollbar-width:none]",
-        flow ? "top-[84px] bg-background/85" : "top-[72px] bg-card/85",
-      )}
+      className="sticky top-[72px] z-30 -my-1 overflow-x-auto bg-card/85 py-1 backdrop-blur-md [scrollbar-width:none]"
     >
       <ol className="flex min-w-max gap-1 rounded-[var(--radius)] border border-border bg-card p-1">
         {AGENDA.map((item, i) => {
@@ -99,7 +48,7 @@ export function GovernanceRoom({ flow = false }: { flow?: boolean }) {
             <li key={item.id}>
               <button
                 type="button"
-                onClick={() => goToStage(item.id)}
+                onClick={() => setStage(item.id)}
                 aria-current={active ? "step" : undefined}
                 className={cn(
                   "relative flex min-h-10 items-center gap-2 rounded-md px-3 text-[13px] transition-colors",
@@ -112,7 +61,7 @@ export function GovernanceRoom({ flow = false }: { flow?: boolean }) {
               >
                 {active && (
                   <motion.span
-                    layoutId={flow ? "agenda-active-flow" : "agenda-active"}
+                    layoutId="agenda-active"
                     className="absolute inset-0 rounded-md bg-primary"
                     transition={{ duration: 0.26, ease: [0.2, 0, 0.1, 1] }}
                   />
@@ -133,12 +82,7 @@ export function GovernanceRoom({ flow = false }: { flow?: boolean }) {
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p className="label-caps">Monthly operating review</p>
-        {/* On the homepage this sits under the page's h1, so it must not be a second one. */}
-        {flow ? (
-          <h3 className="mt-2 font-display text-[clamp(1.5rem,2.2vw,1.9rem)] leading-tight">{CLIENT.name}</h3>
-        ) : (
-          <h1 className="mt-2 text-[clamp(1.6rem,2.4vw,2rem)] leading-tight">{CLIENT.name}</h1>
-        )}
+        <h1 className="mt-2 text-[clamp(1.6rem,2.4vw,2rem)] leading-tight">{CLIENT.name}</h1>
       </div>
       <p className="text-data text-micro text-muted-foreground">
         {CLIENT.reviewPeriod} · {CLIENT.specialty} · {CLIENT.providers} providers
@@ -146,39 +90,8 @@ export function GovernanceRoom({ flow = false }: { flow?: boolean }) {
     </header>
   );
 
-  if (flow) {
-    return (
-      <div ref={root} className="flex flex-col gap-6">
-        {header}
-        {rail}
-        {AGENDA.map((item, i) => (
-          <section
-            key={item.id}
-            id={`review-${item.id}`}
-            aria-labelledby={`review-${item.id}-title`}
-            className={cn("scroll-mt-[150px]", i > 0 && "border-t border-border pt-10")}
-          >
-            <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
-              <h4 id={`review-${item.id}-title`} className="flex items-baseline gap-3 text-[17px] font-semibold">
-                <span className="text-data text-micro text-brand">{String(i + 1).padStart(2, "0")}</span>
-                {item.label}
-              </h4>
-              <p className="text-micro text-muted-foreground">{item.detail}</p>
-            </div>
-            <StageBody id={item.id} />
-            {item.id === "actions" && (
-              <div className="mt-6">
-                <ExecutiveNotes />
-              </div>
-            )}
-          </section>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div ref={root} className="flex flex-col gap-5 p-4 lg:p-6">
+    <div className="flex flex-col gap-5 p-4 lg:p-6">
       {header}
       {rail}
 

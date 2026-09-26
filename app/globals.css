@@ -19,26 +19,24 @@
    The full shadcn/ui variable set, so every shadcn component drops in and
    inherits this identity instead of the stock neutral theme.
 
-   Warm stone and ink, with one quiet accent. Researched against the category:
-   the healthcare brands that read as premium (Abridge, Cedar, Function, Tia,
-   Maven) all put a warm stone or cream ground under near-black ink, let the ink
-   carry buttons and type, and spend a single restrained accent sparingly. The
-   ones that read as generic (most RCM vendors, most course platforms) are
-   corporate blue. So: primary is ink; the brand accent is a muted eucalyptus
-   sage, used for emphasis, marks and state, never as a flood.
+   Surfaces are chosen per chapter, not defaulted. The desk is a neutral near-
+   white; warm paper appears only where there is a document (the claim, the
+   remittance, the calendar); the Opening and the footer are ink, the Lab is a
+   charcoal desk, and two quiet chapters are stone. Ink carries type and
+   buttons; eucalyptus is spent on state and emphasis, never as a flood.
 
-   Contrast measured against #FFFFFF card and #F4EFE6 canvas. AA or better.
+   Contrast measured against #FFFFFF card and #F3F2EE desk. AA or better.
    =========================================================================== */
 :root,
 .env-paper {
-  --background: #f4efe6;            /* warm stone */
-  --foreground: #161513;            /* warm ink, 15.9:1 on stone */
+  --background: #f3f2ee;            /* the desk: neutral near-white. Warm paper is for documents only */
+  --foreground: #161513;            /* warm ink, 16.6:1 on the desk */
   --card: #ffffff;
   --card-foreground: #161513;
   --popover: #ffffff;
   --popover-foreground: #161513;
 
-  --muted: #ece6db;
+  --muted: #e8e6e0;
   --muted-foreground: #57534c;      /* 7.6:1 on card */
   --subtle: #6f6a62;                /* 5.4:1 on card, 4.7:1 on stone */
 
@@ -48,14 +46,14 @@
   --brand: #3f6e5e;                 /* eucalyptus. 5.8:1 on card, 5.1:1 on stone */
   --signal: #5b8b79;                /* marks and strokes only, never text */
 
-  --secondary: #ece6db;
+  --secondary: #e8e6e0;
   --secondary-foreground: #2e2b27;
 
   --accent: #e2eae3;                /* sage mist */
   --accent-foreground: #2e5446;     /* 6.9:1 on accent */
 
-  --border: #e3dccf;
-  --input: #d2cabb;
+  --border: #dddbd4;
+  --input: #c9c6bd;
   --ring: #3f6e5e;
   --radius: 0.625rem;
 
@@ -90,7 +88,9 @@
 /* Constants that never re-theme. Environments read these when they must name the
    paper or the sky explicitly, e.g. the wave seam that crosses from one to the other. */
 :root {
-  --paper: #f4efe6;
+  --paper: #fcfaf5;                 /* documents: the claim, the remittance, the calendar */
+  --surface-stone: #e7e2d8;         /* a quieter chapter: the learning path, mentoring */
+  --surface-charcoal: #1d1c19;      /* the desk the Lab's documents are examined on */
   --ink: #161513;
   --sage-mist: #e2eae3;
   --sage: #a9c2b5;
@@ -134,6 +134,43 @@
   --chart-1: #9cc3b2;
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
   --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.25), 0 14px 32px -14px rgb(0 0 0 / 0.6);
+  color: var(--foreground);
+  color-scheme: dark;
+}
+
+/* Stone: a quieter chapter (the learning path, mentoring). Text tones deepen one step so
+   everything stays AA on the darker ground. */
+.env-sheet {
+  /* White sheet: the prospectus. Crisp, one step brighter than the desk, never cream. */
+  --background: #ffffff;
+  --border: #e4e2dc;
+  --input: #cbc8c0;
+}
+
+/* Charcoal: the Operations Lab. Same contract as ink, one step lighter, so paper
+   documents laid on it read as the brightest things on the page. */
+.env-charcoal {
+  --background: #1d1c19;
+  --foreground: #f1ede5;
+  --card: #262420;
+  --card-foreground: #f1ede5;
+  --muted: #2d2b27;
+  --muted-foreground: #b6afa4;
+  --subtle: #8e877c;
+  --primary: #f1ede5;
+  --primary-hover: #ffffff;
+  --primary-foreground: #161513;
+  --brand: #9cc3b2;
+  --secondary: #2d2b27;
+  --secondary-foreground: #e4ddd1;
+  --accent: rgb(156 195 178 / 0.14);
+  --accent-foreground: #c4dccf;
+  --border: rgb(241 237 229 / 0.12);
+  --input: rgb(241 237 229 / 0.24);
+  --ring: #9cc3b2;
+  --warning: #e3c15a;
+  --warning-bg: rgb(227 193 90 / 0.14);
+  --danger: #f08a8a;
   color: var(--foreground);
   color-scheme: dark;
 }
@@ -322,163 +359,24 @@
     overflow: hidden;
   }
 
-  /* ---- Section fields ---------------------------------------------------
-     Static, CSS-only gradient environments behind light sections. One canvas
-     on the site is enough; these cost nothing per frame. */
-  .field {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    overflow: hidden;
-  }
-
-  /* Mesh: four soft pools. The learning path sets data-level on its section and
-     the field deepens with it: stone to sage to eucalyptus. The environment
-     matures with the learner. */
-  .field-mesh {
-    --m1: rgb(226 234 227 / 0.9);
-    --m2: rgb(236 230 219 / 0.8);
-    --m3: rgb(246 243 237 / 0);
-    background:
-      radial-gradient(42% 60% at 12% 18%, var(--m1), transparent 70%),
-      radial-gradient(38% 55% at 88% 12%, var(--m2), transparent 70%),
-      radial-gradient(50% 60% at 70% 95%, var(--m2), transparent 70%),
-      radial-gradient(35% 45% at 30% 85%, var(--m1), transparent 72%);
-    transition: --m1 var(--dur-slow) var(--ease-exec), --m2 var(--dur-slow) var(--ease-exec);
-  }
-  .path-scope[data-level="1"] > .field-mesh { --m1: rgb(236 241 236 / 1); --m2: rgb(240 235 226 / 0.9); }
-  .path-scope[data-level="2"] > .field-mesh { --m1: rgb(222 233 225 / 1); --m2: rgb(232 238 232 / 0.9); }
-  .path-scope[data-level="3"] > .field-mesh { --m1: rgb(208 224 214 / 1); --m2: rgb(222 233 225 / 0.9); }
-  .path-scope[data-level="4"] > .field-mesh { --m1: rgb(192 213 202 / 1); --m2: rgb(212 226 217 / 0.9); }
-  .path-scope[data-level="5"] > .field-mesh { --m1: rgb(176 202 189 / 0.95); --m2: rgb(200 218 208 / 0.85); }
-
-  .field-radial {
-    background: radial-gradient(60% 70% at 50% 0%, rgb(226 234 227 / 0.7), transparent 70%);
-  }
-  .env-ink .field-radial,
-  .field-radial.is-ink {
-    background:
-      radial-gradient(55% 80% at 50% 0%, rgb(156 195 178 / 0.12), transparent 70%),
-      radial-gradient(40% 60% at 85% 100%, rgb(244 239 230 / 0.05), transparent 70%);
-  }
 }
 
-/* ===========================================================================
-   Illustration system. Every diagram on the site draws with these, so they
-   read as one family: 1.5 strokes, round caps, stone fills, eucalyptus for
-   what is happening now, crimson only for an exception. State is set with
-   data-state="idle | done | active" (and data-tone="danger") by whatever
-   animates the diagram; colour is always CSS.
-   =========================================================================== */
+/* Illustration labels for the few diagrams left on the site (the advisory calendar). */
 @layer components {
-  .ill {
-    --ill-line: var(--input);
-    --ill-fill: var(--card);
-    --ill-quiet: var(--subtle);
-    --ill-on: var(--brand);
-    --ill-alert: var(--danger);
-  }
-  .ill-line,
-  .cyc-ring,
-  .cyc-detour-line {
-    fill: none;
-    stroke: var(--ill-line);
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .cyc-detour-line.is-deny {
-    stroke: color-mix(in oklab, var(--ill-alert) 45%, var(--ill-line));
-  }
-
-  .ill-node,
-  .cyc-node {
-    color: var(--ill-quiet);
-    transition: color var(--dur-med) var(--ease-exec);
-  }
-  .ill-node circle,
-  .ill-node rect,
-  .cyc-node circle {
-    fill: var(--ill-fill);
-    stroke: var(--ill-line);
-    stroke-width: 1.5;
-    transition: fill var(--dur-med) var(--ease-exec), stroke var(--dur-med) var(--ease-exec);
-  }
-  :is(.ill-node, .cyc-node)[data-state="done"] {
-    color: var(--ill-on);
-  }
-  :is(.ill-node, .cyc-node)[data-state="done"] :is(circle, rect) {
-    stroke: var(--ill-on);
-  }
-  :is(.ill-node, .cyc-node)[data-state="active"] {
-    color: #fff;
-  }
-  :is(.ill-node, .cyc-node)[data-state="active"] :is(circle, rect) {
-    fill: var(--ill-on);
-    stroke: var(--ill-on);
-  }
-  :is(.ill-node, .cyc-node)[data-state="active"][data-tone="danger"] :is(circle, rect) {
-    fill: var(--ill-alert);
-    stroke: var(--ill-alert);
-  }
-
-  .ill-label,
-  .cyc-label {
+  .ill-label {
     font-family: var(--font-sans);
     font-size: 12.5px;
     font-weight: 500;
     fill: var(--muted-foreground);
-    transition: fill var(--dur-med) var(--ease-exec);
   }
-  .cyc-label.is-small {
-    font-size: 11px;
-  }
-  .cyc-node[data-state="active"] + .cyc-label,
-  .ill-node[data-state="active"] + .ill-label {
-    fill: var(--foreground);
-  }
-  .ill-caps,
-  .cyc-kicker {
+  .ill-caps {
     font-family: var(--font-mono);
     font-size: 10.5px;
     font-weight: 500;
     letter-spacing: 0.08em;
     fill: var(--subtle);
   }
-  .cyc-step {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 500;
-    fill: var(--ill-on);
-  }
-  .cyc-status {
-    font-family: var(--font-serif), Georgia, serif;
-    font-size: 20px;
-    font-style: italic;
-    fill: var(--foreground);
-    transition: fill var(--dur-fast);
-  }
-  .cyc-status[data-tone="danger"] {
-    fill: var(--ill-alert);
-  }
-  .cyc-status[data-tone="good"] {
-    fill: var(--ill-on);
-  }
-  .cyc-token rect {
-    fill: var(--ill-on);
-  }
-  .cyc-token path {
-    fill: none;
-    stroke: #fff;
-    stroke-width: 1.2;
-    stroke-linecap: round;
-  }
 }
-
-/* Registered so the mesh pools can transition colour rather than snap. */
-@property --m1 { syntax: "<color>"; inherits: true; initial-value: transparent; }
-@property --m2 { syntax: "<color>"; inherits: true; initial-value: transparent; }
 
 @layer utilities {
   /* 12px floor for functional text; nothing in the product goes below it. */

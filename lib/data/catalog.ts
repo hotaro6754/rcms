@@ -327,3 +327,9 @@ export const FAQ = [
 ];
 
 export const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
+
+/**
+ * The next cohort start. PLACEHOLDER until the founder confirms the calendar; every
+ * surface that mentions it reads it from here.
+ */
+export const NEXT_COHORT = { iso: "2026-10-06", label: "6 October 2026" } as const;
