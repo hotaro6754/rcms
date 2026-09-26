@@ -215,7 +215,7 @@ function Lever({
         value={value}
         onChange={onChange}
         aria-describedby={`${id}-hint`}
-        className="mt-2 h-9 w-full cursor-pointer accent-[var(--primary)]"
+        className="mt-2 h-9 w-full cursor-pointer accent-[var(--brand)]"
       />
       <p id={`${id}-hint`} className="text-micro leading-snug text-muted-foreground">
         {hint}

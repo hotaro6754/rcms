@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local dev database
 .pgdata/
+
+# local logs
+*.log

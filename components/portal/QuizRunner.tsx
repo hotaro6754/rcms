@@ -149,7 +149,7 @@ export function QuizRunner({
                       name={q.id}
                       checked={answers[q.id] === oi}
                       onChange={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
-                      className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+                      className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
                     />
                     <span className="text-secondary-foreground">{o}</span>
                   </label>

@@ -47,59 +47,57 @@ export function SiteFooter() {
   const cheapest = Math.min(...PROGRAMS.map((p) => p.price));
 
   return (
-    <footer className="border-t border-border">
-      {/* Closing argument. A single dark band anchors the page and gives the last
-          call to action somewhere to sit that is not another white card. */}
-      <section className="bg-foreground text-background">
+    <footer className="editorial border-t border-border">
+      {/* Closing argument, set in ink: the one dark band on the page, so the last call to
+          action has weight. A static radial and grain, not a second canvas. */}
+      <section data-env="ink" className="env-ink relative isolate bg-background">
+        <div aria-hidden="true" className="field field-radial is-ink" />
+        <div aria-hidden="true" className="grain absolute inset-0 -z-10" />
         <div className="mx-auto max-w-[1320px] px-6 py-20">
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-end">
             <div>
-              <p className="text-data text-[12.5px] tracking-[0.02em] text-background/60">
+              <p className="text-data text-[12.5px] tracking-[0.02em] text-subtle">
                 Next cohort opens 6 October 2026
               </p>
-              <h2 className="mt-6 max-w-[18ch] text-[clamp(2.1rem,4.6vw,3.6rem)] leading-[1.02] text-background">
-                The next promotion is a metrics conversation.
+              <h2 className="mt-6 max-w-[20ch] text-[clamp(2.1rem,4.6vw,3.6rem)] leading-[1.02]">
+                The revenue cycle is complicated. <em>Learning it doesn&rsquo;t have to be.</em>
               </h2>
             </div>
             <div>
-              <p className="max-w-[46ch] text-[14.5px] leading-relaxed text-background/70">
+              <p className="max-w-[46ch] text-[14.5px] leading-relaxed text-muted-foreground">
                 Start where you actually are. The five levels map what you own now against what
                 the role above expects, and programs begin at {inr(cheapest)}.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link
                   href="/learning-paths"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-background px-5 text-sm font-medium text-foreground transition-opacity hover:opacity-90"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
                 >
-                  Find your level
+                  Explore programs
                   <ArrowUpRight className="h-4 w-4" aria-hidden />
                 </Link>
                 <Link
                   href="/mentoring"
-                  className="inline-flex min-h-11 items-center rounded-full border border-background/25 px-5 text-sm font-medium text-background transition-colors hover:bg-background/10"
+                  className="inline-flex min-h-11 items-center rounded-full border border-input px-5 text-sm font-medium transition-colors hover:bg-secondary"
                 >
-                  Book mentoring
+                  Talk to an advisor
                 </Link>
               </div>
             </div>
           </div>
 
           {/* The five levels restated as the closing thesis. */}
-          <ol id="levels" className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-background/15 bg-background/15 sm:grid-cols-2 lg:grid-cols-5">
+          <ol id="levels" className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
             {LEVELS.map((l) => (
               <li
                 key={l.n}
-                className="group bg-foreground px-5 py-5 transition-colors duration-200 hover:!bg-white cursor-pointer"
+                className="group bg-background/80 px-5 py-5 backdrop-blur-sm transition-colors duration-[var(--dur-med)] hover:bg-card"
               >
-                <span className="text-data text-micro text-background/45 transition-colors duration-200 group-hover:!text-neutral-500">
+                <span className="text-data text-micro text-subtle transition-colors group-hover:text-brand">
                   {String(l.n).padStart(2, "0")}
                 </span>
-                <p className="mt-2 text-[15px] font-semibold text-background transition-colors duration-200 group-hover:!text-neutral-950">
-                  {l.verb}
-                </p>
-                <p className="mt-1.5 text-micro leading-relaxed text-background/60 transition-colors duration-200 group-hover:!text-neutral-600">
-                  {l.title}
-                </p>
+                <p className="mt-2 text-[15px] font-semibold">{l.verb}</p>
+                <p className="mt-1.5 text-micro leading-relaxed text-muted-foreground">{l.title}</p>
               </li>
             ))}
           </ol>

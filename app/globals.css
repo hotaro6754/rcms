@@ -19,68 +19,123 @@
    The full shadcn/ui variable set, so every shadcn component drops in and
    inherits this identity instead of the stock neutral theme.
 
-   Warm light. Warm paper ground, warm ink, and one terracotta accent spent
-   only on action, state and signal. No navy, no corporate blue: the site
-   should feel like a steady mentor's desk, not a bank. Danger leans crimson
-   and warning leans mustard so neither is mistaken for the accent. Light
-   only by product decision; one committed theme beats two half-tuned ones.
+   Warm stone and ink, with one quiet accent. Researched against the category:
+   the healthcare brands that read as premium (Abridge, Cedar, Function, Tia,
+   Maven) all put a warm stone or cream ground under near-black ink, let the ink
+   carry buttons and type, and spend a single restrained accent sparingly. The
+   ones that read as generic (most RCM vendors, most course platforms) are
+   corporate blue. So: primary is ink; the brand accent is a muted eucalyptus
+   sage, used for emphasis, marks and state, never as a flood.
 
-   Contrast measured against #FFFFFF card and #F6F3ED canvas. AA or better.
+   Contrast measured against #FFFFFF card and #F4EFE6 canvas. AA or better.
    =========================================================================== */
-:root {
-  --background: #f6f3ed;            /* warm paper */
-  --foreground: #1b1815;            /* warm near-black, 15.9:1 on card */
+:root,
+.env-paper {
+  --background: #f4efe6;            /* warm stone */
+  --foreground: #161513;            /* warm ink, 15.9:1 on stone */
   --card: #ffffff;
-  --card-foreground: #1b1815;
+  --card-foreground: #161513;
   --popover: #ffffff;
-  --popover-foreground: #1b1815;
+  --popover-foreground: #161513;
 
-  --muted: #f0ebe2;
-  --muted-foreground: #5b534a;      /* 8.0:1 on card */
-  --subtle: #736a5f;                /* 5.4:1 on card, smallest text still passes */
+  --muted: #ece6db;
+  --muted-foreground: #57534c;      /* 7.6:1 on card */
+  --subtle: #6f6a62;                /* 5.4:1 on card, 4.7:1 on stone */
 
-  --primary: #9c4221;               /* terracotta. 6.5:1 on card; white on it 6.5:1 */
-  --primary-hover: #83361a;
-  --primary-foreground: #ffffff;
-  --signal: #c2562c;                /* marks and strokes only, never text */
+  --primary: #161513;               /* ink. Buttons and type carry the weight */
+  --primary-hover: #2c2a26;
+  --primary-foreground: #f7f3ec;    /* 16.5:1 */
+  --brand: #3f6e5e;                 /* eucalyptus. 5.8:1 on card, 5.1:1 on stone */
+  --signal: #5b8b79;                /* marks and strokes only, never text */
 
-  --secondary: #f0ebe2;
-  --secondary-foreground: #332e28;
+  --secondary: #ece6db;
+  --secondary-foreground: #2e2b27;
 
-  --accent: #f8ebe1;
-  --accent-foreground: #8a3a1c;     /* 6.7:1 on accent */
+  --accent: #e2eae3;                /* sage mist */
+  --accent-foreground: #2e5446;     /* 6.9:1 on accent */
 
-  --border: #e6dfd4;
-  --input: #d4ccbf;
-  --ring: #9c4221;
+  --border: #e3dccf;
+  --input: #d2cabb;
+  --ring: #3f6e5e;
   --radius: 0.625rem;
 
-  --chart-1: #9c4221;
-  --chart-2: #8a8074;
-  --chart-3: #16704f;
-  --chart-4: #3d6b7a;
+  --chart-1: #3f6e5e;
+  --chart-2: #8a8378;
+  --chart-3: #6f9a5a;
+  --chart-4: #4f7187;
   --chart-5: #b0243a;
 
-  --success: #16704f;               /* 5.1:1 on card */
-  --success-bg: #e4efe7;
-  --warning: #7c6308;               /* 5.8:1 on card */
-  --warning-bg: #f6efd8;
-  --danger: #b0243a;                /* 6.7:1 on card */
+  --success: #2f7d4f;
+  --success-bg: #e3efe6;
+  --warning: #8a6508;
+  --warning-bg: #f5eed8;
+  --danger: #b0243a;
   --danger-bg: #fae6ea;
   --destructive: #b0243a;
 
-  --sidebar: #fbf9f5;
-  --sidebar-foreground: #1b1815;
-  --sidebar-primary: #9c4221;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f0ebe2;
-  --sidebar-accent-foreground: #332e28;
-  --sidebar-border: #e6dfd4;
-  --sidebar-ring: #9c4221;
+  --sidebar: #faf7f2;
+  --sidebar-foreground: #161513;
+  --sidebar-primary: #161513;
+  --sidebar-primary-foreground: #f7f3ec;
+  --sidebar-accent: #ece6db;
+  --sidebar-accent-foreground: #2e2b27;
+  --sidebar-border: #e3dccf;
+  --sidebar-ring: #3f6e5e;
 
-  --shadow-sm: 0 1px 2px rgb(27 24 21 / 0.05);
-  --shadow-md: 0 1px 2px rgb(27 24 21 / 0.06), 0 5px 12px -8px rgb(27 24 21 / 0.2);
-  --shadow-lift: 0 2px 4px rgb(27 24 21 / 0.05), 0 12px 28px -14px rgb(27 24 21 / 0.28);
+  --shadow-sm: 0 1px 2px rgb(22 21 19 / 0.05);
+  --shadow-md: 0 1px 2px rgb(22 21 19 / 0.06), 0 5px 12px -8px rgb(22 21 19 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(22 21 19 / 0.05), 0 12px 28px -14px rgb(22 21 19 / 0.24);
+}
+
+/* Constants that never re-theme. Environments read these when they must name the
+   paper or the sky explicitly, e.g. the wave seam that crosses from one to the other. */
+:root {
+  --paper: #f4efe6;
+  --ink: #161513;
+  --sage-mist: #e2eae3;
+  --sage: #a9c2b5;
+  --eucalyptus: #3f6e5e;
+
+  /* Motion tokens. Durations in CSS; the GSAP side mirrors them in lib/gsap/eases.ts. */
+  --dur-fast: 160ms;
+  --dur-med: 480ms;
+  --dur-slow: 1.2s;
+  --dur-ambient: 18s;
+  --ease-exec: cubic-bezier(0.2, 0, 0.1, 1);
+}
+
+/* ===========================================================================
+   Ink environment. One dark band, the closing argument, set in the same warm
+   ink the type is printed in. Tokens only: every component inside re-themes
+   through the same contract. Contrast measured on #161513, all 5:1 or better.
+   =========================================================================== */
+.env-ink {
+  --background: #161513;
+  --foreground: #f4efe6;
+  --card: #201e1b;
+  --card-foreground: #f4efe6;
+  --popover: #201e1b;
+  --popover-foreground: #f4efe6;
+  --muted: #2a2723;
+  --muted-foreground: #b9b2a7;      /* 8.7:1 */
+  --subtle: #8f887e;                /* 5.2:1 */
+  --primary: #f4efe6;               /* buttons invert: stone on ink */
+  --primary-hover: #ffffff;
+  --primary-foreground: #161513;
+  --brand: #9cc3b2;                 /* 9.4:1 */
+  --signal: #9cc3b2;
+  --secondary: #2a2723;
+  --secondary-foreground: #e6dfd3;
+  --accent: rgb(156 195 178 / 0.14);
+  --accent-foreground: #c4dccf;
+  --border: rgb(244 239 230 / 0.1);
+  --input: rgb(244 239 230 / 0.22);
+  --ring: #9cc3b2;
+  --chart-1: #9cc3b2;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.25), 0 14px 32px -14px rgb(0 0 0 / 0.6);
+  color: var(--foreground);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -97,6 +152,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-signal: var(--signal);
+  --color-brand: var(--brand);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
@@ -146,6 +202,10 @@
 
   html {
     scroll-behavior: smooth;
+    /* Reserve the scrollbar's width permanently. Locking scroll (the preloader) then
+       never changes the layout width, so nothing rewraps and no ScrollTrigger measured
+       during the lock goes stale. */
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -210,43 +270,215 @@
   .phrase:hover::before {
     transform: scaleX(1);
   }
+}
 
-  /* A pinned Governance stage is a fixed frame under exactly the media query that
-     creates the pin, so its height never changes when the pin toggles. That is what
-     stops the released section from overlapping the footer: ScrollTrigger's spacer
-     stays correct because nothing about the box moves. Long stages scroll inside. */
-  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
-    .gov-panel {
-      height: calc(100vh - 340px);
-      min-height: 24rem;
-      max-height: 42rem;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      padding-right: 6px;
-    }
-    .gov-panel::-webkit-scrollbar {
-      width: 8px;
-    }
-    .gov-panel::-webkit-scrollbar-thumb {
-      background: var(--input);
-      border-radius: 99px;
-    }
-    .gov-panel::-webkit-scrollbar-track {
-      background: transparent;
-    }
+@layer components {
+  /* Film grain, printed at full resolution over whatever sits beneath. Static: grain
+     that moves reads as video noise, grain that holds still reads as paper. */
+  .grain {
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 1.2 -0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
   }
 
-  .hero-rows {
-    background-image: repeating-linear-gradient(
-      to bottom,
-      var(--border) 0 1px,
-      transparent 1px 88px
-    );
-    opacity: 0.5;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 88%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 88%, transparent 100%);
+  /* ---- Photography ------------------------------------------------------
+     One treatment for every photo so the set reads as commissioned, not
+     collected: a little less saturation, a little less contrast, and a breath
+     of stone over the highlights and eucalyptus in the shadows. */
+  .photo {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    margin: 0;
+    background: var(--muted);
+  }
+  .photo img {
+    filter: saturate(0.8) contrast(0.96) brightness(1.02);
+  }
+  .photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgb(244 239 230 / 0.1) 0%, transparent 45%),
+      linear-gradient(0deg, rgb(63 110 94 / 0.14) 0%, transparent 60%);
+    mix-blend-mode: multiply;
+  }
+
+  /* ---- Preloader --------------------------------------------------------
+     Hidden unless the pre-paint script in app/layout.tsx asked for it, so a
+     visitor without JavaScript never sees a curtain that nothing will lift. */
+  .preloader {
+    display: none;
+  }
+  html[data-intro="play"] .preloader {
+    display: flex;
+  }
+  html[data-intro="play"] body {
+    overflow: hidden;
+  }
+
+  /* ---- Section fields ---------------------------------------------------
+     Static, CSS-only gradient environments behind light sections. One canvas
+     on the site is enough; these cost nothing per frame. */
+  .field {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  /* Mesh: four soft pools. The learning path sets data-level on its section and
+     the field deepens with it: stone to sage to eucalyptus. The environment
+     matures with the learner. */
+  .field-mesh {
+    --m1: rgb(226 234 227 / 0.9);
+    --m2: rgb(236 230 219 / 0.8);
+    --m3: rgb(246 243 237 / 0);
+    background:
+      radial-gradient(42% 60% at 12% 18%, var(--m1), transparent 70%),
+      radial-gradient(38% 55% at 88% 12%, var(--m2), transparent 70%),
+      radial-gradient(50% 60% at 70% 95%, var(--m2), transparent 70%),
+      radial-gradient(35% 45% at 30% 85%, var(--m1), transparent 72%);
+    transition: --m1 var(--dur-slow) var(--ease-exec), --m2 var(--dur-slow) var(--ease-exec);
+  }
+  .path-scope[data-level="1"] > .field-mesh { --m1: rgb(236 241 236 / 1); --m2: rgb(240 235 226 / 0.9); }
+  .path-scope[data-level="2"] > .field-mesh { --m1: rgb(222 233 225 / 1); --m2: rgb(232 238 232 / 0.9); }
+  .path-scope[data-level="3"] > .field-mesh { --m1: rgb(208 224 214 / 1); --m2: rgb(222 233 225 / 0.9); }
+  .path-scope[data-level="4"] > .field-mesh { --m1: rgb(192 213 202 / 1); --m2: rgb(212 226 217 / 0.9); }
+  .path-scope[data-level="5"] > .field-mesh { --m1: rgb(176 202 189 / 0.95); --m2: rgb(200 218 208 / 0.85); }
+
+  .field-radial {
+    background: radial-gradient(60% 70% at 50% 0%, rgb(226 234 227 / 0.7), transparent 70%);
+  }
+  .env-ink .field-radial,
+  .field-radial.is-ink {
+    background:
+      radial-gradient(55% 80% at 50% 0%, rgb(156 195 178 / 0.12), transparent 70%),
+      radial-gradient(40% 60% at 85% 100%, rgb(244 239 230 / 0.05), transparent 70%);
   }
 }
+
+/* ===========================================================================
+   Illustration system. Every diagram on the site draws with these, so they
+   read as one family: 1.5 strokes, round caps, stone fills, eucalyptus for
+   what is happening now, crimson only for an exception. State is set with
+   data-state="idle | done | active" (and data-tone="danger") by whatever
+   animates the diagram; colour is always CSS.
+   =========================================================================== */
+@layer components {
+  .ill {
+    --ill-line: var(--input);
+    --ill-fill: var(--card);
+    --ill-quiet: var(--subtle);
+    --ill-on: var(--brand);
+    --ill-alert: var(--danger);
+  }
+  .ill-line,
+  .cyc-ring,
+  .cyc-detour-line {
+    fill: none;
+    stroke: var(--ill-line);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .cyc-detour-line.is-deny {
+    stroke: color-mix(in oklab, var(--ill-alert) 45%, var(--ill-line));
+  }
+
+  .ill-node,
+  .cyc-node {
+    color: var(--ill-quiet);
+    transition: color var(--dur-med) var(--ease-exec);
+  }
+  .ill-node circle,
+  .ill-node rect,
+  .cyc-node circle {
+    fill: var(--ill-fill);
+    stroke: var(--ill-line);
+    stroke-width: 1.5;
+    transition: fill var(--dur-med) var(--ease-exec), stroke var(--dur-med) var(--ease-exec);
+  }
+  :is(.ill-node, .cyc-node)[data-state="done"] {
+    color: var(--ill-on);
+  }
+  :is(.ill-node, .cyc-node)[data-state="done"] :is(circle, rect) {
+    stroke: var(--ill-on);
+  }
+  :is(.ill-node, .cyc-node)[data-state="active"] {
+    color: #fff;
+  }
+  :is(.ill-node, .cyc-node)[data-state="active"] :is(circle, rect) {
+    fill: var(--ill-on);
+    stroke: var(--ill-on);
+  }
+  :is(.ill-node, .cyc-node)[data-state="active"][data-tone="danger"] :is(circle, rect) {
+    fill: var(--ill-alert);
+    stroke: var(--ill-alert);
+  }
+
+  .ill-label,
+  .cyc-label {
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 500;
+    fill: var(--muted-foreground);
+    transition: fill var(--dur-med) var(--ease-exec);
+  }
+  .cyc-label.is-small {
+    font-size: 11px;
+  }
+  .cyc-node[data-state="active"] + .cyc-label,
+  .ill-node[data-state="active"] + .ill-label {
+    fill: var(--foreground);
+  }
+  .ill-caps,
+  .cyc-kicker {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    fill: var(--subtle);
+  }
+  .cyc-step {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    fill: var(--ill-on);
+  }
+  .cyc-status {
+    font-family: var(--font-serif), Georgia, serif;
+    font-size: 20px;
+    font-style: italic;
+    fill: var(--foreground);
+    transition: fill var(--dur-fast);
+  }
+  .cyc-status[data-tone="danger"] {
+    fill: var(--ill-alert);
+  }
+  .cyc-status[data-tone="good"] {
+    fill: var(--ill-on);
+  }
+  .cyc-token rect {
+    fill: var(--ill-on);
+  }
+  .cyc-token path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.2;
+    stroke-linecap: round;
+  }
+}
+
+/* Registered so the mesh pools can transition colour rather than snap. */
+@property --m1 { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --m2 { syntax: "<color>"; inherits: true; initial-value: transparent; }
 
 @layer utilities {
   /* 12px floor for functional text; nothing in the product goes below it. */
@@ -284,4 +516,39 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Editorial headings. Unlayered on purpose so it wins over utility weights and
+   tracking: inside .editorial (the public site) h1 and h2 are set in the serif
+   at a book weight, the way a publication sets a headline. Italic carries the
+   emphasis instead of colour alone. The product, portal and admin surfaces do
+   not carry .editorial and keep the grotesk.
+   --------------------------------------------------------------------------- */
+.editorial :is(h1, h2) {
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  font-optical-sizing: auto;
+}
+
+/* Emphasis inside an editorial headline: italic, in the brand accent. */
+.editorial :is(h1, h2) em {
+  font-style: italic;
+  color: var(--brand);
+}
+.font-serif-display {
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* Rubber stamp: ink that did not take evenly. A speckled noise mask knocks small gaps out
+   of the stamp so it reads as pressed onto paper, not drawn on screen. */
+.stamp {
+  background: color-mix(in oklab, currentColor 5%, transparent);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3.2 2.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3.2 2.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  -webkit-mask-size: 120px 120px;
+  mask-size: 120px 120px;
 }

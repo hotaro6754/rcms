@@ -76,9 +76,13 @@ row expansion and presence. CSS owns hover and focus. `lib/animation-ownership.m
 full matrix; `npm run audit:ownership` enforces it and currently reports zero conflicts across
 88 files with one documented exception.
 
-**Light theme only, by product decision.** Warm paper ground with a single considered blue,
-spent on action, state and signal. Full shadcn token contract in `app/globals.css`, so any
-shadcn component inherits the identity rather than the stock neutral theme.
+**Warm stone, ink, one quiet accent.** Researched against the category: premium healthcare
+brands (Abridge, Cedar, Function, Tia, Maven) put a warm stone ground under near-black ink and
+spend one restrained accent; generic RCM vendors and course platforms are corporate blue.
+Primary is ink, the accent is a muted eucalyptus (`--brand`). The hero sky is a live sage mist
+ribbon on stone (`components/environment/AuroraField.tsx`, raw WebGL, art-directed after
+FeralUI's Aurora and Mist); the closing band is ink (`.env-ink`). Environments re-declare
+tokens rather than fork components, so anything placed inside one re-themes itself.
 
 ---
 

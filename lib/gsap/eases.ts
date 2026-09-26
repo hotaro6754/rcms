@@ -30,15 +30,12 @@ export const EASE = {
   ui: "power2.out",
 } as const;
 
-export const HERO_BEATS = {
-  blueprint: 0,
-  flow: 0.7,
-  stop: 1.4,
-  queue: 2.0,
-  break: 3.6,
-  own: 4.5,
-  metric: 5.1,
-  reveal: 6.4,
+/** Mirrors the --dur-* CSS tokens in app/globals.css, in seconds for GSAP. */
+export const DUR = {
+  fast: 0.16,
+  med: 0.48,
+  slow: 1.2,
+  ambient: 18,
 } as const;
 
 export { gsap };

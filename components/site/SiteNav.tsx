@@ -8,10 +8,11 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { href: "/#top", label: "Overview" },
-  { href: "/#metrics", label: "The metric" },
-  { href: "/#governance", label: "Governance" },
-  { href: "/#tracks", label: "Tracks" },
+  { href: "/courses", label: "Programs" },
+  { href: "/#tracks", label: "Learning path" },
+  { href: "/#system", label: "Why RCMS" },
+  { href: "/blog", label: "Resources" },
+  { href: "/about", label: "About" },
 ];
 
 /**
@@ -22,11 +23,15 @@ const LINKS = [
  * near the top of the document and whenever the mobile menu is open.
  *
  * Under reduced motion it simply never hides.
+ *
+ * Over the ink band ([data-env="ink"]) it takes the ink tokens, so the pill reads as part
+ * of that band rather than a light lozenge floating on it. CSS owns that swap; Motion only ever owns the hide/show transform.
  */
 export function SiteNav() {
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
   const [lifted, setLifted] = useState(false);
+  const [ink, setInk] = useState(false);
   const anchorY = useRef(0);
   const { scrollY } = useScroll();
   const pathname = usePathname();
@@ -39,7 +44,9 @@ export function SiteNav() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     setLifted(y > 20);
 
-    if (y < 200 || reduced || open) {
+    // A section can ask the nav to stay put (the review's sticky agenda sits under it).
+    const held = document.documentElement.dataset.holdNav === "true";
+    if (y < 200 || reduced || open || held) {
       setHidden(false);
       anchorY.current = y;
     } else if (y > anchorY.current + 50) {
@@ -53,17 +60,36 @@ export function SiteNav() {
 
   useEffect(() => setOpen(false), [pathname]);
 
+  // Which environment sits under the nav: a thin band at the top of the viewport.
+  useEffect(() => {
+    const zones = document.querySelectorAll<HTMLElement>('[data-env="ink"]');
+    if (!zones.length) {
+      setInk(false);
+      return;
+    }
+    const under = new Set<Element>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => (e.isIntersecting ? under.add(e.target) : under.delete(e.target)));
+        setInk(under.size > 0);
+      },
+      { rootMargin: "0px 0px -92% 0px", threshold: 0 },
+    );
+    zones.forEach((z) => io.observe(z));
+    return () => io.disconnect();
+  }, [pathname]);
+
   return (
     <motion.header
       initial={false}
       animate={{ y: hidden ? "-160%" : "0%" }}
       transition={{ duration: 0.32, ease: [0.2, 0, 0.1, 1] }}
-      className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6"
+      className={cn("fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6", ink && "env-ink")}
     >
       <nav
         aria-label="Primary"
         className={cn(
-          "mx-auto flex max-w-[76rem] items-center gap-3 rounded-full border border-border px-2 py-2 pl-4 transition-shadow duration-300",
+          "mx-auto flex max-w-[76rem] items-center gap-3 rounded-full border border-border px-2 py-2 pl-4 transition-[background-color,border-color,box-shadow] duration-300",
           lifted ? "bg-card/92 shadow-[var(--shadow-lift)] backdrop-blur-xl" : "bg-card/70 backdrop-blur-md",
         )}
       >
@@ -97,10 +123,10 @@ export function SiteNav() {
         </ul>
 
         <Link
-          href="/#governance"
+          href="/pricing"
           className="ml-auto hidden shrink-0 items-center rounded-full bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover sm:inline-flex sm:min-h-10 lg:ml-0"
         >
-          Open Governance
+          Enroll now
         </Link>
 
         <button
@@ -137,11 +163,11 @@ export function SiteNav() {
             ))}
           </ul>
           <Link
-            href="/#governance"
+            href="/pricing"
             onClick={() => setOpen(false)}
             className="mt-2 flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 text-[14px] font-medium text-primary-foreground"
           >
-            Open Governance
+            Enroll now
           </Link>
           <button
             type="button"

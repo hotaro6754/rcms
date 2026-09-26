@@ -44,14 +44,13 @@ export function KpiReview() {
       gsap.set(paths, { drawSVG: "0%" });
       gsap.set(ends, { autoAlpha: 0, scale: 0, transformOrigin: "center" });
 
+      // Draws once, when the charts first come into view, and stays drawn. Never rewinds:
+      // a chart that empties itself behind the reader looks broken, not clever.
       const tl = gsap.timeline({
-        // Plays in on the way down and rewinds on the way back up, so the section
-        // reads the same in both directions.
         scrollTrigger: {
           trigger: root.current,
-          start: "top 85%",
-          end: "top 40%",
-          toggleActions: "play reverse play reverse",
+          start: "top 88%",
+          once: true,
         },
       });
 
