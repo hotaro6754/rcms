@@ -99,6 +99,16 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // The founder's address (OWNER_EMAILS) becomes OWNER the moment it signs up, so the
+        // owner sets their own password and nobody else ever handles it. Everyone else starts
+        // as STUDENT; roles are changed only on the server.
+        before: async (user) => {
+          const owners = (process.env.OWNER_EMAILS ?? "")
+            .split(",")
+            .map((e) => e.trim().toLowerCase())
+            .filter(Boolean);
+          return { data: { ...user, role: owners.includes(user.email.toLowerCase()) ? "OWNER" : "STUDENT" } };
+        },
         after: async (user) => {
           await audit({
             actorId: user.id,
