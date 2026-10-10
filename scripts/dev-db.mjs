@@ -14,7 +14,8 @@
  */
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
-import { rmSync } from "node:fs";
+import { rmSync, existsSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
 
 const PORT = Number(process.env.DEV_DB_PORT ?? 55432);
 const DIR = ".pgdata";
@@ -22,6 +23,13 @@ const DIR = ".pgdata";
 if (process.argv.includes("--fresh")) {
   rmSync(DIR, { recursive: true, force: true });
   console.log(`[dev-db] wiped ${DIR}`);
+} else {
+  const pidFile = join(DIR, "postmaster.pid");
+  if (existsSync(pidFile)) {
+    try {
+      unlinkSync(pidFile);
+    } catch {}
+  }
 }
 
 const db = await PGlite.create({ dataDir: DIR });

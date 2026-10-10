@@ -27,7 +27,17 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
   // Development servers run on more than one local port; production trusts only baseURL.
-  trustedOrigins: process.env.NODE_ENV === "production" ? [] : ["http://localhost:3000", "http://localhost:3100"],
+  trustedOrigins:
+    process.env.NODE_ENV === "production"
+      ? []
+      : [
+          "http://localhost:3000",
+          "http://localhost:3100",
+          "http://127.0.0.1:3000",
+          "http://172.31.176.1:3000",
+          "http://192.168.29.72:3000",
+          "https://*.trycloudflare.com",
+        ],
 
   emailAndPassword: {
     enabled: true,
