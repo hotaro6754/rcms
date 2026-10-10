@@ -30,8 +30,8 @@ export default async function StudioPage() {
 
       <div className="mt-9 grid gap-4 md:grid-cols-2">
         {programs.map((p) => {
-          const lessons = p.modules.flatMap((m) => m.lessons);
-          const published = lessons.filter((l) => l.state === "PUBLISHED").length;
+          const lessons = p.modules.flatMap((m: any) => m.lessons);
+          const published = lessons.filter((l: any) => l.state === "PUBLISHED").length;
           const drafts = lessons.length - published;
           return (
             <Card key={p.id} className="gap-0 py-0">

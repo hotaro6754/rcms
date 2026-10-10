@@ -54,8 +54,8 @@ export default async function LessonPage({
   });
   if (!enrolment || enrolment.state !== "ACTIVE") notFound();
 
-  const flat = program.modules.flatMap((m) =>
-    m.lessons.map((l) => ({ ...l, moduleTitle: m.title })),
+  const flat = program.modules.flatMap((m: any) =>
+    m.lessons.map((l: any) => ({ ...l, moduleTitle: m.title })),
   );
   const index = flat.findIndex((l) => l.id === lesson.id);
   const prev = index > 0 ? flat[index - 1] : null;
