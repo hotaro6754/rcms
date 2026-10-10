@@ -52,3 +52,5 @@ next-env.d.ts
 
 # uploaded course materials (local storage driver)
 /storage/
+
+.vercel
