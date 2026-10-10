@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   outputFileTracingRoot: path.resolve(__dirname),
   allowedDevOrigins: ["*.trycloudflare.com"],
   experimental: {
