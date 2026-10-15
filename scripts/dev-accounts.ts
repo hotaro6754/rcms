@@ -1,40 +1,63 @@
 import "dotenv/config";
+import type { StaffRole } from "@prisma/client";
 import { auth } from "../lib/auth";
 import { prisma } from "../lib/db";
 
 /**
- * LOCAL DEVELOPMENT ONLY. Creates three verified accounts so the portal, studio and admin
- * can be exercised without an email provider:
- *
- *   student@rcms.test   STUDENT
- *   trainer@rcms.test   TRAINER
- *   admin@rcms.test     OWNER
- *
- * Refuses to run against anything but a local database. The passwords below are test
- * values for this machine's dev database and nothing else.
+ * LOCAL DEVELOPMENT ONLY. Creates verified accounts so every surface can be exercised
+ * without an email provider: a learner, a vendor contact, and one account per staff role.
  *
  *   npx tsx scripts/dev-accounts.ts
+ *
+ * Refuses to run against anything but a local database. The password is a test value for
+ * this machine's dev database and nothing else.
  */
 
-const ACCOUNTS = [
-  { email: "student@rcms.test", name: "Test Student", role: "STUDENT", password: "Rcms-7LBJbG7LoTk-dev" },
-  { email: "trainer@rcms.test", name: "Test Trainer", role: "TRAINER", password: "Rcms-BRn2nuMKfmE-dev" },
-  { email: "admin@rcms.test", name: "Test Admin", role: "OWNER", password: "Rcms-czd65N6VC6I-dev" },
-] as const;
+const PASSWORD = "Rcms-dev-password-1";
+
+const STAFF: [StaffRole, string][] = [
+  ["SUPER_ADMIN", "super"],
+  ["ACADEMY_DIRECTOR", "director"],
+  ["CONTENT_ADMIN", "content"],
+  ["ACADEMIC_REVIEWER", "academic"],
+  ["COMPLIANCE_REVIEWER", "compliance"],
+  ["SUBSCRIBER_ADMIN", "subscribers"],
+  ["SUPPORT_AGENT", "agent"],
+  ["SUPPORT_MANAGER", "supportmgr"],
+  ["FINANCE_ADMIN", "finance"],
+  ["VENDOR_MANAGER", "vendormgr"],
+  ["REPORTING_ANALYST", "analyst"],
+  ["AUDITOR", "auditor"],
+];
+
+async function ensure(email: string, name: string) {
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (!existing) await auth.api.signUpEmail({ body: { email, password: PASSWORD, name } });
+  return prisma.user.update({ where: { email }, data: { emailVerified: true, status: "ACTIVE" } });
+}
 
 async function main() {
   const url = process.env.DATABASE_URL ?? "";
   if (process.env.NODE_ENV === "production" || !/@(127\.0\.0\.1|localhost)[:/]/.test(url)) {
     throw new Error("dev-accounts runs only against a local development database.");
   }
-  for (const a of ACCOUNTS) {
-    const existing = await prisma.user.findUnique({ where: { email: a.email } });
-    if (!existing) {
-      await auth.api.signUpEmail({ body: { email: a.email, password: a.password, name: a.name } });
-    }
-    await prisma.user.update({ where: { email: a.email }, data: { emailVerified: true, role: a.role } });
-    console.log(`[dev-accounts] ${a.email} ready (${a.role})`);
+  await ensure("student@rcms.test", "Test Learner");
+  console.log("[dev-accounts] student@rcms.test (learner)");
+  for (const [role, slug] of STAFF) {
+    const u = await ensure(`${slug}@rcms.test`, `Test ${role.replace(/_/g, " ").toLowerCase()}`);
+    await prisma.staffRoleAssignment.upsert({ where: { userId_role: { userId: u.id, role } }, create: { userId: u.id, role }, update: {} });
+    console.log(`[dev-accounts] ${slug}@rcms.test (${role})`);
   }
+  const vendorUser = await ensure("vendor@rcms.test", "Test Vendor Contact");
+  await prisma.user.update({ where: { id: vendorUser.id }, data: { role: "VENDOR" } });
+  const vendor = await prisma.vendor.upsert({
+    where: { code: "VEN-0001" },
+    create: { code: "VEN-0001", legalName: "Synthetic Content Studio LLP", tradingName: "Synthetic Studio", type: "CONTENT_AUTHOR", status: "ACTIVE", country: "India", contactName: "Test Vendor Contact", contactEmail: "vendor@rcms.test", services: "Lesson writing and assessment items", commercialModel: "Fee per module" },
+    update: {},
+  });
+  await prisma.vendorMember.upsert({ where: { vendorId_userId: { vendorId: vendor.id, userId: vendorUser.id } }, create: { vendorId: vendor.id, userId: vendorUser.id }, update: {} });
+  console.log("[dev-accounts] vendor@rcms.test (vendor portal, VEN-0001)");
+  console.log(`[dev-accounts] password for all: ${PASSWORD}`);
 }
 
 main()

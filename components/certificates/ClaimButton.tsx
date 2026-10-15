@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { claimCertificate } from "@/lib/actions/certificates";
+import { claimCertificateAction } from "@/lib/actions/learning";
 
 /** Claim an earned certificate, then open it. The server re-checks eligibility. */
 export function ClaimButton({ programId, className }: { programId: string; className?: string }) {
@@ -17,8 +17,8 @@ export function ClaimButton({ programId, className }: { programId: string; class
         onClick={() =>
           start(async () => {
             setError(null);
-            const res = await claimCertificate(programId);
-            if (res.ok) router.push(`/certificates/${res.serial}`);
+            const res = await claimCertificateAction(programId);
+            if (res.ok) router.push(res.data.href);
             else setError(res.error);
           })
         }

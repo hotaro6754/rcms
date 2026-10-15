@@ -14,15 +14,7 @@ import type { QuestionType } from "@prisma/client";
  * are marked by a person; until then the attempt is "pending review" and nothing is passed.
  */
 
-export const QUESTION_LABEL: Record<QuestionType, string> = {
-  SINGLE: "Multiple choice",
-  MULTI: "Multiple select",
-  TRUE_FALSE: "True or false",
-  MATCHING: "Matching",
-  SEQUENCE: "Correct sequence",
-  SHORT_ANSWER: "Written answer (manually graded)",
-  FILE_UPLOAD: "Document upload (manually graded)",
-};
+export { QUESTION_LABEL } from "./labels";
 
 export const MANUAL_TYPES: QuestionType[] = ["SHORT_ANSWER", "FILE_UPLOAD"];
 

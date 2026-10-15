@@ -1,157 +1,137 @@
 import Link from "next/link";
-import { humanSize, isAvailable, typeLabel } from "@/lib/storage";
-import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, FileText, PlayCircle } from "lucide-react";
-import { requireUser } from "@/lib/rbac";
-import { prisma } from "@/lib/db";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
+import { requireActor } from "@/lib/actor";
+import { getPublishedCourse, lessonAccess } from "@/lib/services/learning/catalog";
+import { recordLessonView, progressFor } from "@/lib/services/learning/progress";
+import { attemptsFor } from "@/lib/services/learning/attempts";
+import { flatLessons } from "@/lib/cms/snapshot";
+import { Blocks } from "@/components/cms/BlockView";
 import { LessonComplete } from "@/components/portal/LessonComplete";
-import { QuizRunner } from "@/components/portal/QuizRunner";
-import { Card, CardContent } from "@/components/ui/card";
+import { StartAttempt } from "@/components/portal/StartAttempt";
+import { StatusPill, when } from "@/components/admin/kit";
+import { humanSize, typeLabel } from "@/lib/storage";
 
-export default async function LessonPage({
-  params,
-}: {
-  params: Promise<{ program: string; lesson: string }>;
-}) {
+/**
+ * One lesson, rendered from the course's released version. Access is checked on the server
+ * for every lesson load: enrolled (or staff preview, or a free-preview lesson for anyone
+ * signed in). Opening the lesson records a start; completion follows the lesson's rule.
+ */
+export default async function LessonPage({ params }: { params: Promise<{ program: string; lesson: string }> }) {
   const { program: slug, lesson: lessonId } = await params;
-  const user = await requireUser();
+  const actor = await requireActor();
+  const course = await getPublishedCourse(slug);
+  if (!course) notFound();
+  const flat = flatLessons(course.snapshot);
+  const index = flat.findIndex((l) => l.id === lessonId);
+  if (index < 0) notFound();
+  const access = await lessonAccess(actor, course, lessonId);
+  if (!access) redirect(`/catalog/${slug}`);
 
-  const lesson = await prisma.lesson.findUnique({
-    where: { id: lessonId },
-    include: {
-      resources: true,
-      quizzes: { include: { questions: { orderBy: { sortOrder: "asc" } } }, take: 1 },
-      module: {
-        include: {
-          program: {
-            include: {
-              modules: {
-                orderBy: { sortOrder: "asc" },
-                include: {
-                  lessons: {
-                    where: { state: "PUBLISHED" },
-                    orderBy: { sortOrder: "asc" },
-                    select: { id: true, title: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!lesson || lesson.module.program.slug !== slug || lesson.state !== "PUBLISHED") {
-    notFound();
-  }
-
-  const program = lesson.module.program;
-
-  // Access is checked on the server for every lesson load, not once at the program page.
-  const enrolment = await prisma.enrolment.findUnique({
-    where: { userId_programId: { userId: user.id, programId: program.id } },
-  });
-  if (!enrolment || enrolment.state !== "ACTIVE") notFound();
-
-  type LessonEntry = { id: string; title: string };
-  type ModuleEntry = { title: string; lessons: LessonEntry[] };
-  const flat = (program.modules as ModuleEntry[]).flatMap((m) =>
-    m.lessons.map((l) => ({ ...l, moduleTitle: m.title })),
-  );
-  const index = flat.findIndex((l) => l.id === lesson.id);
+  const lesson = flat[index];
   const prev = index > 0 ? flat[index - 1] : null;
   const next = index < flat.length - 1 ? flat[index + 1] : null;
-
-  const progress = await prisma.progress.findUnique({
-    where: { userId_lessonId: { userId: user.id, lessonId: lesson.id } },
-  });
-
-  // The answer key never leaves the server: only prompts and options are sent.
-  const quiz = lesson.quizzes[0];
-  const lastAttempt = quiz
-    ? await prisma.quizAttempt.findFirst({
-        where: { quizId: quiz.id, userId: user.id },
-        orderBy: { createdAt: "desc" },
-        select: { score: true, passed: true },
-      })
-    : null;
+  if (access.tracked) await recordLessonView(actor, course.id, lessonId);
+  const progress = access.tracked ? await progressFor(actor.id, course.snapshot) : null;
+  const done = !!progress?.done.has(lessonId);
+  const quiz = lesson.assessment;
+  const tries = quiz && access.tracked ? await attemptsFor(actor.id, quiz.id) : [];
+  const module = course.snapshot.modules.find((m) => m.id === lesson.moduleId)!;
 
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">
-      <Link
-        href={`/academy/${program.slug}`}
-        className="inline-flex items-center gap-1.5 text-micro text-primary hover:underline"
-      >
+      <Link href={access.full ? `/academy/${slug}` : `/catalog/${slug}`} className="inline-flex items-center gap-1.5 text-micro text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-        {program.name}
+        {course.snapshot.course.name}
       </Link>
+
+      {access.reason === "free_preview" && (
+        <p className="mt-4 border-l-2 border-brand bg-secondary/60 px-4 py-2.5 text-[13.5px]">
+          Free preview. <Link href={`/catalog/${slug}`} className="underline underline-offset-4">Enrol</Link> to take the assessments, track progress and earn the certificate.
+        </p>
+      )}
+      {access.reason === "staff_preview" && <p className="mt-4 text-[12.5px] text-warning">Staff view of the released version. Progress and attempts are not recorded.</p>}
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
         <article>
-          <p className="label-caps">{lesson.module.title}</p>
+          <p className="label-caps">{lesson.moduleTitle}</p>
           <h1 className="mt-2 text-[clamp(1.7rem,3vw,2.3rem)] leading-tight">{lesson.title}</h1>
           <p className="text-data mt-3 text-micro text-muted-foreground">
-            Lesson {index + 1} of {flat.length} · {Math.round((lesson.durationSec ?? 0) / 60)} min
+            Lesson {index + 1} of {flat.length} · {lesson.minutes} min
+            {lesson.effectiveDate ? ` · effective ${when(lesson.effectiveDate)}` : ""}
           </p>
-
-          {/* No fake player. The slot says what it is until a video host is chosen and the
-              signed-URL pipeline is wired to it. */}
-          <div className="mt-8 flex items-center gap-3 rounded-[var(--radius)] border border-dashed border-input bg-secondary/50 px-5 py-4">
-            <PlayCircle className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-            <p className="text-micro leading-relaxed text-muted-foreground">
-              Video is uploaded in Trainer Studio once a host is chosen. The written lesson
-              below is complete and is the assessable material.
-            </p>
-          </div>
-
-          <div className="mt-8 flex max-w-[68ch] flex-col gap-5">
-            {(lesson.body ?? "").split("\n\n").map((para, i) => (
-              <p key={i} className="text-[15px] leading-[1.72] text-secondary-foreground">
-                {para}
-              </p>
-            ))}
-          </div>
-
-          {quiz && quiz.questions.length > 0 && (
-            <div className="mt-10">
-              <QuizRunner
-                quizId={quiz.id}
-                title={quiz.title}
-                passingScore={quiz.passingScore}
-                questions={quiz.questions.map((q) => ({
-                  id: q.id,
-                  prompt: q.prompt,
-                  options: q.options,
-                }))}
-                lastScore={lastAttempt}
-              />
+          {lesson.objectives.length > 0 && (
+            <div className="mt-6 rounded-[var(--radius)] border border-border bg-card px-5 py-4">
+              <p className="text-[13px] font-semibold">By the end of this lesson you can</p>
+              <ul className="mt-2 list-disc pl-5 text-[14px] text-secondary-foreground">
+                {lesson.objectives.map((o) => (
+                  <li key={o}>{o}</li>
+                ))}
+              </ul>
             </div>
           )}
 
-          <div className="mt-10 border-t border-border pt-6">
-            <LessonComplete lessonId={lesson.id} done={!!progress?.completedAt} />
+          <div className="mt-8">
+            <Blocks blocks={lesson.blocks} mediaContext={course.id} />
           </div>
 
-          <nav className="mt-8 flex flex-wrap justify-between gap-3 border-t border-border pt-6">
-            {prev ? (
-              <Link
-                href={`/academy/${program.slug}/${prev.id}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-[3px] border border-input bg-card px-4 text-[13.5px] font-medium transition-colors hover:bg-secondary"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden />
-                Previous
+          {quiz && (
+            <section aria-labelledby="assess" className="mt-12 rounded-[var(--radius)] border border-border bg-card px-5 py-5">
+              <h2 id="assess" className="text-[1.15rem]">
+                {quiz.title}
+              </h2>
+              <p className="text-data mt-1 text-micro text-muted-foreground">
+                Pass mark {quiz.passingScore}% · {quiz.questions.length + quiz.drawCount} questions · {quiz.timeLimitMinutes ? `${quiz.timeLimitMinutes} minutes` : "untimed"} · {quiz.maxAttempts ? `${quiz.maxAttempts} attempts` : "unlimited attempts"}
+                {quiz.retakeWaitMinutes ? ` · ${quiz.retakeWaitMinutes} min between attempts` : ""}
+              </p>
+              {quiz.instructions && <p className="mt-3 text-[14px]">{quiz.instructions}</p>}
+              {tries.length > 0 && (
+                <ul className="mt-4 divide-y divide-border border-y border-border text-[13.5px]">
+                  {tries.map((t) => (
+                    <li key={t.id} className="flex flex-wrap items-center gap-3 py-2">
+                      <span className="text-data text-micro text-subtle">#{t.attemptNo}</span>
+                      <StatusPill status={t.status} />
+                      {t.score !== null && t.status !== "IN_PROGRESS" && <span>{t.score}%</span>}
+                      {t.passed && <span className="text-success">passed</span>}
+                      <Link href={`/academy/attempts/${t.id}`} className="ml-auto underline underline-offset-4">
+                        {t.status === "IN_PROGRESS" ? "Resume" : "Review"}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {access.tracked ? (
+                <div className="mt-4">
+                  <StartAttempt quizId={quiz.id} label={tries.some((t) => t.status === "IN_PROGRESS") ? "Resume attempt" : tries.length ? "Start another attempt" : "Start the assessment"} />
+                  <p className="mt-2 text-[12px] text-muted-foreground">Answers are saved as you go and graded on the server when you submit.</p>
+                </div>
+              ) : (
+                <p className="mt-3 text-micro text-muted-foreground">Enrol to take this assessment.</p>
+              )}
+            </section>
+          )}
+
+          {access.tracked && (
+            <div className="mt-10 border-t border-border pt-6">
+              {lesson.completionRule === "ASSESSMENT_PASS" ? (
+                <p className="text-[14px]">{done ? "Complete — you passed the assessment." : "This lesson is completed by passing its assessment."}</p>
+              ) : (
+                <LessonComplete lessonId={lesson.id} done={done} />
+              )}
+            </div>
+          )}
+
+          <nav aria-label="Lesson navigation" className="mt-8 flex flex-wrap justify-between gap-3 border-t border-border pt-6">
+            {prev && access.full ? (
+              <Link href={`/academy/${slug}/${prev.id}`} className="inline-flex min-h-11 items-center gap-2 rounded-[3px] border border-input bg-card px-4 text-[13.5px] font-medium hover:bg-secondary">
+                <ArrowLeft className="h-4 w-4" aria-hidden /> Previous
               </Link>
             ) : (
               <span />
             )}
-            {next && (
-              <Link
-                href={`/academy/${program.slug}/${next.id}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-              >
-                Next lesson
-                <ArrowRight className="h-4 w-4" aria-hidden />
+            {next && access.full && (
+              <Link href={`/academy/${slug}/${next.id}`} className="inline-flex min-h-11 items-center gap-2 rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:bg-primary-hover">
+                Next lesson <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             )}
           </nav>
@@ -159,61 +139,40 @@ export default async function LessonPage({
 
         <aside className="flex flex-col gap-4">
           {lesson.resources.length > 0 && (
-            <Card className="gap-0 py-0">
-              <CardContent className="px-5 py-5">
-                <h2 className="text-[13px] font-semibold">Resources</h2>
-                <ul className="mt-3 flex flex-col gap-2.5">
-                  {lesson.resources.map((r) => (
-                    <li key={r.id} className="flex items-start gap-2.5">
-                      <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                      {!isAvailable(r.fileKey) ? (
-                        <span className="min-w-0 flex-1 text-micro leading-snug text-muted-foreground">
-                          {r.title}
-                          <span className="text-data ml-2 text-[10.5px] text-subtle">NOT YET UPLOADED</span>
-                        </span>
-                      ) : (
-                      <a href={`/api/materials/${r.id}`} className="min-w-0 flex-1 text-micro leading-snug underline-offset-4 hover:underline">
-                        {r.title}
-                        <span className="text-data ml-2 text-[10.5px] text-subtle">
-                          {typeLabel(r.mimeType)}
-                          {r.sizeBytes ? ` · ${humanSize(r.sizeBytes)}` : ""}
-                        </span>
-                      </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 border-t border-border pt-3 text-micro leading-relaxed text-muted-foreground">
-                  Every material from your programs is also in your{" "}
-                  <Link href="/library" className="underline underline-offset-4">library</Link>.
-                </p>
-              </CardContent>
-            </Card>
+            <section className="rounded-[var(--radius)] border border-border bg-card px-5 py-5">
+              <h2 className="text-[13px] font-semibold">Resources</h2>
+              <ul className="mt-3 flex flex-col gap-2.5">
+                {lesson.resources.map((r) => (
+                  <li key={r.id} className="flex items-start gap-2.5">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                    <a href={`/api/materials/${r.id}`} className="min-w-0 flex-1 text-micro leading-snug underline-offset-4 hover:underline">
+                      {r.title}
+                      <span className="text-data ml-2 text-[10.5px] text-subtle">
+                        {typeLabel(r.mimeType)}
+                        {r.sizeBytes ? ` · ${humanSize(r.sizeBytes)}` : ""}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
-
-          <Card className="gap-0 py-0">
-            <CardContent className="px-5 py-5">
+          {access.full && (
+            <section className="rounded-[var(--radius)] border border-border bg-card px-5 py-5">
               <h2 className="text-[13px] font-semibold">In this module</h2>
               <ol className="mt-3 flex flex-col gap-2">
-                {program.modules
-                  .find((m) => m.id === lesson.moduleId)!
-                  .lessons.map((l) => (
-                    <li key={l.id}>
-                      <Link
-                        href={`/academy/${program.slug}/${l.id}`}
-                        className={`block text-micro leading-snug transition-colors hover:text-primary ${
-                          l.id === lesson.id
-                            ? "font-semibold text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {l.title}
-                      </Link>
-                    </li>
-                  ))}
+                {module.lessons.map((l) => (
+                  <li key={l.id}>
+                    <Link href={`/academy/${slug}/${l.id}`} className={`block text-micro leading-snug hover:text-primary ${l.id === lesson.id ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                      {progress?.done.has(l.id) ? "✓ " : ""}
+                      {l.title}
+                    </Link>
+                  </li>
+                ))}
               </ol>
-            </CardContent>
-          </Card>
+            </section>
+          )}
+          <p className="text-[12px] leading-relaxed text-muted-foreground">Educational content only; all examples are synthetic. Never enter patient information anywhere in the Academy.</p>
         </aside>
       </div>
     </div>

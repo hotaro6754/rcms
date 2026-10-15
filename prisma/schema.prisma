@@ -1055,6 +1055,8 @@ model Product {
   programId   String?
   /// TRACK products and level subscriptions grant every released course in this level.
   levelId     String?
+  /// Course slugs a TRACK (bundle) product grants, when it is not a whole level.
+  includes    String[]         @default([])
   interval    BillingInterval?
   trialDays   Int              @default(0)
   graceDays   Int              @default(0)

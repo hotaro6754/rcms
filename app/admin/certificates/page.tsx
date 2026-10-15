@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/rbac";
+import { requireAnyPermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { eligibility } from "@/lib/certificates";
 import { PageHead, Ruled } from "@/components/platform/PlatformShell";
 import { IssueForm, IssueNow, RevokeControl } from "@/components/admin/CertificateControls";
+import { ActionButton } from "@/components/admin/ActionForm";
+import { reissueCertificateAction } from "@/lib/actions/learning";
 
 export const metadata = { title: "Certificates · Admin" };
 
@@ -15,7 +17,7 @@ const DATE = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", 
  * with revoke.
  */
 export default async function AdminCertificatesPage() {
-  await requireAdmin();
+  await requireAnyPermission(["certificate.issue", "certificate.revoke"]);
 
   const [certs, enrolments, people, programs] = await Promise.all([
     prisma.certificate.findMany({ orderBy: { issuedAt: "desc" }, include: { user: { select: { email: true } } } }),
@@ -99,13 +101,24 @@ export default async function AdminCertificatesPage() {
                       {c.holderName}
                       <span className="block text-[12px] text-muted-foreground">{c.user.email}</span>
                     </td>
-                    <td className="py-3.5 pr-4">{c.programName}</td>
+                    <td className="py-3.5 pr-4">
+                      {c.programName}
+                      {c.courseVersion && <span className="block text-[12px] text-muted-foreground">version {c.courseVersion}</span>}
+                    </td>
                     <td className="text-data py-3.5 pr-4 text-[12px]">{DATE.format(c.issuedAt)}</td>
                     <td className="text-data py-3.5 pr-4 text-[11px] uppercase tracking-[0.08em] text-subtle">{c.basis}</td>
                     <td className="py-3.5">
                       {c.revokedAt ? (
-                        <span className="text-data text-[11px] tracking-[0.1em] text-danger" title={c.revokeReason ?? undefined}>
-                          REVOKED
+                        <span className="flex flex-col items-start gap-1.5">
+                          <span className="text-data text-[11px] tracking-[0.1em] text-danger" title={c.revokeReason ?? undefined}>
+                            REVOKED
+                          </span>
+                          {c.revokeReason && <span className="text-[12px] text-muted-foreground">{c.revokeReason}</span>}
+                          {!held.has(`${c.userId}:${c.programId}`) && (
+                            <ActionButton action={reissueCertificateAction} fields={{ certificateId: c.id }} variant="ghost" confirm="Issue a corrected certificate with a new serial?">
+                              Re-issue
+                            </ActionButton>
+                          )}
                         </span>
                       ) : (
                         <span className="flex items-baseline gap-5">

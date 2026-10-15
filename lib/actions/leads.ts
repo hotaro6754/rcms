@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { requireAdmin } from "@/lib/rbac";
+import { requirePermission } from "@/lib/actor";
 import type { LeadStage } from "@prisma/client";
 
 /**
@@ -180,7 +180,7 @@ export async function subscribeNotes(formData: FormData): Promise<ContactResult>
 }
 
 export async function setLeadStage(leadId: string, stage: LeadStage) {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("lead.manage");
 
   const before = await prisma.lead.findUnique({ where: { id: leadId } });
   if (!before) throw new Error("That lead no longer exists.");
@@ -204,7 +204,7 @@ export async function setLeadStage(leadId: string, stage: LeadStage) {
 
 /** Admin only. Claims a lead. */
 export async function assignLead(leadId: string, ownerId: string | null) {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("lead.manage");
 
   await prisma.lead.update({ where: { id: leadId }, data: { ownerId } });
 

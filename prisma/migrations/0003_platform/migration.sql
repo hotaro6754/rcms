@@ -183,7 +183,8 @@ ADD COLUMN     "graceDays" INTEGER NOT NULL DEFAULT 0,
 ADD COLUMN     "interval" "BillingInterval",
 ADD COLUMN     "levelId" TEXT,
 ADD COLUMN     "taxPercent" INTEGER NOT NULL DEFAULT 0,
-ADD COLUMN     "trialDays" INTEGER NOT NULL DEFAULT 0;
+ADD COLUMN     "trialDays" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "includes" TEXT[] DEFAULT ARRAY[]::TEXT[];
 
 -- AlterTable
 ALTER TABLE "Program" ADD COLUMN     "academicReviewerId" TEXT,

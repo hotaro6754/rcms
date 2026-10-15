@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { requireTrainer, requireUser } from "@/lib/rbac";
+import { requireActor, requirePermission } from "@/lib/actor";
 import { RUBRIC } from "@/lib/data/scenarios";
 
 /**
@@ -40,7 +40,7 @@ async function openAttempt(userId: string, attemptId: string): Promise<OpenAttem
 }
 
 export async function startAttempt(scenarioId: string) {
-  const user = await requireUser();
+  const user = await requireActor();
 
   const existing = await prisma.labAttempt.findUnique({
     where: { userId_scenarioId: { userId: user.id, scenarioId } },
@@ -70,7 +70,7 @@ const CapacityInput = z.object({
 });
 
 export async function saveCapacityRun(attemptId: string, formData: FormData) {
-  const user = await requireUser();
+  const user = await requireActor();
   const found = await openAttempt(user.id, attemptId);
   if (!found.ok) return fail(found.error);
 
@@ -133,7 +133,7 @@ const RcaInput = z.object({
 });
 
 export async function saveRca(attemptId: string, formData: FormData) {
-  const user = await requireUser();
+  const user = await requireActor();
   const found = await openAttempt(user.id, attemptId);
   if (!found.ok) return fail(found.error);
 
@@ -185,7 +185,7 @@ const ActionInput = z.object({
 });
 
 export async function addActionItem(attemptId: string, formData: FormData) {
-  const user = await requireUser();
+  const user = await requireActor();
   const found = await openAttempt(user.id, attemptId);
   if (!found.ok) return fail(found.error);
 
@@ -204,7 +204,7 @@ export async function addActionItem(attemptId: string, formData: FormData) {
 }
 
 export async function removeActionItem(itemId: string) {
-  const user = await requireUser();
+  const user = await requireActor();
   const item = await prisma.actionItem.findUnique({ where: { id: itemId } });
   if (!item) return fail("That action no longer exists.");
 
@@ -231,7 +231,7 @@ const NotesInput = z.object({
  * gradeable by a trainer.
  */
 export async function submitAttempt(attemptId: string, formData: FormData) {
-  const user = await requireUser();
+  const user = await requireActor();
   const found = await openAttempt(user.id, attemptId);
   if (!found.ok) return fail(found.error);
 
@@ -277,13 +277,13 @@ export async function submitAttempt(attemptId: string, formData: FormData) {
   });
 
   revalidatePath("/labs");
-  revalidatePath("/studio/grading");
+  revalidatePath("/admin/grading/labs");
   return { ok: true as const };
 }
 
 /** Trainer only. Scores every rubric criterion at once and closes the attempt as graded. */
 export async function gradeAttempt(attemptId: string, formData: FormData) {
-  const trainer = await requireTrainer();
+  const trainer = await requirePermission("labs.grade");
 
   const attempt = await prisma.labAttempt.findUnique({ where: { id: attemptId } });
   if (!attempt) return fail("That attempt no longer exists.");
@@ -329,7 +329,7 @@ export async function gradeAttempt(attemptId: string, formData: FormData) {
     },
   });
 
-  revalidatePath("/studio/grading");
+  revalidatePath("/admin/grading/labs");
   revalidatePath(`/labs/${attemptId}`);
   return { ok: true as const };
 }

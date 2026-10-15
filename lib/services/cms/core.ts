@@ -252,9 +252,11 @@ export function slugify(s: string) {
 }
 
 export async function uniqueSlug(tx: Tx, base: string, kind: "program" | "learningLevel") {
+  // Reserved: these are routes beside /academy/[course] and /catalog/[course].
+  const reserved = new Set(["attempts", "new", "admin", "preview"]);
   const root = slugify(base) || "course";
   for (let i = 0; i < 50; i++) {
-    const candidate = i === 0 ? root : `${root}-${i + 1}`;
+    const candidate = i === 0 && !reserved.has(root) ? root : `${root}-${i + 1}`;
     const taken =
       kind === "program"
         ? await tx.program.findUnique({ where: { slug: candidate }, select: { id: true } })

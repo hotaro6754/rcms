@@ -43,7 +43,7 @@ export function GradeForm({
         start(async () => {
           setError(null);
           const res = await gradeAttempt(attemptId, fd);
-          if (res.ok) router.push("/studio/grading");
+          if (res.ok) router.push("/admin/grading/labs");
           else setError(res.error);
         })
       }
