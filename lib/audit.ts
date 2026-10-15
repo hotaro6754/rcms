@@ -1,36 +1,50 @@
 import { prisma } from "./db";
 
 /**
- * Audit is a Phase 0 decision, not a Phase 8 one.
+ * The audit trail.
  *
- * Every mutation in the platform records who did what to which entity, with a before/after
- * diff where it makes sense. Retrofitting this later means reconstructing history you no
- * longer have, so it goes in before the first write path exists.
+ * Every mutation records who did what to which entity, the outcome, and a before/after diff
+ * where it makes sense. Refused access is recorded too ("deny"). The table is append-only:
+ * a database trigger (migration 0003) rejects UPDATE and DELETE, so the trail cannot be
+ * edited through the application or by anyone sharing its database role.
  *
- * Rule: never put a secret, a password hash, a full card number or a gateway token in the
- * diff. `redact` strips the obvious ones; anything sensitive and non-obvious is the
- * caller's responsibility.
+ * Rule: never put a secret, a password hash, a full card number, a session or a gateway
+ * token in the diff. `redact` strips the obvious keys and masks card-like numbers; anything
+ * sensitive and non-obvious is the caller's responsibility.
  */
 
 const SENSITIVE = new Set([
   "password",
-  "passwordHash",
+  "passwordhash",
+  "newpassword",
+  "currentpassword",
   "token",
-  "accessToken",
-  "refreshToken",
-  "idToken",
+  "accesstoken",
+  "refreshtoken",
+  "idtoken",
   "secret",
-  "apiKey",
+  "apikey",
   "signature",
-  "rawPayload",
+  "rawpayload",
+  "backupcodes",
+  "totpuri",
+  "cardnumber",
+  "cvv",
+  "accountnumber",
+  "taxid",
 ]);
 
-function redact(value: unknown): unknown {
-  if (value === null || typeof value !== "object") return value;
+const CARD_LIKE = /\b(?:\d[ -]?){13,19}\b/g;
+
+export function redact(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (typeof value === "string") return value.replace(CARD_LIKE, "[number removed]");
+  if (typeof value !== "object") return value;
+  if (value instanceof Date) return value.toISOString();
   if (Array.isArray(value)) return value.map(redact);
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-    out[k] = SENSITIVE.has(k) ? "[redacted]" : redact(v);
+    out[k] = SENSITIVE.has(k.toLowerCase()) ? "[redacted]" : redact(v);
   }
   return out;
 }
@@ -40,24 +54,51 @@ export type AuditAction =
   | "update"
   | "delete"
   | "login"
+  | "login_failed"
   | "logout"
+  | "lockout"
+  | "mfa_failed"
+  | "mfa_enabled"
+  | "password_reset"
   | "enrol"
   | "purchase"
+  | "payment"
   | "refund"
   | "grade"
   | "publish"
+  | "unpublish"
+  | "submit"
+  | "approve"
+  | "reject"
+  | "schedule"
+  | "archive"
+  | "restore"
+  | "rollback"
+  | "move"
+  | "duplicate"
   | "assign"
   | "issue"
   | "revoke"
-  | "download";
+  | "suspend"
+  | "reactivate"
+  | "download"
+  | "export"
+  | "deny"
+  | "request"
+  | "escalate"
+  | "reconcile"
+  | "webhook";
 
 export interface AuditInput {
   actorId?: string | null;
+  actorRoles?: string[];
   action: AuditAction;
   entity: string;
   entityId?: string | null;
   before?: unknown;
   after?: unknown;
+  outcome?: "success" | "failure" | "denied";
+  correlationId?: string | null;
   ip?: string | null;
   userAgent?: string | null;
 }
@@ -77,12 +118,15 @@ export async function audit(input: AuditInput): Promise<void> {
     await prisma.auditLog.create({
       data: {
         actorId: input.actorId ?? null,
+        actorRoles: input.actorRoles ?? [],
         action: input.action,
         entity: input.entity,
         entityId: input.entityId ?? null,
         diff: diff as never,
+        outcome: input.outcome ?? "success",
+        correlationId: input.correlationId ?? null,
         ip: input.ip ?? null,
-        userAgent: input.userAgent ?? null,
+        userAgent: input.userAgent?.slice(0, 400) ?? null,
       },
     });
   } catch (error) {
@@ -99,10 +143,7 @@ export async function audit(input: AuditInput): Promise<void> {
  * Wraps a mutation so the audit row is written from the same call site as the change,
  * which is the only reliable way to keep the two in step.
  */
-export async function withAudit<T>(
-  meta: Omit<AuditInput, "after">,
-  mutate: () => Promise<T>,
-): Promise<T> {
+export async function withAudit<T>(meta: Omit<AuditInput, "after">, mutate: () => Promise<T>): Promise<T> {
   const result = await mutate();
   await audit({ ...meta, after: result });
   return result;

@@ -1,15 +1,14 @@
 import { randomInt } from "node:crypto";
 import { prisma } from "./db";
+import { flatLessons, type CourseSnapshot } from "./cms/snapshot";
 
 /**
  * Certificates: what earns one, and how it is identified.
  *
- * A student has earned a program's certificate when the program has at least one
- * published lesson, every published lesson is marked complete, and every quiz attached to
- * those lessons has a passing attempt. Nothing else counts: not time enrolled, not payment.
- *
- * Server-only. The actions in lib/actions/certificates.ts and the portal and admin pages
- * all read eligibility from here, so the rule has one definition.
+ * A learner has earned a course's certificate when the course's released version has at
+ * least one lesson, every lesson in it is complete, and every assessment in it has a
+ * passing, graded attempt. Nothing else counts: not time enrolled, not payment, not a
+ * button. Eligibility is computed here from stored records only.
  */
 
 export interface Eligibility {
@@ -18,24 +17,26 @@ export interface Eligibility {
   lessonsTotal: number;
   quizzesPassed: number;
   quizzesTotal: number;
+  version: number | null;
+  passedAttemptIds: string[];
 }
 
 export async function eligibility(userId: string, programId: string): Promise<Eligibility> {
-  const lessons = await prisma.lesson.findMany({
-    where: { state: "PUBLISHED", module: { programId } },
-    select: { id: true, quizzes: { where: { questions: { some: {} } }, select: { id: true } } },
-  });
+  const course = await prisma.program.findUnique({ where: { id: programId }, select: { publishedVersion: { select: { version: true, snapshot: true } } } });
+  if (!course?.publishedVersion) {
+    return { eligible: false, lessonsDone: 0, lessonsTotal: 0, quizzesPassed: 0, quizzesTotal: 0, version: null, passedAttemptIds: [] };
+  }
+  const lessons = flatLessons(course.publishedVersion.snapshot as unknown as CourseSnapshot);
   const lessonIds = lessons.map((l) => l.id);
-  const quizIds = lessons.flatMap((l) => l.quizzes.map((q) => q.id));
+  const quizIds = lessons.flatMap((l) => (l.assessment ? [l.assessment.id] : []));
 
-  const done = lessonIds.length
-    ? await prisma.progress.count({ where: { userId, lessonId: { in: lessonIds }, completedAt: { not: null } } })
-    : 0;
+  const done = lessonIds.length ? await prisma.progress.count({ where: { userId, lessonId: { in: lessonIds }, completedAt: { not: null } } }) : 0;
   const passed = quizIds.length
     ? await prisma.quizAttempt.findMany({
-        where: { userId, quizId: { in: quizIds }, passed: true },
+        where: { userId, quizId: { in: quizIds }, passed: true, status: { in: ["GRADED", "EXPIRED"] } },
+        orderBy: { score: "desc" },
         distinct: ["quizId"],
-        select: { quizId: true },
+        select: { id: true, quizId: true },
       })
     : [];
 
@@ -45,6 +46,8 @@ export async function eligibility(userId: string, programId: string): Promise<El
     lessonsTotal: lessonIds.length,
     quizzesPassed: passed.length,
     quizzesTotal: quizIds.length,
+    version: course.publishedVersion.version,
+    passedAttemptIds: passed.map((p) => p.id),
   };
 }
 
@@ -52,12 +55,16 @@ export async function eligibility(userId: string, programId: string): Promise<El
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const block = () => Array.from({ length: 4 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
 
-/** RCMS-L1-7KQ4-M9TX: the level, then two random blocks. Unique by retry. */
-export async function newSerial(level: number): Promise<string> {
+/** RCMS-L1-7KQ4-M9TX-3HPA: the level, then three random blocks (about 10^17 combinations). */
+export async function newSerial(prefix: string | number): Promise<string> {
+  const head = typeof prefix === "number" ? `L${prefix}` : prefix;
   for (let i = 0; i < 8; i++) {
-    const serial = `RCMS-L${level}-${block()}-${block()}`;
-    const taken = await prisma.certificate.findUnique({ where: { serial }, select: { id: true } });
-    if (!taken) return serial;
+    const serial = `RCMS-${head}-${block()}-${block()}-${block()}`;
+    const [cert, badge] = await Promise.all([
+      prisma.certificate.findUnique({ where: { serial }, select: { id: true } }),
+      prisma.levelBadge.findUnique({ where: { serial }, select: { id: true } }),
+    ]);
+    if (!cert && !badge) return serial;
   }
   throw new Error("Could not allocate a certificate serial.");
 }
