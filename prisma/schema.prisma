@@ -79,34 +79,36 @@ model User {
   bannedAt   DateTime?
   lastSeenAt DateTime?
 
-  sessions        Session[]
-  accounts        Account[]
-  twoFactors      TwoFactor[]
-  enrolments      Enrolment[]
-  certificates    Certificate[]
-  badges          LevelBadge[]
-  progress        Progress[]
-  quizAttempts    QuizAttempt[]
-  orders          Order[]
-  subscriptions   Subscription[]
-  bookings        Booking[]
-  labAttempts     LabAttempt[]
-  posts           Post[]
-  threads         Thread[]
-  notifications   Notification[]
-  auditLogs       AuditLog[]            @relation("AuditActor")
-  ownedLeads      Lead[]                @relation("LeadOwner")
-  trainer         Trainer?
-  orgMembers      OrgMember[]
-  staffRoles      StaffRoleAssignment[] @relation("StaffRoleHolder")
-  consents        ConsentRecord[]
-  notesAbout      AdminNote[]           @relation("NoteSubject")
-  notesWritten    AdminNote[]           @relation("NoteAuthor")
-  tickets         SupportTicket[]       @relation("TicketRequester")
-  assignedTickets SupportTicket[]       @relation("TicketAssignee")
-  vendorMembers   VendorMember[]
-  privacyRequests PrivacyRequest[]
-  bookmarks       Bookmark[]
+  sessions           Session[]
+  accounts           Account[]
+  twoFactors         TwoFactor[]
+  enrolments         Enrolment[]
+  certificates       Certificate[]
+  badges             LevelBadge[]
+  progress           Progress[]
+  quizAttempts       QuizAttempt[]
+  orders             Order[]
+  subscriptions      Subscription[]
+  bookings           Booking[]
+  labAttempts        LabAttempt[]
+  posts              Post[]
+  threads            Thread[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]            @relation("AuditActor")
+  ownedLeads         Lead[]                @relation("LeadOwner")
+  trainer            Trainer?
+  orgMembers         OrgMember[]
+  staffRoles         StaffRoleAssignment[] @relation("StaffRoleHolder")
+  consents           ConsentRecord[]
+  notesAbout         AdminNote[]           @relation("NoteSubject")
+  notesWritten       AdminNote[]           @relation("NoteAuthor")
+  tickets            SupportTicket[]       @relation("TicketRequester")
+  assignedTickets    SupportTicket[]       @relation("TicketAssignee")
+  vendorMembers      VendorMember[]
+  privacyRequests    PrivacyRequest[]
+  bookmarks          Bookmark[]
+  simAttempts        SimAttempt[]
+  competencyOutcomes CompetencyOutcome[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2086,4 +2088,152 @@ model Bookmark {
   createdAt DateTime @default(now())
 
   @@unique([userId, lessonId])
+}
+
+// ---------------------------------------------------------------------------
+// Case simulations and competencies. A case is authored as a draft, reviewed by someone other
+// than the submitter, and published as an immutable version; attempts point at the version
+// they were taken against, so a later edit never changes how an old attempt was scored.
+// ---------------------------------------------------------------------------
+
+enum CaseStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  RETIRED
+}
+
+model SimCase {
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  title           String
+  /// The working definition, including the answer key. Never sent to learners.
+  draft           Json
+  status          CaseStatus @default(DRAFT)
+  hasDraftChanges Boolean    @default(false)
+  /// Optional: only learners with access to this course may attempt the case.
+  programId       String?
+  authorId        String
+  submittedById   String?
+  reviewerId      String?
+  reviewNote      String?
+  lockVersion     Int        @default(0)
+
+  versions SimCaseVersion[]
+  attempts SimAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model SimCaseVersion {
+  id            String    @id @default(cuid())
+  caseId        String
+  version       Int
+  /// Immutable copy of the definition and its rubric at approval.
+  definition    Json
+  publishedById String
+  reviewedById  String
+  retiredAt     DateTime?
+
+  case     SimCase      @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  attempts SimAttempt[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([caseId, version])
+}
+
+enum SimAttemptState {
+  IN_PROGRESS
+  SCORED
+  REVIEWED
+}
+
+model SimAttempt {
+  id             String          @id @default(cuid())
+  userId         String
+  caseId         String
+  versionId      String
+  attemptNo      Int
+  state          SimAttemptState @default(IN_PROGRESS)
+  answers        Json            @default("{}")
+  /// Percentage 0-100 after scoring (and after instructor adjustment, if any).
+  score          Int?
+  passed         Boolean?
+  /// The scored result: criteria, critical errors and feedback. Written by the server only.
+  result         Json?
+  instructorNote String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  submittedAt    DateTime?
+
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  case     SimCase             @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  version  SimCaseVersion      @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  outcomes CompetencyOutcome[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, caseId, attemptNo])
+  @@index([caseId, state])
+  @@index([userId, state])
+}
+
+enum CompetencyStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+model Competency {
+  id               String           @id @default(cuid())
+  code             String           @unique
+  name             String
+  description      String
+  expectedBehavior String
+  /// 1 Foundation, 2 Guided Practitioner, 3 Independent Practitioner, 4 Specialist / Analyst,
+  /// 5 Team Lead / Quality Auditor, 6 Manager / Strategist.
+  proficiencyLevel Int
+  /// Rubric criteria whose scores are this competency's evidence.
+  criteria         String[]
+  /// Minimum score (0-100) on each linked criterion, in a passing attempt with no critical error.
+  threshold        Int              @default(75)
+  /// Months before the competency should be shown again; null means no reassessment.
+  reassessMonths   Int?
+  status           CompetencyStatus @default(DRAFT)
+  authorId         String
+  reviewerId       String?
+  reviewedAt       DateTime?
+  lockVersion      Int              @default(0)
+
+  outcomes CompetencyOutcome[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompetencyOutcome {
+  id            String    @id @default(cuid())
+  userId        String
+  competencyId  String
+  attemptId     String
+  demonstrated  Boolean
+  /// Lowest linked-criterion score in the attempt, 0-100.
+  evidenceScore Int
+  expiresAt     DateTime?
+  /// Set when an instructor review replaces this outcome; history is kept.
+  supersededAt  DateTime?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  competency Competency @relation(fields: [competencyId], references: [id], onDelete: Restrict)
+  attempt    SimAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, competencyId])
+  @@index([attemptId])
 }

@@ -19,7 +19,10 @@ export async function usersWithPermission(permission: Permission) {
 export async function notifyUsers(userIds: string[], n: { kind: string; title: string; body?: string; href?: string }) {
   const unique = [...new Set(userIds)];
   if (!unique.length) return;
-  await prisma.notification.createMany({ data: unique.map((userId) => ({ userId, ...n })) });
+  // Some records name a non-user author (seeded content says "seed"); skip ids with no account.
+  const existing = await prisma.user.findMany({ where: { id: { in: unique } }, select: { id: true } });
+  if (!existing.length) return;
+  await prisma.notification.createMany({ data: existing.map(({ id: userId }) => ({ userId, ...n })) });
 }
 
 export async function notifyPermission(permission: Permission, n: { kind: string; title: string; body?: string; href?: string }, exceptUserId?: string) {
