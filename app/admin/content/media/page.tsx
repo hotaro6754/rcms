@@ -1,4 +1,4 @@
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -14,7 +14,7 @@ export const metadata = { title: "Media library" };
  * and pointing the block at it: released versions keep showing what was approved.
  */
 export default async function MediaPage({ searchParams }: { searchParams: Promise<{ archived?: string }> }) {
-  const actor = await requirePermission("content.view");
+  const actor = await requirePagePermission("content.view");
   const { archived } = await searchParams;
   const assets = await prisma.mediaAsset.findMany({ where: archived ? {} : { archivedAt: null }, orderBy: { createdAt: "desc" }, take: 200 });
   const canManage = can(actor, "media.manage");

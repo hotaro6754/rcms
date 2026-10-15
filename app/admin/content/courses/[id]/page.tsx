@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { Panel, StatusPill } from "@/components/admin/kit";
@@ -24,7 +24,7 @@ export const metadata = { title: "Course workspace" };
  * assessment), and the review-and-release panel for the course as a whole.
  */
 export default async function CourseWorkspace({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ item?: string }> }) {
-  const actor = await requirePermission("content.view");
+  const actor = await requirePagePermission("content.view");
   const { id } = await params;
   const { item = "course" } = await searchParams;
 

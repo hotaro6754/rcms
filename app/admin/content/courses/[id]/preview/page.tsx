@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { buildSnapshot } from "@/lib/services/cms/release";
 import { flatLessons } from "@/lib/cms/snapshot";
@@ -17,7 +17,7 @@ export const metadata = { title: "Preview" };
  * recorded as learner progress. Reviewers decide from this page.
  */
 export default async function PreviewPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ lesson?: string; device?: string }> }) {
-  await requirePermission("content.view");
+  await requirePagePermission("content.view");
   const { id } = await params;
   const sp = await searchParams;
   const course = await prisma.program.findUnique({ where: { id }, select: { id: true, name: true } });

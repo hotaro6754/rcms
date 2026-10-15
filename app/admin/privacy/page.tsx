@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -9,7 +9,7 @@ import { resolvePrivacyAction } from "@/lib/actions/subscribers";
 export const metadata = { title: "Privacy requests" };
 
 export default async function PrivacyPage() {
-  await requirePermission("subscriber.privacy");
+  await requirePagePermission("subscriber.privacy");
   const rows = await prisma.privacyRequest.findMany({ orderBy: [{ status: "asc" }, { createdAt: "asc" }], take: 200, include: { user: { select: { id: true, name: true, email: true } } } });
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-10">

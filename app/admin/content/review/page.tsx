@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { Empty, StatusPill, Table, Td, when } from "@/components/admin/kit";
@@ -12,7 +12,7 @@ export const metadata = { title: "Review queue" };
  * date has passed (blueprint §7: every module has a next-review date).
  */
 export default async function ReviewQueue() {
-  const actor = await requirePermission("content.view");
+  const actor = await requirePagePermission("content.view");
   const [waiting, overdue] = await Promise.all([
     prisma.program.findMany({
       where: { status: { in: ["ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED"] } },

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { GradeForm } from "@/components/studio/GradeForm";
 import type { RcaStep, CapacityResult } from "@/components/portal/LabWorkspace";
@@ -16,7 +16,7 @@ export default async function GradeAttemptPage({
   params: Promise<{ attempt: string }>;
 }) {
   const { attempt: attemptId } = await params;
-  await requirePermission("labs.grade");
+  await requirePagePermission("labs.grade");
 
   const attempt = await prisma.labAttempt.findUnique({
     where: { id: attemptId },

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import type { AccountStatus, Role } from "@prisma/client";
 import { prisma } from "./db";
 import { auth } from "./auth";
@@ -141,4 +142,17 @@ export function mfaRequired() {
   if (flag === "true") return true;
   if (flag === "false") return false;
   return process.env.NODE_ENV === "production";
+}
+
+/**
+ * Page guard for the Admin Control Center. Like requireAnyPermission, but a refusal sends the
+ * person back to the dashboard with a notice instead of an error screen. The refusal is
+ * audited either way. Server actions and API routes keep throwing.
+ */
+export async function requirePagePermission(permission: Permission | Permission[]) {
+  const actor = await requireActor();
+  const list = Array.isArray(permission) ? permission : [permission];
+  if (canAny(actor, list)) return actor;
+  await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "deny", entity: "Page", outcome: "denied", after: { permission: list } });
+  redirect("/admin?denied=1");
 }

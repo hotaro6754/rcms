@@ -1,4 +1,4 @@
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -8,7 +8,7 @@ import { couponActiveAction, createCouponAction } from "@/lib/actions/commerce";
 export const metadata = { title: "Coupons" };
 
 export default async function CouponsPage() {
-  const actor = await requirePermission("finance.view");
+  const actor = await requirePagePermission("finance.view");
   const coupons = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-10">

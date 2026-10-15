@@ -1,4 +1,4 @@
-import { requirePermission, can, mfaRequired } from "@/lib/actor";
+import { requirePagePermission, can, mfaRequired } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -11,7 +11,7 @@ export const metadata = { title: "Settings and integrations" };
 
 /** Integration status shows whether a secret is configured, never the secret itself. */
 export default async function SettingsPage() {
-  const actor = await requirePermission("settings.view");
+  const actor = await requirePagePermission("settings.view");
   const stored = Object.fromEntries((await prisma.setting.findMany({ where: { key: { in: Object.keys(SETTINGS) } } })).map((s) => [s.key, s.value]));
   const integrations: [string, boolean, string][] = [
     ["Payments (Razorpay keys)", paymentsConfigured(), "RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET. Without them, paid checkout is disabled and learners are told so."],

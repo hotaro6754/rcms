@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { BTN, Field, FIELD, Panel, StatusPill, TEXTAREA, when } from "@/components/admin/kit";
@@ -10,7 +10,7 @@ export const metadata = { title: "Mark an attempt" };
 
 /** Manual marking of written answers and uploads, against each question's rubric. */
 export default async function GradeAttempt({ params }: { params: Promise<{ id: string }> }) {
-  const actor = await requirePermission("assessment.grade");
+  const actor = await requirePagePermission("assessment.grade");
   const { id } = await params;
   const { attempt, learner, result, manual } = await attemptForGrading(actor, id);
   const own = attempt.userId === actor.id;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -12,7 +12,7 @@ export const metadata = { title: "Learning level" };
 
 /** Level editor: every field in the blueprint's §4.2 level data list, status, and history. */
 export default async function LevelPage({ params }: { params: Promise<{ id: string }> }) {
-  const actor = await requirePermission("content.view");
+  const actor = await requirePagePermission("content.view");
   const { id } = await params;
   const level = await prisma.learningLevel.findUnique({
     where: { id },

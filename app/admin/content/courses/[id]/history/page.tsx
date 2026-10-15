@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -22,7 +22,7 @@ function show(v: unknown) {
  * item in the course (compare any two versions of an item, restore any earlier one).
  */
 export default async function HistoryPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ a?: string; b?: string; entity?: string }> }) {
-  const actor = await requirePermission("content.view");
+  const actor = await requirePagePermission("content.view");
   const { id } = await params;
   const sp = await searchParams;
   const course = await prisma.program.findUnique({ where: { id }, select: { id: true, name: true, publishedVersionId: true, status: true } });

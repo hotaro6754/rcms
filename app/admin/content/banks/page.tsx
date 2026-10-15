@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -9,7 +9,7 @@ import { bankAction } from "@/lib/actions/cms";
 export const metadata = { title: "Question banks" };
 
 export default async function BanksPage() {
-  const actor = await requirePermission("content.view");
+  const actor = await requirePagePermission("content.view");
   const banks = await prisma.questionBank.findMany({
     orderBy: [{ archivedAt: "asc" }, { title: "asc" }],
     include: { _count: { select: { questions: { where: { archivedAt: null } }, quizzes: { where: { archivedAt: null } } } } },

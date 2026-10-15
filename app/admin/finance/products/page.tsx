@@ -1,4 +1,4 @@
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -12,7 +12,7 @@ export const metadata = { title: "Plans and pricing" };
  * and every later price change need the Academy Director's approval with an effective date.
  */
 export default async function ProductsPage() {
-  const actor = await requirePermission("finance.view");
+  const actor = await requirePagePermission("finance.view");
   const [products, courses, pending] = await Promise.all([
     prisma.product.findMany({ orderBy: [{ kind: "asc" }, { name: "asc" }], include: { program: { select: { name: true } }, _count: { select: { orders: true } } } }),
     prisma.program.findMany({ where: { status: { not: "ARCHIVED" } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),

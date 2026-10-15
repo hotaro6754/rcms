@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -12,7 +12,7 @@ import { TeamTable } from "@/components/portal/TeamTable";
 export const metadata = { title: "Corporate account" };
 
 export default async function OrganisationPage({ params }: { params: Promise<{ id: string }> }) {
-  const actor = await requirePermission("org.manage");
+  const actor = await requirePagePermission("org.manage");
   const { id } = await params;
   const { org, rows } = await teamReport(actor, id);
   const courses = await prisma.program.findMany({ where: { publishedVersionId: { not: null }, status: { not: "ARCHIVED" } }, select: { id: true, name: true }, orderBy: { name: "asc" } });

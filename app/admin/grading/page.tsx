@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAnyPermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { Empty, Table, Td, when } from "@/components/admin/kit";
@@ -12,7 +12,7 @@ export const metadata = { title: "Grading" };
  * submitted Governance Labs reviews. Oldest first.
  */
 export default async function GradingQueue() {
-  const actor = await requireAnyPermission(["assessment.grade", "labs.grade"]);
+  const actor = await requirePagePermission(["assessment.grade", "labs.grade"]);
   const [attempts, labs] = await Promise.all([
     can(actor, "assessment.grade") ? pendingGrading() : Promise.resolve([]),
     can(actor, "labs.grade") ? prisma.labAttempt.count({ where: { state: "SUBMITTED" } }) : Promise.resolve(0),

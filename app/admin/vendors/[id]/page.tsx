@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { VendorStatus } from "@prisma/client";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -12,7 +12,7 @@ import { LIFECYCLE, ONBOARDING, scorecard, VENDOR_TYPES } from "@/lib/services/v
 export const metadata = { title: "Vendor" };
 
 export default async function VendorPage({ params }: { params: Promise<{ id: string }> }) {
-  const actor = await requirePermission("vendor.view");
+  const actor = await requirePagePermission("vendor.view");
   const { id } = await params;
   const v = await prisma.vendor.findUnique({
     where: { id },

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ContentStatus, Prisma } from "@prisma/client";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -24,7 +24,7 @@ function swap(ids: string[], i: number, j: number) {
  * workflow status, and the entry point to every course workspace.
  */
 export default async function ContentHome({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; owner?: string }> }) {
-  const actor = await requirePermission("content.view");
+  const actor = await requirePagePermission("content.view");
   const sp = await searchParams;
   const q = sp.q?.trim();
   const status = STATUSES.includes(sp.status as ContentStatus) ? (sp.status as ContentStatus) : undefined;

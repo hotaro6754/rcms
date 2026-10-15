@@ -1,4 +1,4 @@
-import { requireAnyPermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -13,7 +13,7 @@ export const metadata = { title: "Vendor settlements" };
  * details cannot approve that vendor's payments.
  */
 export default async function SettlementsPage() {
-  const actor = await requireAnyPermission(["finance.view", "settlement.approve"]);
+  const actor = await requirePagePermission(["finance.view", "settlement.approve"]);
   const invoices = await prisma.vendorInvoice.findMany({ orderBy: { createdAt: "desc" }, take: 100, include: { vendor: { select: { legalName: true, payoutLast4: true } }, deliverable: { select: { title: true, status: true, fee: true } } } });
   const people = await prisma.user.findMany({ where: { id: { in: invoices.flatMap((i) => [i.validatedById, i.approvedById, i.paidById]).filter(Boolean) as string[] } }, select: { id: true, name: true } });
   const name = (id: string | null) => people.find((p) => p.id === id)?.name;

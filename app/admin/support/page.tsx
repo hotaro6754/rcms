@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { SupportCategory, SupportStatus } from "@prisma/client";
-import { requireAnyPermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton } from "@/components/admin/ActionForm";
 import { BTN, Empty, Field, FIELD, Pill, StatusPill, Table, Td, when } from "@/components/admin/kit";
@@ -13,7 +13,7 @@ const STATUSES: SupportStatus[] = ["WAITING", "ASSIGNED", "IN_PROGRESS", "PENDIN
 
 /** The live queue: unassigned and urgent first. Agents see their own and unassigned cases. */
 export default async function SupportQueue({ searchParams }: { searchParams: Promise<{ status?: string; category?: string; mine?: string; unassigned?: string }> }) {
-  const actor = await requireAnyPermission(["support.view_assigned", "support.view_all"]);
+  const actor = await requirePagePermission(["support.view_assigned", "support.view_all"]);
   const sp = await searchParams;
   const rows = await queue(actor, {
     status: STATUSES.includes(sp.status as SupportStatus) ? (sp.status as SupportStatus) : undefined,

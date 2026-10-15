@@ -18,7 +18,8 @@ export const metadata = { title: "Admin Control Center" };
  * approved changes with an effective date are applied on the way in, as a backstop to the
  * cron route.
  */
-export default async function AdminHome() {
+export default async function AdminHome({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
+  const { denied } = await searchParams;
   const actor = await requireActor();
   if (!isStaff(actor)) redirect("/account");
   await Promise.all([runScheduledPublications().catch(() => []), runDueApprovals().catch(() => undefined)]);
@@ -55,6 +56,12 @@ export default async function AdminHome() {
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">
       <PageHead kicker="Admin Control Center" title={`Hello, ${actor.name.split(" ")[0]}.`} lede={`Signed in as ${actor.staffRoles.map((r) => ROLE_LABEL[r]).join(", ")}. What you can see and do here follows those roles.`} />
+
+      {denied && (
+        <p role="alert" className="mt-6 border-l-2 border-warning pl-3 text-[14px]">
+          Your roles do not include access to that page. If you need it, ask an administrator to request a role change.
+        </p>
+      )}
 
       <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Ruled label="Waiting for you">

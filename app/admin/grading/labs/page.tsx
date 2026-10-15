@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 
@@ -10,7 +10,7 @@ export const metadata = { title: "Grading queue" };
  * for a week teaches the learner that it did not matter.
  */
 export default async function GradingPage() {
-  await requirePermission("labs.grade");
+  await requirePagePermission("labs.grade");
 
   const attempts = await prisma.labAttempt.findMany({
     where: { state: { in: ["SUBMITTED", "GRADED"] } },

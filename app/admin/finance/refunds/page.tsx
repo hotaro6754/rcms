@@ -1,4 +1,4 @@
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -10,7 +10,7 @@ export const metadata = { title: "Refunds" };
 
 /** The refund register: request → approval by someone else → provider → confirmation. */
 export default async function RefundsPage() {
-  const actor = await requirePermission("finance.view");
+  const actor = await requirePagePermission("finance.view");
   const [refunds, windowDays, maxPct, limit] = await Promise.all([
     prisma.refund.findMany({ orderBy: { createdAt: "desc" }, take: 100, include: { order: { select: { number: true, amount: true, paidAt: true, user: { select: { name: true } }, product: { select: { name: true } } } } } }),
     getSetting("refund.windowDays"),

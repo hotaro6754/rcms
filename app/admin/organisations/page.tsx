@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -9,7 +9,7 @@ import { createOrganisationAction } from "@/lib/actions/admin";
 export const metadata = { title: "Corporate accounts" };
 
 export default async function OrganisationsPage() {
-  await requirePermission("org.manage");
+  await requirePagePermission("org.manage");
   const orgs = await prisma.organisation.findMany({ orderBy: { name: "asc" }, include: { _count: { select: { members: true, groups: true, enrolments: true } } } });
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-10">

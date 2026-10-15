@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -10,7 +10,7 @@ import { VENDOR_TYPES } from "@/lib/services/vendors/vendors";
 export const metadata = { title: "Vendors" };
 
 export default async function VendorsPage() {
-  const actor = await requirePermission("vendor.view");
+  const actor = await requirePagePermission("vendor.view");
   const vendors = await prisma.vendor.findMany({ orderBy: [{ status: "asc" }, { legalName: "asc" }], include: { _count: { select: { deliverables: true, members: true } } } });
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">

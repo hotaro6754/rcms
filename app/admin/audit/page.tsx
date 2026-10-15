@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
-import { requirePermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { BTN_OUTLINE, Empty, FIELD, Pill, Table, Td, when } from "@/components/admin/kit";
@@ -9,7 +9,7 @@ export const metadata = { title: "Audit log" };
 
 /** Read-only view of the append-only audit log. Changes to it are refused by the database. */
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  await requirePermission("audit.view");
+  await requirePagePermission("audit.view");
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const actor = sp.actor?.trim() ? await prisma.user.findUnique({ where: { email: sp.actor.trim().toLowerCase() }, select: { id: true } }) : null;

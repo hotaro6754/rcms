@@ -1,4 +1,4 @@
-import { requireAnyPermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -9,7 +9,7 @@ import { effectiveRoles, ROLE_LABEL, ROLE_PERMISSIONS, STAFF_ROLES, canRequestRo
 export const metadata = { title: "Users and roles" };
 
 export default async function UsersPage() {
-  const actor = await requireAnyPermission(["users.view", "roles.request"]);
+  const actor = await requirePagePermission(["users.view", "roles.request"]);
   const staff = await prisma.user.findMany({
     where: { OR: [{ staffRoles: { some: {} } }, { role: { in: ["OWNER", "ADMIN", "TRAINER"] } }] },
     orderBy: { name: "asc" },

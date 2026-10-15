@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { AccountStatus } from "@prisma/client";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -14,7 +14,7 @@ export const metadata = { title: "Subscribers" };
 const STATUSES: AccountStatus[] = ["PENDING_VERIFICATION", "ACTIVE", "TRIAL", "PAYMENT_PENDING", "PAYMENT_FAILED", "GRACE_PERIOD", "SUSPENDED", "CANCELLED", "COMPLETED", "DEACTIVATED", "ARCHIVED"];
 
 export default async function SubscribersPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const actor = await requirePermission("subscriber.view");
+  const actor = await requirePagePermission("subscriber.view");
   const sp = await searchParams;
   const status = STATUSES.includes(sp.status as AccountStatus) ? (sp.status as AccountStatus) : undefined;
   const filter = { q: sp.q?.trim() || undefined, status, courseId: sp.course || undefined, page: Number(sp.page) || 1 };

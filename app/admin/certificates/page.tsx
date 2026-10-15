@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAnyPermission } from "@/lib/actor";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { eligibility } from "@/lib/certificates";
 import { PageHead, Ruled } from "@/components/platform/PlatformShell";
@@ -17,7 +17,7 @@ const DATE = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", 
  * with revoke.
  */
 export default async function AdminCertificatesPage() {
-  await requireAnyPermission(["certificate.issue", "certificate.revoke"]);
+  await requirePagePermission(["certificate.issue", "certificate.revoke"]);
 
   const [certs, enrolments, people, programs] = await Promise.all([
     prisma.certificate.findMany({ orderBy: { issuedAt: "desc" }, include: { user: { select: { email: true } } } }),

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { OrderState, Prisma, ReconciliationStatus } from "@prisma/client";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionForm } from "@/components/admin/ActionForm";
@@ -15,7 +15,7 @@ const RECON: ReconciliationStatus[] = ["UNRECONCILED", "RECONCILED", "EXCEPTION"
 
 /** Every order with its payments, invoice, refunds and reconciliation status (blueprint §8.2). */
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ q?: string; state?: string; reconciliation?: string }> }) {
-  const actor = await requirePermission("finance.view");
+  const actor = await requirePagePermission("finance.view");
   const sp = await searchParams;
   const where: Prisma.OrderWhereInput = {
     ...(STATES.includes(sp.state as OrderState) ? { state: sp.state as OrderState } : {}),

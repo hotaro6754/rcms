@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAnyPermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { AuthorisationError, ServiceError } from "@/lib/errors";
 import { viewTicket, CATEGORY_LABEL, ESCALATION } from "@/lib/services/support/tickets";
@@ -17,7 +17,7 @@ export const metadata = { title: "Support case" };
 
 /** The admin chat console (blueprint §6.3). */
 export default async function SupportCase({ params }: { params: Promise<{ id: string }> }) {
-  const actor = await requireAnyPermission(["support.view_assigned", "support.view_all"]);
+  const actor = await requirePagePermission(["support.view_assigned", "support.view_all"]);
   const { id } = await params;
   const v = await viewTicket(actor, id).catch((e) => {
     if (e instanceof ServiceError || e instanceof AuthorisationError) notFound();

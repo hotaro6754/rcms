@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { AccountStatus } from "@prisma/client";
-import { requirePermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -13,7 +13,7 @@ export const metadata = { title: "Subscriber" };
 const SETTABLE: AccountStatus[] = ["ACTIVE", "SUSPENDED", "DEACTIVATED", "ARCHIVED", "CANCELLED", "COMPLETED"];
 
 export default async function SubscriberProfile({ params }: { params: Promise<{ id: string }> }) {
-  const actor = await requirePermission("subscriber.view");
+  const actor = await requirePagePermission("subscriber.view");
   const { id } = await params;
   const u = await profile(actor, id);
   const courses = await prisma.program.findMany({ where: { status: { not: "ARCHIVED" }, publishedVersionId: { not: null } }, select: { id: true, name: true }, orderBy: { name: "asc" } });

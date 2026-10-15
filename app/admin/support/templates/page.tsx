@@ -1,4 +1,4 @@
-import { requireAnyPermission, can } from "@/lib/actor";
+import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
@@ -10,7 +10,7 @@ export const metadata = { title: "Approved responses" };
 
 /** The standard response library. Agents can insert only approved responses; edits need re-approval. */
 export default async function TemplatesPage() {
-  const actor = await requireAnyPermission(["support.respond", "support.templates.manage"]);
+  const actor = await requirePagePermission(["support.respond", "support.templates.manage"]);
   const templates = await prisma.responseTemplate.findMany({ where: { archivedAt: null }, orderBy: [{ approved: "asc" }, { title: "asc" }] });
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-10">
