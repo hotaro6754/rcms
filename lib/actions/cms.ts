@@ -524,3 +524,11 @@ export async function importCourseAction(fd: FormData) {
     return { id: course.id, href: `/admin/content/courses/${course.id}`, warnings };
   });
 }
+
+export async function bulkLessonStateAction(fd: FormData) {
+  return attempt(async () => {
+    const n = await structure.bulkLessonState(await requireActor(), str(fd, "courseId"), fd.getAll("lessonId").map(String), state(fd));
+    refresh(str(fd, "courseId"));
+    return { changed: n };
+  });
+}

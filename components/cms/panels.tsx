@@ -21,6 +21,7 @@ import {
   updateCourseAction,
   updateLessonAction,
   updateModuleAction,
+  bulkLessonStateAction,
   workflowAction,
 } from "@/lib/actions/cms";
 import { STATUS_LABEL } from "@/lib/services/cms/core";
@@ -398,12 +399,14 @@ export function ModulePanel({
   mod,
   courses,
   siblings = [],
+  lessonList = [],
 }: {
   actor: Actor;
   courseId: string;
   mod: { id: string; title: string; summary: string | null; objectives: string[]; estimatedMinutes: number | null; prerequisiteModuleId: string | null; state: string; lockVersion: number; lessons: number; resources: number; assessments: number; blocks: number };
   courses: { id: string; name: string }[];
   siblings?: { id: string; title: string }[];
+  lessonList?: { id: string; title: string; state: string }[];
 }) {
   const canEdit = can(actor, "content.edit");
   return (
@@ -448,6 +451,32 @@ export function ModulePanel({
         </fieldset>
         {canEdit && <button className={`${BTN} w-fit`}>Save module</button>}
       </ActionForm>
+
+      {canEdit && lessonList.length > 1 && (
+        <ActionForm action={bulkLessonStateAction} className="flex flex-col gap-2 border-t border-border pt-4" success="Updated.">
+          <input type="hidden" name="courseId" value={courseId} />
+          <p className="label-caps">Lessons in this module</p>
+          <ul className="flex flex-col gap-1">
+            {lessonList.map((l) => (
+              <li key={l.id}>
+                <label className="flex items-center gap-2 text-[13.5px]">
+                  <input type="checkbox" name="lessonId" value={l.id} />
+                  {l.title} <StatusPill status={l.state} label={l.state === "PUBLISHED" ? "ready" : l.state.toLowerCase()} />
+                </label>
+              </li>
+            ))}
+          </ul>
+          <span className="flex flex-wrap items-center gap-2">
+            <select name="state" aria-label="Change selected lessons to" className={`${FIELD} w-auto`}>
+              <option value="PUBLISHED">Mark ready for release</option>
+              <option value="DRAFT">Back to draft</option>
+              {can(actor, "content.archive") && <option value="ARCHIVED">Archive</option>}
+            </select>
+            <button className="rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Apply to selected</button>
+          </span>
+          <p className="text-[12px] text-muted-foreground">All or nothing: if one lesson cannot change, none do, and the message says which.</p>
+        </ActionForm>
+      )}
 
       {canEdit && (
         <div className="flex flex-wrap gap-2 border-t border-border pt-4">

@@ -97,3 +97,22 @@ describe("bookmarks", () => {
     await expect(structure.updateModule(learner, modules[0].id, { title: "x y z" }, 0)).rejects.toBeInstanceOf(AuthorisationError);
   });
 });
+
+describe("bulk lesson state", () => {
+  it("changes every selected lesson or none of them", async () => {
+    const author = await staff("CONTENT_ADMIN");
+    const { course, modules } = await makeCourseDraft(author, { modules: 1, lessons: 2 });
+    const [a, b] = modules[0].lessons;
+    expect(await structure.bulkLessonState(author, course.id, [a.id, b.id, a.id], "DRAFT")).toBe(2);
+    expect((await prisma.lesson.findMany({ where: { id: { in: [a.id, b.id] } } })).every((l) => l.state === "DRAFT")).toBe(true);
+
+    const empty = await structure.createLesson(author, modules[0].id, { title: "Empty lesson" });
+    await expect(structure.bulkLessonState(author, course.id, [a.id, b.id, empty.id], "PUBLISHED")).rejects.toThrow(/Add content/);
+    expect((await prisma.lesson.findMany({ where: { id: { in: [a.id, b.id] } } })).every((l) => l.state === "DRAFT")).toBe(true);
+
+    const { modules: other } = await makeCourseDraft(author, { modules: 1, lessons: 1 });
+    await expect(structure.bulkLessonState(author, course.id, [a.id, other[0].lessons[0].id], "DRAFT")).rejects.toThrow();
+    const learner = await makeUser();
+    await expect(structure.bulkLessonState(learner, course.id, [a.id], "DRAFT")).rejects.toBeInstanceOf(AuthorisationError);
+  });
+});

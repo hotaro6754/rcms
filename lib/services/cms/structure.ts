@@ -569,27 +569,46 @@ export async function updateLesson(actor: Actor, lessonId: string, input: unknow
   await log(actor, "update", "Lesson", lessonId, { title: data.title });
 }
 
+async function applyLessonState(tx: Tx, actor: Actor, lessonId: string, state: PublishState) {
+  const courseId = await courseOfLesson(tx, lessonId);
+  await lockedCheck(tx, courseId);
+  const before = await lessonSnapshot(tx, lessonId);
+  if (before.state === "ARCHIVED" && state !== "ARCHIVED") await assertCan(actor, "content.archive", { entity: "Lesson", id: lessonId });
+  if (state === "PUBLISHED") {
+    // Sequential: one transaction is one connection, and pg will refuse overlapping queries.
+    const blocks = await tx.contentBlock.count({ where: { lessonId } });
+    const resources = await tx.resource.count({ where: { lessonId, archivedAt: null } });
+    const quizzes = await tx.quiz.count({ where: { lessonId, archivedAt: null } });
+    if (!blocks && !resources && !quizzes) throw new ServiceError(`Add content to “${before.title as string}” before marking it ready. Learners would see an empty page.`);
+  }
+  await tx.lesson.update({ where: { id: lessonId }, data: { state, lockVersion: { increment: 1 } } });
+  await markEdited(tx, courseId);
+  await recordRevision(tx, { entityType: "Lesson", entityId: lessonId, courseId, editorId: actor.id, reason: `State set to ${state.toLowerCase()}`, before, after: await lessonSnapshot(tx, lessonId) });
+  return { before, courseId };
+}
+
 export async function setLessonState(actor: Actor, lessonId: string, state: PublishState) {
   await assertCan(actor, state === "ARCHIVED" ? "content.archive" : "content.edit");
-  const before = await transaction(async (tx) => {
-    const courseId = await courseOfLesson(tx, lessonId);
-    await lockedCheck(tx, courseId);
-    const before = await lessonSnapshot(tx, lessonId);
-    if (before.state === "ARCHIVED" && state !== "ARCHIVED") await assertCan(actor, "content.archive", { entity: "Lesson", id: lessonId });
-    if (state === "PUBLISHED") {
-      const [blocks, resources, quizzes] = await Promise.all([
-        tx.contentBlock.count({ where: { lessonId } }),
-        tx.resource.count({ where: { lessonId, archivedAt: null } }),
-        tx.quiz.count({ where: { lessonId, archivedAt: null } }),
-      ]);
-      if (!blocks && !resources && !quizzes) throw new ServiceError("Add content to this lesson before marking it ready. Learners would see an empty page.");
-    }
-    await tx.lesson.update({ where: { id: lessonId }, data: { state, lockVersion: { increment: 1 } } });
-    await markEdited(tx, courseId);
-    await recordRevision(tx, { entityType: "Lesson", entityId: lessonId, courseId, editorId: actor.id, reason: `State set to ${state.toLowerCase()}`, before, after: await lessonSnapshot(tx, lessonId) });
-    return before;
-  });
+  const { before } = await transaction((tx) => applyLessonState(tx, actor, lessonId, state));
   await log(actor, state === "ARCHIVED" ? "archive" : before.state === "ARCHIVED" ? "restore" : "update", "Lesson", lessonId, { state }, { state: before.state });
+}
+
+/**
+ * The same state change for several lessons of one course, all or nothing: if any lesson
+ * cannot change (empty, locked course, missing permission), none do.
+ */
+export async function bulkLessonState(actor: Actor, courseId: string, lessonIds: string[], state: PublishState) {
+  await assertCan(actor, state === "ARCHIVED" ? "content.archive" : "content.edit");
+  const ids = [...new Set(lessonIds)];
+  if (!ids.length) throw new ServiceError("Select at least one lesson.");
+  if (ids.length > 100) throw new ServiceError("Change at most 100 lessons at a time.");
+  await transaction(async (tx) => {
+    const owned = await tx.lesson.count({ where: { id: { in: ids }, module: { programId: courseId } } });
+    if (owned !== ids.length) throw new ServiceError("Every selected lesson must belong to this course.");
+    for (const id of ids) await applyLessonState(tx, actor, id, state);
+  });
+  await log(actor, state === "ARCHIVED" ? "archive" : "update", "Course", courseId, { bulk: true, lessons: ids.length, state });
+  return ids.length;
 }
 
 export async function reorderLessons(actor: Actor, moduleId: string, orderedIds: string[]) {

@@ -71,7 +71,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
   if (kind === "module" && itemId) {
     const mod = await prisma.module.findFirst({
       where: { id: itemId, programId: id },
-      include: { lessons: { select: { id: true, _count: { select: { blocks: true, resources: true, quizzes: true } } } } },
+      include: { lessons: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, state: true, _count: { select: { blocks: true, resources: true, quizzes: true } } } } },
     });
     if (!mod) notFound();
     const courses = await prisma.program.findMany({ where: { id: { not: id }, status: { notIn: ["ARCHIVED", "ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED"] } }, select: { id: true, name: true }, orderBy: { name: "asc" } });
@@ -81,6 +81,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
         courseId={id}
         courses={courses}
         siblings={course.modules.filter((m) => m.id !== mod.id && m.state !== "ARCHIVED").map((m) => ({ id: m.id, title: m.title }))}
+        lessonList={mod.lessons.filter((l) => l.state !== "ARCHIVED").map((l) => ({ id: l.id, title: l.title, state: l.state }))}
         mod={{
           ...mod,
           lessons: mod.lessons.length,
