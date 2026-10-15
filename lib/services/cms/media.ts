@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { assertCan, type Actor } from "@/lib/actor";
 import { ServiceError } from "@/lib/errors";
-import { DOCUMENT_TYPES, IMAGE_TYPES, MAX_BYTES, MAX_IMAGE_BYTES, saveChecked } from "@/lib/storage";
+import { AUDIO_TYPES, DOCUMENT_TYPES, IMAGE_TYPES, MAX_BYTES, MAX_IMAGE_BYTES, saveChecked } from "@/lib/storage";
 import { refusalFor } from "@/lib/cms/screen";
 
 /**
@@ -30,11 +30,11 @@ export async function uploadMedia(actor: Actor, file: File, input: unknown) {
   const isImage = file.type.startsWith("image/");
   let stored;
   try {
-    stored = await saveChecked("media", file, isImage ? IMAGE_TYPES : DOCUMENT_TYPES, isImage ? MAX_IMAGE_BYTES : MAX_BYTES);
+    stored = await saveChecked("media", file, isImage ? IMAGE_TYPES : new Set([...DOCUMENT_TYPES, ...AUDIO_TYPES]), isImage ? MAX_IMAGE_BYTES : MAX_BYTES);
   } catch (e) {
     throw new ServiceError(e instanceof Error ? e.message : "That upload was refused.");
   }
-  const kind: MediaKind = IMAGE_TYPES.has(stored.mimeType) ? "IMAGE" : "DOCUMENT";
+  const kind: MediaKind = IMAGE_TYPES.has(stored.mimeType) ? "IMAGE" : AUDIO_TYPES.has(stored.mimeType) ? "AUDIO" : "DOCUMENT";
   if (kind === "IMAGE" && !meta.altText) throw new ServiceError("Describe the image (alternative text) so it is accessible.");
   const asset = await prisma.mediaAsset.create({
     data: { kind, title: meta.title, altText: meta.altText ?? null, isPublic: meta.isPublic, fileKey: stored.fileKey, mimeType: stored.mimeType, sizeBytes: stored.sizeBytes, uploadedById: actor.id },

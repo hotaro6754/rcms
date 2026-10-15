@@ -100,6 +100,8 @@ export async function updateCourseAction(fd: FormData) {
     const id = str(fd, "id");
     const data = fields(fd, COURSE_FIELDS, ["isFree", "includedInSubscription", "complianceSensitive"]);
     for (const k of ["durationMinutes", "difficulty", "academicReviewerId", "complianceReviewerId", "thumbnailId", "flag"]) if (data[k] === "") data[k] = null;
+    // Optional fields: only sent by forms that show them, so absence means "unchanged".
+    for (const k of ["expiresAt", "requiresCourseId", "isTemplate"]) if (fd.has(k)) data[k] = str(fd, k);
     await structure.updateCourse(await requireActor(), id, data, Number(str(fd, "lockVersion")), opt(fd, "reason") ?? undefined);
     refresh(id);
   });
@@ -109,7 +111,7 @@ export async function duplicateCourseAction(fd: FormData) {
   return attempt(async () => {
     const c = await structure.duplicateCourse(await requireActor(), str(fd, "id"));
     refresh(c.id);
-    return { id: c.id };
+    return { id: c.id, ...(fd.has("open") ? { href: `/admin/content/courses/${c.id}` } : {}) };
   });
 }
 
@@ -190,7 +192,9 @@ export async function createModuleAction(fd: FormData) {
 
 export async function updateModuleAction(fd: FormData) {
   return attempt(async () => {
-    await structure.updateModule(await requireActor(), str(fd, "id"), fields(fd, ["title", "summary", "objectives", "estimatedMinutes"]), Number(str(fd, "lockVersion")), opt(fd, "reason") ?? undefined);
+    const data = fields(fd, ["title", "summary", "objectives", "estimatedMinutes"]);
+    if (fd.has("prerequisiteModuleId")) data.prerequisiteModuleId = str(fd, "prerequisiteModuleId");
+    await structure.updateModule(await requireActor(), str(fd, "id"), data, Number(str(fd, "lockVersion")), opt(fd, "reason") ?? undefined);
     refresh(opt(fd, "courseId"));
   });
 }
@@ -250,6 +254,7 @@ export async function createLessonAction(fd: FormData) {
 export async function updateLessonAction(fd: FormData) {
   return attempt(async () => {
     const data = fields(fd, ["title", "objectives", "minutes", "completionRule", "effectiveDate"], ["freePreview"]);
+    for (const k of ["lastReviewedAt", "nextReviewAt", "sources", "contentOwnerId"]) if (fd.has(k)) data[k] = str(fd, k);
     await structure.updateLesson(await requireActor(), str(fd, "id"), data, Number(str(fd, "lockVersion")), opt(fd, "reason") ?? undefined);
     refresh(opt(fd, "courseId"));
   });
@@ -311,6 +316,8 @@ function blockData(kind: BlockKind, fd: FormData): unknown {
       return { mediaId: str(fd, "mediaId"), alt: str(fd, "alt"), caption: opt(fd, "caption") ?? undefined };
     case "VIDEO":
       return { url: str(fd, "url"), title: str(fd, "title"), transcript: opt(fd, "transcript") ?? undefined, captions: bool(fd, "captions") };
+    case "AUDIO":
+      return { mediaId: str(fd, "mediaId"), title: str(fd, "title"), transcript: str(fd, "transcript") };
     case "LINK":
       return { url: str(fd, "url"), label: str(fd, "label"), description: opt(fd, "description") ?? undefined };
     case "TABLE": {

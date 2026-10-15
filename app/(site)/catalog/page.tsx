@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LEVEL_BORDER } from "@/lib/level-accent";
 import { listPublishedCourses, listPublishedLevels } from "@/lib/services/learning/catalog";
 import { runScheduledPublications } from "@/lib/services/cms/release";
 import { PageHeader } from "@/components/site/PageHeader";
@@ -7,7 +8,7 @@ import { cn } from "@/lib/utils";
 export const metadata = { title: "Course catalogue", description: "Every released course, by learning level: Trainee, Professional and Leadership." };
 export const dynamic = "force-dynamic";
 
-const ACCENT: Record<string, string> = { teal: "border-[#2f7d76]", blue: "border-[#2e5f9e]", navy: "border-[#1d2b4a]" };
+const ACCENT = LEVEL_BORDER;
 
 /**
  * The live catalogue: released courses only, grouped by learning level, searchable. Course

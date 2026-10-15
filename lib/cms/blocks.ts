@@ -90,6 +90,11 @@ export const BLOCK_SCHEMAS = {
     synthetic: z.literal(true, { error: "Confirm the scenario uses synthetic data only." }),
   }),
   CODE: z.object({ language: text(40).optional(), code: text(20_000).min(1, "Paste the example.") }),
+  AUDIO: z.object({
+    mediaId: z.string().min(1, "Choose an audio file from the media library."),
+    title: text(200).min(3, "Give the recording a title."),
+    transcript: text(40_000).min(20, "Add a transcript so the recording is accessible to everyone."),
+  }),
 } satisfies Record<BlockKind, z.ZodType>;
 
 export type BlockData<K extends BlockKind> = z.infer<(typeof BLOCK_SCHEMAS)[K]>;
@@ -105,6 +110,7 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   STEPS: "Steps",
   SCENARIO: "Scenario / case study",
   CODE: "Structured example",
+  AUDIO: "Audio",
 };
 
 /** All the human-readable text in a block, for screening and search. */

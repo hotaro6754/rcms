@@ -149,3 +149,17 @@ export async function lessonAccess(actor: Actor | null, course: { id: string; le
   if (actor && lesson?.freePreview) return { ...access, full: false, reason: "free_preview" as const, tracked: false };
   return null;
 }
+
+/**
+ * A course may require a valid certificate for another course before enrolment. Checked on
+ * free enrolment and before checkout; staff granting access can override it deliberately.
+ */
+export async function coursePrerequisiteMissing(userId: string, courseId: string): Promise<string | null> {
+  const c = await prisma.program.findUnique({ where: { id: courseId }, select: { requiresCourseId: true } });
+  if (!c?.requiresCourseId) return null;
+  const has = await prisma.certificate.findFirst({ where: { userId, programId: c.requiresCourseId, revokedAt: null }, select: { id: true } });
+  if (has) return null;
+  const req = await prisma.program.findUnique({ where: { id: c.requiresCourseId }, select: { name: true } });
+  return `Complete ${req?.name ?? "the prerequisite course"} and claim its certificate first.`;
+}
+

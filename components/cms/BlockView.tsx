@@ -56,6 +56,19 @@ export function BlockView({ block, mediaContext }: { block: ViewBlock; mediaCont
           {s(d.caption) && <figcaption className="text-micro text-muted-foreground">{s(d.caption)}</figcaption>}
         </figure>
       );
+    case "AUDIO":
+      return (
+        <figure className="flex flex-col gap-2">
+          {s(d.title) && <figcaption className="text-[14px] font-semibold">{s(d.title)}</figcaption>}
+          <audio controls preload="none" src={`/api/media/${s(d.mediaId)}${mediaContext ? `?c=${encodeURIComponent(mediaContext)}` : ""}`} className="w-full">
+            Your browser cannot play this recording; the transcript is below.
+          </audio>
+          <details className="rounded-[var(--radius)] border border-border bg-card px-4 py-3">
+            <summary className="cursor-pointer text-[13px] font-medium">Transcript</summary>
+            <Markdown text={s(d.transcript)} className="mt-2 flex flex-col gap-2 [&_p]:text-[14px]" />
+          </details>
+        </figure>
+      );
     case "VIDEO": {
       const src = videoEmbedUrl(s(d.url));
       return (

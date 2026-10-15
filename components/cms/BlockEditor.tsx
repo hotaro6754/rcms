@@ -32,7 +32,7 @@ function L({ label, children, hint }: { label: string; children: React.ReactNode
 const MD_HINT = "Blank line = new paragraph. ## heading, - bullet, 1. step, **bold**, *italic*, [link](https://…).";
 
 /** The fields for one block kind, pre-filled from `d`. Names match lib/actions/cms.ts blockData. */
-function KindFields({ kind, d, images }: { kind: BlockKind; d: Record<string, unknown>; images: { id: string; title: string }[] }) {
+function KindFields({ kind, d, images, audio = [] }: { kind: BlockKind; d: Record<string, unknown>; images: { id: string; title: string }[]; audio?: { id: string; title: string }[] }) {
   switch (kind) {
     case "TEXT":
       return (
@@ -93,6 +93,27 @@ function KindFields({ kind, d, images }: { kind: BlockKind; d: Record<string, un
           </L>
           <L label="Caption (optional)">
             <input name="caption" defaultValue={s(d.caption)} className={IN} />
+          </L>
+        </>
+      );
+    case "AUDIO":
+      return (
+        <>
+          <L label="Audio file" hint={audio.length ? undefined : "Upload MP3, M4A, OGG or WAV files in the media library first."}>
+            <select name="mediaId" defaultValue={s(d.mediaId)} required className={IN}>
+              <option value="">Choose…</option>
+              {audio.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title}
+                </option>
+              ))}
+            </select>
+          </L>
+          <L label="Title">
+            <input name="title" defaultValue={s(d.title)} required minLength={3} className={IN} />
+          </L>
+          <L label="Transcript" hint="Required: learners who cannot listen read this instead.">
+            <textarea name="transcript" rows={5} defaultValue={s(d.transcript)} required minLength={20} className={TA} />
           </L>
         </>
       );
@@ -195,7 +216,7 @@ function summary(b: EditorBlock) {
   return t.length > 140 ? t.slice(0, 140) + "…" : t;
 }
 
-export function BlockEditor({ courseId, lessonId, blocks, images, canEdit }: { courseId: string; lessonId: string; blocks: EditorBlock[]; images: { id: string; title: string }[]; canEdit: boolean }) {
+export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], canEdit }: { courseId: string; lessonId: string; blocks: EditorBlock[]; images: { id: string; title: string }[]; audio?: { id: string; title: string }[]; canEdit: boolean }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [newKind, setNewKind] = useState<BlockKind | "">("");
 
@@ -238,7 +259,7 @@ export function BlockEditor({ courseId, lessonId, blocks, images, canEdit }: { c
                 <input type="hidden" name="kind" value={b.kind} />
                 <input type="hidden" name="updatedAt" value={b.updatedAt} />
                 <input type="hidden" name="courseId" value={courseId} />
-                <KindFields kind={b.kind} d={b.data} images={images} />
+                <KindFields kind={b.kind} d={b.data} images={images} audio={audio} />
                 <div className="flex gap-2">
                   <button className="min-h-9 rounded-[3px] bg-primary px-3 text-[13px] font-medium text-primary-foreground">Save block</button>
                   <button type="button" onClick={() => setEditing(null)} className="min-h-9 rounded-[3px] px-3 text-[13px] hover:bg-secondary">
@@ -271,7 +292,7 @@ export function BlockEditor({ courseId, lessonId, blocks, images, canEdit }: { c
               <input type="hidden" name="lessonId" value={lessonId} />
               <input type="hidden" name="kind" value={newKind} />
               <input type="hidden" name="courseId" value={courseId} />
-              <KindFields kind={newKind} d={{}} images={images} />
+              <KindFields kind={newKind} d={{}} images={images} audio={audio} />
               <div className="flex gap-2">
                 <button className="min-h-9 rounded-[3px] bg-primary px-3 text-[13px] font-medium text-primary-foreground">Add {BLOCK_LABEL[newKind].toLowerCase()}</button>
                 <button type="button" onClick={() => setNewKind("")} className="min-h-9 rounded-[3px] px-3 text-[13px] hover:bg-secondary">

@@ -6,7 +6,7 @@ import { PageHead, Ruled } from "@/components/platform/PlatformShell";
 import { BoardView } from "@/components/admin/BoardView";
 import { board } from "@/lib/services/reports/dashboards";
 import { runDueApprovals } from "@/lib/services/approvals";
-import { runScheduledPublications } from "@/lib/services/cms/release";
+import { runScheduledExpiries, runScheduledPublications } from "@/lib/services/cms/release";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { when } from "@/components/admin/kit";
 
@@ -22,7 +22,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const { denied } = await searchParams;
   const actor = await requireActor();
   if (!isStaff(actor)) redirect("/account");
-  await Promise.all([runScheduledPublications().catch(() => []), runDueApprovals().catch(() => undefined)]);
+  await Promise.all([runScheduledPublications().catch(() => []), runScheduledExpiries().catch(() => []), runDueApprovals().catch(() => undefined)]);
 
   const [toReviewAcademic, toReviewCompliance, toPublish, toGrade, myTickets, unassigned, approvals, invoices, privacy, recentAudit] = await Promise.all([
     can(actor, "content.review.academic") ? prisma.program.count({ where: { status: "ACADEMIC_REVIEW" } }) : 0,

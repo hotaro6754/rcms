@@ -205,6 +205,12 @@ export const CourseInput = z.object({
   effectiveDate: optionalDate,
   reviewDate: optionalDate,
   thumbnailId: z.string().trim().optional().nullable(),
+  /** Withdraw from learners automatically at this time. Omitted = unchanged. */
+  expiresAt: optionalDate,
+  /** A template is copied to start new courses and is never released. Omitted = unchanged. */
+  isTemplate: z.preprocess((v) => (v === undefined || v === "" ? undefined : v === true || v === "true" || v === "on"), z.boolean().optional()),
+  /** Enrolment requires a valid certificate for this course. "" clears it; omitted = unchanged. */
+  requiresCourseId: z.preprocess((v) => (v === "" ? null : v), z.string().trim().nullable().optional()),
 });
 
 export async function createCourse(actor: Actor, input: { levelId: string; name: string; description?: string | null }) {
@@ -254,6 +260,15 @@ export async function updateCourse(actor: Actor, courseId: string, input: unknow
     if (!level || level.status === "ARCHIVED") throw new ServiceError("Choose an active learning level.");
     const before = await courseSnapshot(tx, courseId);
     if (before.levelId !== data.levelId) await assertCan(actor, "content.structure", { entity: "Course", id: courseId });
+    if (data.requiresCourseId) {
+      if (data.requiresCourseId === courseId) throw new ServiceError("A course cannot require itself.");
+      const req = await tx.program.findUnique({ where: { id: data.requiresCourseId }, select: { requiresCourseId: true, isTemplate: true } });
+      if (!req || req.isTemplate) throw new ServiceError("Choose a real course as the prerequisite.");
+      if (req.requiresCourseId === courseId) throw new ServiceError("Those two courses would require each other.");
+    }
+    if (data.isTemplate && (await tx.program.findUnique({ where: { id: courseId }, select: { publishedVersionId: true } }))?.publishedVersionId) {
+      throw new ServiceError("A released course cannot become a template. Duplicate it and mark the copy as a template.");
+    }
     const res = await tx.program.updateMany({
       where: { id: courseId, lockVersion },
       data: { ...data, lockVersion: { increment: 1 } },
@@ -328,7 +343,21 @@ export const ModuleInput = z.object({
   summary: z.string().trim().max(2_000).optional().nullable(),
   objectives: lines,
   estimatedMinutes: z.coerce.number().int().min(0).max(10_000).optional().nullable(),
+  /** Another module of the same course that must be completed first. "" clears it; omitted = unchanged. */
+  prerequisiteModuleId: z.preprocess((v) => (v === "" ? null : v), z.string().trim().nullable().optional()),
 });
+
+/** The prerequisite must be another module of the same course, and the chain must not loop. */
+async function checkPrerequisite(tx: Tx, courseId: string, moduleId: string | null, prerequisiteId: string | null | undefined) {
+  if (!prerequisiteId) return;
+  if (prerequisiteId === moduleId) throw new ServiceError("A module cannot require itself.");
+  const all = await tx.module.findMany({ where: { programId: courseId }, select: { id: true, prerequisiteModuleId: true } });
+  const byId = new Map(all.map((m) => [m.id, m.prerequisiteModuleId]));
+  if (!byId.has(prerequisiteId)) throw new ServiceError("The prerequisite must be a module of the same course.");
+  for (let cur: string | null | undefined = prerequisiteId, hops = 0; cur; cur = byId.get(cur), hops++) {
+    if (cur === moduleId || hops > all.length) throw new ServiceError("That prerequisite would create a loop.");
+  }
+}
 
 export async function createModule(actor: Actor, courseId: string, input: unknown) {
   await assertCan(actor, "content.create");
@@ -336,6 +365,7 @@ export async function createModule(actor: Actor, courseId: string, input: unknow
   screen(data.summary, ...data.objectives);
   const mod = await transaction(async (tx) => {
     await lockedCheck(tx, courseId);
+    await checkPrerequisite(tx, courseId, null, data.prerequisiteModuleId);
     const created = await tx.module.create({
       data: { ...data, programId: courseId, state: "DRAFT", sortOrder: await nextSortOrder(tx, "module", { programId: courseId }) },
     });
@@ -354,6 +384,7 @@ export async function updateModule(actor: Actor, moduleId: string, input: unknow
   const courseId = await transaction(async (tx) => {
     const courseId = await courseOfModule(tx, moduleId);
     await lockedCheck(tx, courseId);
+    await checkPrerequisite(tx, courseId, moduleId, data.prerequisiteModuleId);
     const before = await moduleSnapshot(tx, moduleId);
     const res = await tx.module.updateMany({ where: { id: moduleId, lockVersion }, data: { ...data, lockVersion: { increment: 1 } } });
     if (res.count === 0) throw new ServiceError("Someone else saved this module after you opened it. Reload to see their changes.");
@@ -479,6 +510,11 @@ export const LessonInput = z.object({
   freePreview: z.coerce.boolean().default(false),
   completionRule: z.enum(["MANUAL", "ASSESSMENT_PASS"]).default("MANUAL"),
   effectiveDate: optionalDate,
+  lastReviewedAt: optionalDate,
+  nextReviewAt: optionalDate,
+  /** Citations the lesson relies on (regulation, payer manual, standard), one per line. */
+  sources: z.union([z.array(z.string()), z.string()]).optional().transform((v) => (v === undefined ? undefined : (Array.isArray(v) ? v : v.split("\n")).map((x) => x.trim()).filter(Boolean).slice(0, 30))),
+  contentOwnerId: z.preprocess((v) => (v === "" ? null : v), z.string().trim().nullable().optional()),
 });
 
 export async function createLesson(actor: Actor, moduleId: string, input: { title: string }) {
@@ -499,7 +535,9 @@ export async function createLesson(actor: Actor, moduleId: string, input: { titl
 export async function updateLesson(actor: Actor, lessonId: string, input: unknown, lockVersion: number, reason?: string) {
   await assertCan(actor, "content.edit");
   const data = LessonInput.parse(input);
-  screen(data.title, ...data.objectives);
+  screen(data.title, ...data.objectives, ...(data.sources ?? []));
+  if (data.lastReviewedAt && data.lastReviewedAt > new Date()) throw new ServiceError("The last review date cannot be in the future.");
+  if (data.lastReviewedAt && data.nextReviewAt && data.nextReviewAt <= data.lastReviewedAt) throw new ServiceError("The next review must come after the last one.");
   await transaction(async (tx) => {
     const courseId = await courseOfLesson(tx, lessonId);
     await lockedCheck(tx, courseId);
@@ -517,6 +555,10 @@ export async function updateLesson(actor: Actor, lessonId: string, input: unknow
         freePreview: data.freePreview,
         completionRule: data.completionRule as LessonCompletion,
         ...(data.effectiveDate !== undefined ? { effectiveDate: data.effectiveDate } : {}),
+        ...(data.lastReviewedAt !== undefined ? { lastReviewedAt: data.lastReviewedAt } : {}),
+        ...(data.nextReviewAt !== undefined ? { nextReviewAt: data.nextReviewAt } : {}),
+        ...(data.sources !== undefined ? { sources: data.sources } : {}),
+        ...(data.contentOwnerId !== undefined ? { contentOwnerId: data.contentOwnerId } : {}),
         lockVersion: { increment: 1 },
       },
     });

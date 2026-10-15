@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { inr, NEXT_COHORT, PROGRAMS } from "@/lib/data/catalog";
+import { whatsappUrl } from "@/lib/contact";
 import { FooterLive } from "./footer/FooterLive";
 import { FooterNotes } from "./footer/FooterNotes";
 import { FooterWordmark } from "./footer/FooterWordmark";
@@ -13,7 +13,7 @@ const INDEX = [
       { href: "/courses", label: "Programs" },
       { href: "/pricing", label: "Pricing" },
       { href: "/mentoring", label: "1:1 mentoring" },
-      { href: "/pricing#corporate", label: "Corporate cohorts" },
+      { href: "/pricing", label: "Corporate accounts" },
     ],
   },
   {
@@ -38,7 +38,7 @@ const INDEX = [
     title: "Contact",
     links: [
       { href: "/contact", label: "Write to us" },
-      { href: "https://wa.me/919999999999", label: "WhatsApp" },
+      ...(whatsappUrl() ? [{ href: whatsappUrl()!, label: "WhatsApp" }] : []),
     ],
   },
   {
@@ -55,13 +55,11 @@ const INDEX = [
 /**
  * The file closes. One ink piece, not a CTA band stacked on a link directory: the claim
  * that opened the page is marked closed and the closing statement answers the hero. Then
- * the monthly letter beside the live facts (the time in India, days to the next cohort),
+ * the monthly letter beside the live facts (the time in India, when sessions run),
  * the site's index as ruled rows, the colophon, and the name set as wide as the page and
  * cut off by its bottom edge. No cards, no pills, no second background.
  */
 export function SiteFooter() {
-  const cheapest = Math.min(...PROGRAMS.map((p) => p.price));
-
   return (
     <footer data-env="ink" className="editorial env-ink bg-background">
       <div className="mx-auto max-w-[1320px] px-6 pt-24 lg:pt-32">
@@ -80,7 +78,7 @@ export function SiteFooter() {
             href="/learning-paths"
             className="inline-flex min-h-12 items-center rounded-[3px] bg-primary px-6 text-[15px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
           >
-            See the five levels
+            See the learning levels
           </Link>
           <Link
             href="/mentoring"
@@ -88,7 +86,9 @@ export function SiteFooter() {
           >
             Or talk it through, 1:1
           </Link>
-          <p className="text-data text-[12px] text-subtle">Programs from {inr(cheapest)} · next cohort {NEXT_COHORT.label}</p>
+          <Link href="/pricing" className="text-data text-[12px] text-subtle underline-offset-4 hover:underline">
+            Pricing
+          </Link>
         </div>
 
         <div className="mt-24 grid gap-14 border-t border-foreground/60 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">

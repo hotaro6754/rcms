@@ -63,6 +63,9 @@ async function restoreCourse(tx: Tx, id: string, s: Snap) {
       effectiveDate: date(s.effectiveDate),
       reviewDate: date(s.reviewDate),
       thumbnailId: (s.thumbnailId as string | null) ?? null,
+      // Revisions written before these fields existed leave them as they are.
+      ...("expiresAt" in s ? { expiresAt: date(s.expiresAt) } : {}),
+      ...("requiresCourseId" in s ? { requiresCourseId: (s.requiresCourseId as string | null) ?? null } : {}),
       lockVersion: { increment: 1 },
     },
   });
@@ -77,6 +80,7 @@ async function restoreModule(tx: Tx, id: string, s: Snap) {
       summary: (s.summary as string | null) ?? null,
       objectives: (s.objectives as string[]) ?? [],
       estimatedMinutes: (s.estimatedMinutes as number | null) ?? null,
+      ...("prerequisiteModuleId" in s ? { prerequisiteModuleId: (s.prerequisiteModuleId as string | null) ?? null } : {}),
       state: (s.state as "DRAFT" | "PUBLISHED" | "ARCHIVED") ?? "DRAFT",
       lockVersion: { increment: 1 },
     },
@@ -95,6 +99,7 @@ async function restoreLesson(tx: Tx, id: string, s: Snap) {
       freePreview: !!s.freePreview,
       completionRule: (s.completionRule as "MANUAL" | "ASSESSMENT_PASS") ?? "MANUAL",
       effectiveDate: date(s.effectiveDate),
+      ...("lastReviewedAt" in s ? { lastReviewedAt: date(s.lastReviewedAt), nextReviewAt: date(s.nextReviewAt), sources: (s.sources as string[]) ?? [], contentOwnerId: (s.contentOwnerId as string | null) ?? null } : {}),
       lockVersion: { increment: 1 },
     },
   });

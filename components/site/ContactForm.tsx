@@ -7,9 +7,17 @@ import { submitContact } from "@/lib/actions/leads";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { MENTORING, PROGRAMS, inr } from "@/lib/data/catalog";
 
-export function ContactForm() {
+const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
+
+interface Options {
+  courses: { name: string; amount: number }[];
+  mentoring: { name: string; amount: number }[];
+}
+
+/** Interest options come from active products, so the prices shown match checkout. */
+export function ContactForm({ options, defaultInterest = "" }: { options: Options; defaultInterest?: string }) {
+  const known = [...options.courses, ...options.mentoring].some((o) => o.name === defaultInterest) || defaultInterest === "Corporate account";
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, start] = useTransition();
   const [sent, setSent] = useState(false);
@@ -29,8 +37,7 @@ export function ContactForm() {
         </span>
         <h2 className="mt-5 text-[1.4rem] leading-tight">That is with me</h2>
         <p className="mt-3 max-w-[52ch] text-[13.5px] leading-relaxed text-muted-foreground">
-          You will get a reply within one working day, IST. If it is urgent, WhatsApp is
-          faster than email.
+          You will get a reply within one working day, IST.
         </p>
         <button
           type="button"
@@ -83,21 +90,26 @@ export function ContactForm() {
           <select
             id="interest"
             name="interest"
-            defaultValue=""
+            defaultValue={known ? defaultInterest : ""}
             className="min-h-11 rounded-md border border-input bg-background px-3 text-[14px] outline-none transition-colors focus:border-primary"
           >
             <option value="" disabled>Choose one</option>
-            <optgroup label="Programs">
-              {PROGRAMS.map((p) => (
-                <option key={p.id} value={p.name}>{p.name} · {inr(p.price)}</option>
-              ))}
-            </optgroup>
-            <optgroup label="Mentoring">
-              {MENTORING.map((m) => (
-                <option key={m.id} value={m.name}>{m.name} · {inr(m.price)}</option>
-              ))}
-            </optgroup>
-            <option value="Corporate cohort">Corporate cohort</option>
+            {options.courses.length > 0 && (
+              <optgroup label="Courses">
+                {options.courses.map((p) => (
+                  <option key={p.name} value={p.name}>{p.name} · {inr(p.amount)}</option>
+                ))}
+              </optgroup>
+            )}
+            {options.mentoring.length > 0 && (
+              <optgroup label="Mentoring">
+                {options.mentoring.map((m) => (
+                  <option key={m.name} value={m.name}>{m.name} · {inr(m.amount)}</option>
+                ))}
+              </optgroup>
+            )}
+            <option value="Corporate account">Corporate account</option>
+            <option value="Something else">Something else</option>
           </select>
         </div>
       </div>

@@ -211,6 +211,7 @@ export function WorkflowPanel({
 
 export function CourseForm({
   course,
+  otherCourses = [],
   levels,
   reviewers,
   thumbnails,
@@ -239,8 +240,12 @@ export function CourseForm({
     effectiveDate: Date | null;
     reviewDate: Date | null;
     thumbnailId: string | null;
+    expiresAt: Date | null;
+    isTemplate: boolean;
+    requiresCourseId: string | null;
     lockVersion: number;
   };
+  otherCourses?: { id: string; name: string }[];
   levels: { id: string; displayTitle: string }[];
   reviewers: { academic: { id: string; name: string }[]; compliance: { id: string; name: string }[] };
   thumbnails: { id: string; title: string }[];
@@ -304,6 +309,25 @@ export function CourseForm({
         </Field>
         <Field label="Next review date" htmlFor="c-rev">
           <input id="c-rev" name="reviewDate" type="date" defaultValue={dateInput(course.reviewDate)} className={FIELD} />
+        </Field>
+        <Field label="Withdraw from learners on" htmlFor="c-exp" hint="Optional. Learners keep their history and certificates.">
+          <input id="c-exp" name="expiresAt" type="date" defaultValue={dateInput(course.expiresAt)} className={FIELD} />
+        </Field>
+        <Field label="Requires a certificate in" htmlFor="c-req" hint="Optional prerequisite course for enrolment and purchase.">
+          <select id="c-req" name="requiresCourseId" defaultValue={course.requiresCourseId ?? ""} className={FIELD}>
+            <option value="">No prerequisite</option>
+            {otherCourses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Template" htmlFor="c-tpl" hint="Templates are copied to start new courses and are never released.">
+          <select id="c-tpl" name="isTemplate" defaultValue={course.isTemplate ? "true" : "false"} className={FIELD}>
+            <option value="false">No, a normal course</option>
+            <option value="true">Yes, use as a template</option>
+          </select>
         </Field>
         <Field label="Assigned academic reviewer" htmlFor="c-ar">
           <select id="c-ar" name="academicReviewerId" defaultValue={course.academicReviewerId ?? ""} className={FIELD}>
@@ -373,11 +397,13 @@ export function ModulePanel({
   courseId,
   mod,
   courses,
+  siblings = [],
 }: {
   actor: Actor;
   courseId: string;
-  mod: { id: string; title: string; summary: string | null; objectives: string[]; estimatedMinutes: number | null; state: string; lockVersion: number; lessons: number; resources: number; assessments: number; blocks: number };
+  mod: { id: string; title: string; summary: string | null; objectives: string[]; estimatedMinutes: number | null; prerequisiteModuleId: string | null; state: string; lockVersion: number; lessons: number; resources: number; assessments: number; blocks: number };
   courses: { id: string; name: string }[];
+  siblings?: { id: string; title: string }[];
 }) {
   const canEdit = can(actor, "content.edit");
   return (
@@ -405,6 +431,16 @@ export function ModulePanel({
           </Field>
           <Field label="Estimated time (minutes)" htmlFor="m-min">
             <input id="m-min" name="estimatedMinutes" type="number" min={0} defaultValue={mod.estimatedMinutes ?? ""} className={FIELD} />
+          </Field>
+          <Field label="Prerequisite module" htmlFor="m-pre" hint="Learners must complete it before this module opens.">
+            <select id="m-pre" name="prerequisiteModuleId" defaultValue={mod.prerequisiteModuleId ?? ""} className={FIELD}>
+              <option value="">None</option>
+              {siblings.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Reason for change" htmlFor="m-reason">
             <input id="m-reason" name="reason" className={FIELD} />
@@ -492,12 +528,14 @@ export function LessonPanel({
   lesson,
   modules,
   courseSlug,
+  owners = [],
 }: {
   actor: Actor;
   courseId: string;
-  lesson: { id: string; title: string; objectives: string[]; durationSec: number | null; state: string; freePreview: boolean; completionRule: string; effectiveDate: Date | null; lockVersion: number; moduleId: string; hasAssessment: boolean };
+  lesson: { id: string; title: string; objectives: string[]; durationSec: number | null; state: string; freePreview: boolean; completionRule: string; effectiveDate: Date | null; lastReviewedAt: Date | null; nextReviewAt: Date | null; sources: string[]; contentOwnerId: string | null; lockVersion: number; moduleId: string; hasAssessment: boolean };
   modules: { id: string; title: string; course: string; sameCourse: boolean }[];
   courseSlug: string;
+  owners?: { id: string; name: string }[];
 }) {
   const canEdit = can(actor, "content.edit");
   return (
@@ -538,6 +576,28 @@ export function LessonPanel({
           <div className="flex items-end pb-2">
             <Checkbox name="freePreview" label="Free preview" defaultChecked={lesson.freePreview} hint="Viewable by signed-in visitors before enrolling." />
           </div>
+          <fieldset className="grid gap-3 rounded-[var(--radius)] border border-border px-4 py-3 sm:col-span-2 sm:grid-cols-3">
+            <legend className="label-caps px-1">Review and sources</legend>
+            <Field label="Content owner" htmlFor="l-own">
+              <select id="l-own" name="contentOwnerId" defaultValue={lesson.contentOwnerId ?? ""} className={FIELD}>
+                <option value="">Course owner</option>
+                {owners.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Last reviewed" htmlFor="l-lrev">
+              <input id="l-lrev" name="lastReviewedAt" type="date" defaultValue={dateInput(lesson.lastReviewedAt)} className={FIELD} />
+            </Field>
+            <Field label="Next review" htmlFor="l-nrev" hint="A compliance-sensitive course cannot be released past this date.">
+              <input id="l-nrev" name="nextReviewAt" type="date" defaultValue={dateInput(lesson.nextReviewAt)} className={FIELD} />
+            </Field>
+            <Field label="Supporting sources" htmlFor="l-src" hint="One per line: regulation, payer manual section or standard, with its date." className="sm:col-span-3">
+              <textarea id="l-src" name="sources" rows={3} defaultValue={lesson.sources.join("\n")} className={TEXTAREA} />
+            </Field>
+          </fieldset>
           <Field label="Reason for change" htmlFor="l-reason" className="sm:col-span-2">
             <input id="l-reason" name="reason" className={FIELD} />
           </Field>

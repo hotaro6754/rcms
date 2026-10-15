@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
 import { BTN, Empty, Field, FIELD, StatusPill, TEXTAREA } from "@/components/admin/kit";
-import { createCourseAction, createLevelAction, importCourseAction, moveLevelAction, reorderCoursesAction, setLevelStatusAction } from "@/lib/actions/cms";
+import { createCourseAction, createLevelAction, duplicateCourseAction, importCourseAction, moveLevelAction, reorderCoursesAction, setLevelStatusAction } from "@/lib/actions/cms";
 import { STATUS_LABEL } from "@/lib/services/cms/core";
 
 export const metadata = { title: "Levels and courses" };
@@ -58,6 +58,7 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
         updatedAt: true,
         scheduledFor: true,
         complianceSensitive: true,
+        isTemplate: true,
         publishedVersion: { select: { version: true } },
         _count: { select: { modules: true, enrolments: true } },
       },
@@ -233,6 +234,26 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
               </div>
             </ActionForm>
           </details>
+        )}
+
+        {canCreate && courses.some((c) => c.isTemplate) && (
+          <section className="rounded-[var(--radius)] border border-border bg-card px-5 py-4" aria-labelledby="templates">
+            <h2 id="templates" className="text-[14px] font-semibold">
+              Start from a template
+            </h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">A copy of the template becomes a new draft course with its modules, lessons, blocks and assessments.</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {courses
+                .filter((c) => c.isTemplate)
+                .map((t) => (
+                  <li key={t.id}>
+                    <ActionButton action={duplicateCourseAction} fields={{ id: t.id, open: "1" }}>
+                      New course from “{t.name}”
+                    </ActionButton>
+                  </li>
+                ))}
+            </ul>
+          </section>
         )}
 
         {can(actor, "content.import") && can(actor, "content.create") && (

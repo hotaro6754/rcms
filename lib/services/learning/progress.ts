@@ -4,7 +4,7 @@ import { audit } from "@/lib/audit";
 import type { Actor } from "@/lib/actor";
 import { ServiceError } from "@/lib/errors";
 import { flatLessons, findLesson, type CourseSnapshot } from "@/lib/cms/snapshot";
-import { activeSubscriptionCovering, courseAccess, getPublishedCourse, getPublishedCourseById } from "./catalog";
+import { activeSubscriptionCovering, courseAccess, coursePrerequisiteMissing, getPublishedCourse, getPublishedCourseById } from "./catalog";
 
 /**
  * Enrolment and progress for learners.
@@ -20,6 +20,8 @@ export async function enrolFree(actor: Actor, courseId: string) {
   const sub = await activeSubscriptionCovering(actor.id, { levelId: course.levelId, includedInSubscription: course.snapshot.course.includedInSubscription });
   const source = course.snapshot.course.isFree ? "FREE" : sub ? "SUBSCRIPTION" : null;
   if (!source) throw new ServiceError("This course needs a purchase or a subscription.");
+  const missing = await coursePrerequisiteMissing(actor.id, courseId);
+  if (missing) throw new ServiceError(missing);
   try {
     const e = await prisma.enrolment.create({ data: { userId: actor.id, programId: courseId, source } });
     await audit({ actorId: actor.id, action: "enrol", entity: "Enrolment", entityId: e.id, after: { programId: courseId, source } });
@@ -36,6 +38,18 @@ export async function enrolFree(actor: Actor, courseId: string) {
     }
     throw error;
   }
+}
+
+/**
+ * A module with a prerequisite stays locked until every lesson of the prerequisite module in
+ * the same release is complete. Staff previews are never locked.
+ */
+export async function moduleLock(userId: string, snapshot: CourseSnapshot, moduleId: string): Promise<{ locked: boolean; prerequisite: string | null }> {
+  const mod = snapshot.modules.find((m) => m.id === moduleId);
+  const pre = mod?.prerequisiteModuleId ? snapshot.modules.find((m) => m.id === mod.prerequisiteModuleId) : null;
+  if (!pre || !pre.lessons.length) return { locked: false, prerequisite: null };
+  const done = await prisma.progress.count({ where: { userId, lessonId: { in: pre.lessons.map((l) => l.id) }, completedAt: { not: null } } });
+  return { locked: done < pre.lessons.length, prerequisite: pre.title };
 }
 
 async function resolveLesson(actor: Actor, lessonId: string) {
@@ -63,8 +77,10 @@ export async function recordLessonView(actor: Actor, courseId: string, lessonId:
 }
 
 export async function completeLesson(actor: Actor, lessonId: string, opts: { viaAssessment?: boolean } = {}) {
-  const { lesson, access } = await resolveLesson(actor, lessonId);
+  const { course, lesson, access } = await resolveLesson(actor, lessonId);
   if (!access.full || !access.tracked) throw new ServiceError("You are not enrolled on this course.");
+  const lock = await moduleLock(actor.id, course.snapshot, lesson.moduleId);
+  if (lock.locked) throw new ServiceError(`Finish “${lock.prerequisite}” first.`);
   if (lesson.completionRule === "ASSESSMENT_PASS" && !opts.viaAssessment) {
     throw new ServiceError("This lesson completes when you pass its assessment.");
   }

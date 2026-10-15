@@ -4,7 +4,8 @@ import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap/register";
 import { SYSTEM } from "@/lib/data/system";
-import { LEVELS } from "@/lib/data/catalog";
+/** The stage data predates the three learning levels; this maps its 1–5 ladder onto them. */
+const LEVEL_NAME: Record<number, string> = { 1: "Trainee — Foundation", 2: "Professional — Execution", 3: "Professional — Execution", 4: "Leadership — Governance", 5: "Leadership — Governance" };
 import { cn } from "@/lib/utils";
 
 const PHASES = ["Front end", "Middle", "Back end"] as const;
@@ -176,7 +177,6 @@ export function SystemFlow() {
       {/* The spread: every stage in one cell, the active one in place. */}
       <div className="mt-14 grid" aria-live="polite">
         {SYSTEM.map((s, i) => {
-          const level = LEVELS[s.level - 1];
           const on = i === active;
           return (
             <article
@@ -211,7 +211,7 @@ export function SystemFlow() {
                       tabIndex={on ? 0 : -1}
                       className="underline decoration-input underline-offset-4 hover:decoration-foreground"
                     >
-                      Level {String(level.n).padStart(2, "0")}, {level.verb}: {level.title}
+                      {LEVEL_NAME[s.level]}
                     </Link>
                   </dd>
                 </div>

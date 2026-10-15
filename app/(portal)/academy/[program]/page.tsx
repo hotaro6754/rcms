@@ -44,6 +44,11 @@ export default async function CoursePage({ params }: { params: Promise<{ program
             <header className="flex items-baseline gap-3 border-b border-border px-6 py-4">
               <span className="text-data text-micro font-semibold text-primary">{String(i + 1).padStart(2, "0")}</span>
               <h2 className="text-[1.05rem] leading-snug">{m.title}</h2>
+              {(() => {
+                const pre = m.prerequisiteModuleId ? s.modules.find((x) => x.id === m.prerequisiteModuleId) : null;
+                const locked = !!(progress && pre && pre.lessons.some((l) => !progress.done.has(l.id)));
+                return locked ? <span className="text-micro text-warning">Opens after “{pre!.title}”</span> : null;
+              })()}
               {progress && (
                 <span className="text-data ml-auto shrink-0 text-micro text-muted-foreground">
                   {m.lessons.filter((l) => progress.done.has(l.id)).length}/{m.lessons.length}

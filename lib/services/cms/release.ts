@@ -166,15 +166,27 @@ export async function buildSnapshot(tx: Tx, courseId: string): Promise<{ snapsho
         freePreview: l.freePreview,
         completionRule: l.completionRule,
         effectiveDate: l.effectiveDate?.toISOString() ?? null,
+        lastReviewedAt: l.lastReviewedAt?.toISOString() ?? null,
+        nextReviewAt: l.nextReviewAt?.toISOString() ?? null,
+        sources: l.sources,
         blocks: l.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown> })),
         resources: l.resources.map((r) => ({ id: r.id, title: r.title, mimeType: r.mimeType, sizeBytes: r.sizeBytes })),
         assessment,
       };
     });
-    return { id: m.id, title: m.title, summary: m.summary, objectives: m.objectives, estimatedMinutes: m.estimatedMinutes, lessons };
+    return { id: m.id, title: m.title, summary: m.summary, objectives: m.objectives, estimatedMinutes: m.estimatedMinutes, prerequisiteModuleId: m.prerequisiteModuleId, lessons };
   });
 
   if (!modules.some((m) => m.lessons.length)) problems.push("Mark at least one module and one lesson ready for release.");
+  // A prerequisite outside the release would lock learners out for good, so it is dropped.
+  const releasedModules = new Set(modules.map((m) => m.id));
+  for (const m of modules) if (m.prerequisiteModuleId && !releasedModules.has(m.prerequisiteModuleId)) m.prerequisiteModuleId = null;
+  if (course.expiresAt && course.expiresAt <= new Date()) problems.push("The expiry date has passed; clear it or set a later one.");
+  if (course.isTemplate) problems.push("This is a template. Create a course from it and release that instead.");
+  const now = new Date();
+  for (const m of course.modules)
+    for (const l of m.lessons)
+      if (course.complianceSensitive && l.nextReviewAt && l.nextReviewAt < now) problems.push(`Lesson “${l.title}” is past its next review date; review it and update the dates.`);
 
   if (mediaIds.size) {
     const found = await tx.mediaAsset.findMany({ where: { id: { in: [...mediaIds] }, archivedAt: null }, select: { id: true } });
@@ -398,6 +410,19 @@ export async function withdrawFromReview(actor: Actor, courseId: string, reason?
 }
 
 /** Takes a course off the catalogue. Enrolled learners keep their records and certificates. */
+/**
+ * Withdraws courses whose expiry has passed. Learners keep their history and certificates; the
+ * course simply stops being open. Run by the scheduler and on the admin dashboard.
+ */
+export async function runScheduledExpiries(now = new Date()) {
+  const due = await prisma.program.findMany({ where: { state: "PUBLISHED", expiresAt: { lte: now } }, select: { id: true, status: true } });
+  for (const c of due) {
+    await prisma.program.updateMany({ where: { id: c.id, state: "PUBLISHED" }, data: { state: "DRAFT", status: REVIEW_LOCKED.includes(c.status) ? c.status : "UNDER_REVISION" } });
+    await log(null, "unpublish", c.id, { reason: "expired", via: "schedule" });
+  }
+  return due.map((c) => c.id);
+}
+
 export async function unpublishCourse(actor: Actor, courseId: string, reason: string) {
   await assertCan(actor, "content.publish");
   if (!reason?.trim()) throw new ServiceError("Say why the course is being withdrawn.");

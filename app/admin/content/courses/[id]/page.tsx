@@ -80,6 +80,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
         actor={canEdit ? actor : { ...actor, permissions: new Set() }}
         courseId={id}
         courses={courses}
+        siblings={course.modules.filter((m) => m.id !== mod.id && m.state !== "ARCHIVED").map((m) => ({ id: m.id, title: m.title }))}
         mod={{
           ...mod,
           lessons: mod.lessons.length,
@@ -99,7 +100,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
       },
     });
     if (!lesson) notFound();
-    const [allModules, images, banks] = await Promise.all([
+    const [allModules, images, banks, audio] = await Promise.all([
       prisma.module.findMany({
         where: { state: { not: "ARCHIVED" }, program: { status: { notIn: ["ARCHIVED", "ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED"] } } },
         select: { id: true, title: true, programId: true, program: { select: { name: true } } },
@@ -107,6 +108,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
       }),
       prisma.mediaAsset.findMany({ where: { kind: "IMAGE", archivedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }),
       prisma.questionBank.findMany({ where: { archivedAt: null }, select: { id: true, title: true, _count: { select: { questions: { where: { archivedAt: null } } } } } }),
+      prisma.mediaAsset.findMany({ where: { kind: "AUDIO", archivedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }),
     ]);
     const quiz = lesson.quizzes[0] ?? null;
     editor = (
@@ -117,9 +119,10 @@ export default async function CourseWorkspace({ params, searchParams }: { params
           courseSlug={course.slug}
           lesson={{ ...lesson, hasAssessment: !!quiz }}
           modules={allModules.map((m) => ({ id: m.id, title: m.title, course: m.program.name, sameCourse: m.programId === id }))}
+          owners={(await usersWithPermission("content.edit")).map((u) => ({ id: u.id, name: u.name }))}
         />
         <Panel title="Content">
-          <BlockEditor courseId={id} lessonId={lesson.id} canEdit={canEdit} images={images} blocks={lesson.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown>, updatedAt: b.updatedAt.toISOString() }))} />
+          <BlockEditor courseId={id} lessonId={lesson.id} canEdit={canEdit} images={images} audio={audio} blocks={lesson.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown>, updatedAt: b.updatedAt.toISOString() }))} />
         </Panel>
         <Panel title="Downloadable resources">
           {canEdit ? (
@@ -156,11 +159,12 @@ export default async function CourseWorkspace({ params, searchParams }: { params
       </div>
     );
   } else {
-    const [levels, academic, compliance, thumbnails] = await Promise.all([
+    const [levels, academic, compliance, thumbnails, otherCourses] = await Promise.all([
       prisma.learningLevel.findMany({ where: { status: { not: "ARCHIVED" } }, orderBy: { sequence: "asc" }, select: { id: true, displayTitle: true } }),
       usersWithPermission("content.review.academic"),
       usersWithPermission("content.review.compliance"),
       prisma.mediaAsset.findMany({ where: { kind: "IMAGE", isPublic: true, archivedAt: null }, select: { id: true, title: true } }),
+      prisma.program.findMany({ where: { id: { not: id }, isTemplate: false, status: { not: "ARCHIVED" } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     ]);
     editor = (
       <div className="flex flex-col gap-6">
@@ -174,7 +178,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
               {can(actor, "content.create") && <DuplicateCourse id={id} />}
             </span>
           }>
-          <CourseForm course={course} levels={levels} reviewers={{ academic, compliance }} thumbnails={thumbnails} canEdit={canEdit} />
+          <CourseForm course={course} otherCourses={otherCourses} levels={levels} reviewers={{ academic, compliance }} thumbnails={thumbnails} canEdit={canEdit} />
         </Panel>
       </div>
     );

@@ -146,6 +146,9 @@ export async function courseSnapshot(tx: Tx, id: string): Promise<Snap> {
     effectiveDate: c.effectiveDate?.toISOString() ?? null,
     reviewDate: c.reviewDate?.toISOString() ?? null,
     thumbnailId: c.thumbnailId,
+    expiresAt: c.expiresAt?.toISOString() ?? null,
+    isTemplate: c.isTemplate,
+    requiresCourseId: c.requiresCourseId,
   };
 }
 
@@ -156,6 +159,7 @@ export async function moduleSnapshot(tx: Tx, id: string): Promise<Snap> {
     summary: m.summary,
     objectives: m.objectives,
     estimatedMinutes: m.estimatedMinutes,
+    prerequisiteModuleId: m.prerequisiteModuleId,
     state: m.state,
     programId: m.programId,
     sortOrder: m.sortOrder,
@@ -175,6 +179,10 @@ export async function lessonSnapshot(tx: Tx, id: string): Promise<Snap> {
     freePreview: l.freePreview,
     completionRule: l.completionRule,
     effectiveDate: l.effectiveDate?.toISOString() ?? null,
+    lastReviewedAt: l.lastReviewedAt?.toISOString() ?? null,
+    nextReviewAt: l.nextReviewAt?.toISOString() ?? null,
+    sources: l.sources,
+    contentOwnerId: l.contentOwnerId,
     moduleId: l.moduleId,
     sortOrder: l.sortOrder,
     blocks: l.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data })),

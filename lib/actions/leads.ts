@@ -148,7 +148,7 @@ export async function submitContact(formData: FormData): Promise<ContactResult> 
     console.error("[submitContact] failed", error);
     return {
       ok: false,
-      error: "That did not send. Try again, or reach us on WhatsApp.",
+      error: "That did not send. Try again in a moment.",
     };
   }
 }

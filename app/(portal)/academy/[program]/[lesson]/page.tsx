@@ -3,7 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import { requireActor } from "@/lib/actor";
 import { getPublishedCourse, lessonAccess } from "@/lib/services/learning/catalog";
-import { recordLessonView, progressFor } from "@/lib/services/learning/progress";
+import { moduleLock, recordLessonView, progressFor } from "@/lib/services/learning/progress";
+import { isBookmarked } from "@/lib/services/learning/bookmarks";
+import { BookmarkButton } from "@/components/portal/BookmarkButton";
 import { attemptsFor } from "@/lib/services/learning/attempts";
 import { flatLessons } from "@/lib/cms/snapshot";
 import { Blocks } from "@/components/cms/BlockView";
@@ -31,7 +33,31 @@ export default async function LessonPage({ params }: { params: Promise<{ program
   const lesson = flat[index];
   const prev = index > 0 ? flat[index - 1] : null;
   const next = index < flat.length - 1 ? flat[index + 1] : null;
+  const lock = access.tracked ? await moduleLock(actor.id, course.snapshot, lesson.moduleId) : { locked: false, prerequisite: null };
+  if (lock.locked) {
+    const pre = course.snapshot.modules.find((m) => m.id === course.snapshot.modules.find((x) => x.id === lesson.moduleId)?.prerequisiteModuleId);
+    const progressNow = await progressFor(actor.id, course.snapshot);
+    const resume = pre?.lessons.find((l) => !progressNow.done.has(l.id)) ?? pre?.lessons[0];
+    return (
+      <div className="mx-auto max-w-[760px] px-6 py-16">
+        <p className="label-caps">{lesson.moduleTitle}</p>
+        <h1 className="mt-2 text-[clamp(1.6rem,3vw,2.1rem)] leading-tight">This module opens after “{lock.prerequisite}”.</h1>
+        <p className="mt-3 text-[14.5px] text-muted-foreground">Complete every lesson in that module first. Your progress is saved.</p>
+        <div className="mt-6 flex gap-3">
+          {resume && (
+            <Link href={`/academy/${slug}/${resume.id}`} className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground">
+              Continue “{lock.prerequisite}”
+            </Link>
+          )}
+          <Link href={`/academy/${slug}`} className="inline-flex min-h-11 items-center rounded-[3px] border border-input px-5 text-[14px]">
+            Course overview
+          </Link>
+        </div>
+      </div>
+    );
+  }
   if (access.tracked) await recordLessonView(actor, course.id, lessonId);
+  const bookmarked = access.tracked ? await isBookmarked(actor.id, lessonId) : false;
   const progress = access.tracked ? await progressFor(actor.id, course.snapshot) : null;
   const done = !!progress?.done.has(lessonId);
   const quiz = lesson.assessment;
@@ -55,7 +81,10 @@ export default async function LessonPage({ params }: { params: Promise<{ program
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
         <article>
           <p className="label-caps">{lesson.moduleTitle}</p>
-          <h1 className="mt-2 text-[clamp(1.7rem,3vw,2.3rem)] leading-tight">{lesson.title}</h1>
+          <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+            <h1 className="text-[clamp(1.7rem,3vw,2.3rem)] leading-tight">{lesson.title}</h1>
+            {access.tracked && <BookmarkButton lessonId={lesson.id} saved={bookmarked} />}
+          </div>
           <p className="text-data mt-3 text-micro text-muted-foreground">
             Lesson {index + 1} of {flat.length} · {lesson.minutes} min
             {lesson.effectiveDate ? ` · effective ${when(lesson.effectiveDate)}` : ""}

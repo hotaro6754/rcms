@@ -105,3 +105,12 @@ export async function reissueCertificateAction(fd: FormData) {
     return { serial: res.serial };
   });
 }
+
+export async function toggleBookmarkAction(lessonId: string) {
+  return attempt(async () => {
+    const { toggleBookmark } = await import("@/lib/services/learning/bookmarks");
+    const saved = await toggleBookmark(await requireActor(), lessonId);
+    revalidatePath("/academy");
+    return saved;
+  });
+}

@@ -38,7 +38,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const body = await readStored(asset.fileKey).catch(() => null);
   if (!body) return new NextResponse("This file is missing from storage.", { status: 404 });
-  const inline = asset.kind === "IMAGE";
+  const inline = asset.kind === "IMAGE" || asset.kind === "AUDIO";
   return new NextResponse(new Uint8Array(body), {
     headers: {
       ...downloadHeaders(asset.mimeType, body.length, asset.title, inline),

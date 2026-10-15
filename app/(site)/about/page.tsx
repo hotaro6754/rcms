@@ -142,7 +142,7 @@ export default function AboutPage() {
               href="/learning-paths"
               className="inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
-              See the five levels
+              See the learning levels
             </Link>
             <Link
               href="/contact"

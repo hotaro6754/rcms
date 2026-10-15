@@ -145,6 +145,14 @@ describe("rich text and blocks", () => {
 });
 
 describe("upload sniffing", () => {
+  it("recognises audio by its bytes", async () => {
+    const { sniff } = await import("@/lib/storage");
+    expect(sniff(new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0, 0, 0, 0, 0]), "talk.mp3")).toBe("audio/mpeg");
+    expect(sniff(new Uint8Array([0x4f, 0x67, 0x67, 0x53, 0, 2, 0, 0]), "talk.ogg")).toBe("audio/ogg");
+    expect(sniff(new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x41, 0x56, 0x45]), "talk.wav")).toBe("audio/wav");
+    expect(sniff(new Uint8Array([0, 0, 0, 0x20, 0x66, 0x74, 0x79, 0x70, 0x4d, 0x34, 0x41, 0x20]), "talk.m4a")).toBe("audio/mp4");
+  });
+
   it("trusts content, not the file name", () => {
     expect(sniff(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31]), "a.pdf")).toBe("application/pdf");
     expect(sniff(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), "a.png")).toBe("image/png");

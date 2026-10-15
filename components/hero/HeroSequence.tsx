@@ -121,7 +121,7 @@ export function HeroSequence() {
               href="#tracks"
               className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
-              See the five levels
+              See the learning levels
             </a>
             <a
               href="/mentoring"

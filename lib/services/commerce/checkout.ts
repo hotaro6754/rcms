@@ -6,6 +6,7 @@ import { ServiceError } from "@/lib/errors";
 import { sendMail } from "@/lib/email";
 import * as rzp from "@/lib/payments/razorpay";
 import { notifyUsers } from "@/lib/services/people/staff-lookup";
+import { coursePrerequisiteMissing } from "@/lib/services/learning/catalog";
 
 /**
  * Orders, checkout and fulfilment.
@@ -54,6 +55,8 @@ async function assertPurchasable(actor: Actor, product: Product) {
     if (!course || course.state !== "PUBLISHED" || !course.publishedVersionId) throw new ServiceError("This course is not available yet.");
     const e = await prisma.enrolment.findUnique({ where: { userId_programId: { userId: actor.id, programId: product.programId! } } });
     if (e && (e.state === "ACTIVE" || e.state === "COMPLETED") && (!e.expiresAt || e.expiresAt > new Date())) throw new ServiceError("You already have access to this course.");
+    const missing = await coursePrerequisiteMissing(actor.id, product.programId!);
+    if (missing) throw new ServiceError(missing);
   }
   if (product.kind === "MENTORING" || product.kind === "CORPORATE") throw new ServiceError("This is arranged with the team directly. Use the contact form.");
 }

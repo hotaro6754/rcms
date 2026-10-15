@@ -36,10 +36,15 @@ export const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": "JPG",
   "image/webp": "WEBP",
   "image/gif": "GIF",
+  "audio/mpeg": "MP3",
+  "audio/mp4": "M4A",
+  "audio/ogg": "OGG",
+  "audio/wav": "WAV",
 };
 
 export const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
-export const DOCUMENT_TYPES = new Set(Object.keys(ALLOWED_TYPES).filter((t) => !IMAGE_TYPES.has(t)));
+export const AUDIO_TYPES = new Set(["audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav"]);
+export const DOCUMENT_TYPES = new Set(Object.keys(ALLOWED_TYPES).filter((t) => !IMAGE_TYPES.has(t) && !AUDIO_TYPES.has(t)));
 
 export const LINK_TYPE = "text/uri-list";
 
@@ -69,6 +74,15 @@ export function sniff(buf: Uint8Array, fileName: string): string | null {
   if (starts(0xff, 0xd8, 0xff)) return "image/jpeg";
   if (starts(0x47, 0x49, 0x46, 0x38)) return "image/gif";
   if (starts(0x52, 0x49, 0x46, 0x46) && b(8) === 0x57 && b(9) === 0x45 && b(10) === 0x42 && b(11) === 0x50) return "image/webp";
+  if (starts(0x52, 0x49, 0x46, 0x46) && b(8) === 0x57 && b(9) === 0x41 && b(10) === 0x56 && b(11) === 0x45) return "audio/wav";
+  if (starts(0x4f, 0x67, 0x67, 0x53)) return "audio/ogg";
+  // MP3: an ID3 tag, or an MPEG audio frame header (11 sync bits set).
+  if (starts(0x49, 0x44, 0x33) || (b(0) === 0xff && (b(1) & 0xe0) === 0xe0)) return "audio/mpeg";
+  // M4A: an ISO media "ftyp" box with an audio brand.
+  if (b(4) === 0x66 && b(5) === 0x74 && b(6) === 0x79 && b(7) === 0x70) {
+    const brand = String.fromCharCode(b(8), b(9), b(10), b(11));
+    if (brand === "M4A " || brand === "M4B ") return "audio/mp4";
+  }
   if (starts(0x50, 0x4b, 0x03, 0x04)) {
     const ext = fileName.toLowerCase().split(".").pop() ?? "";
     return OOXML[ext] ?? "application/zip";

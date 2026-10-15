@@ -19,6 +19,7 @@ import { findAssessment, flatLessons, type CourseSnapshot } from "@/lib/cms/snap
 import { DOCUMENT_TYPES, IMAGE_TYPES, saveChecked } from "@/lib/storage";
 import { notifyPermission, notifyUsers } from "@/lib/services/people/staff-lookup";
 import { courseAccess, getPublishedCourse } from "./catalog";
+import { moduleLock } from "./progress";
 
 /**
  * Assessment attempts: start, autosave, submit, time limits, attempt limits, retake waits,
@@ -82,6 +83,8 @@ export async function startAttempt(actor: Actor, quizId: string) {
   const { course, lesson, assessment } = await locate(quizId);
   const access = await courseAccess(actor, course);
   if (!access.full || !access.tracked) throw new ServiceError("Enrol on the course to take this assessment.");
+  const lock = await moduleLock(actor.id, course.snapshot, lesson.moduleId);
+  if (lock.locked) throw new ServiceError(`Finish “${lock.prerequisite}” before taking this assessment.`);
 
   const existing = await prisma.quizAttempt.findFirst({ where: { quizId, userId: actor.id, status: "IN_PROGRESS" }, orderBy: { attemptNo: "desc" } });
   if (existing) {

@@ -25,7 +25,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
       {canManage && (
         <ActionForm action={uploadMediaAction} className="mt-8 grid gap-3 rounded-[var(--radius)] border border-dashed border-input bg-card px-5 py-4 sm:grid-cols-2" resetOnSuccess success="Uploaded.">
           <Field label="File" htmlFor="file">
-            <input id="file" name="file" type="file" required accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,.docx,.xlsx,.pptx,.csv,.txt" className="text-[13px]" />
+            <input id="file" name="file" type="file" required accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,.docx,.xlsx,.pptx,.csv,.txt,audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" className="text-[13px]" />
           </Field>
           <Field label="Title" htmlFor="title">
             <input id="title" name="title" required className={FIELD} />

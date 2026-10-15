@@ -32,7 +32,32 @@ import { LottieView } from "@/components/illustration/LottieView";
  *
  * Content lives in lib/data; these components only present it.
  */
-export default function Home() {
+/** Levels, courses and prices are read from the database and refreshed every five minutes. */
+export const revalidate = 300;
+
+async function loadPaths() {
+  try {
+    const { publicPaths } = await import("@/lib/services/learning/public-catalog");
+    return await publicPaths();
+  } catch (error) {
+    // The rest of the homepage is static; without a database it still renders, and the
+    // learning-path section says the guide is unavailable instead of inventing one.
+    console.error("[home] learning paths unavailable", error);
+    return [];
+  }
+}
+
+async function loadMentoringPrices(): Promise<Record<string, number>> {
+  try {
+    const { publicPricing } = await import("@/lib/services/learning/public-catalog");
+    return Object.fromEntries((await publicPricing()).mentoring.map((m) => [m.sku, m.amount]));
+  } catch {
+    return {};
+  }
+}
+
+export default async function Home() {
+  const [levels, mentoringPrices] = await Promise.all([loadPaths(), loadMentoringPrices()]);
   return (
     <>
       <Preloader />
@@ -59,7 +84,7 @@ export default function Home() {
           </div>
         </Chapter>
 
-        <LearningPath />
+        <LearningPath levels={levels} />
 
         <OperationsLab />
 
@@ -90,7 +115,7 @@ export default function Home() {
         </Chapter>
 
         <Leadership />
-        <Mentoring />
+        <Mentoring prices={mentoringPrices} />
         <Founder />
       </main>
 

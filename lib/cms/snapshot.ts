@@ -48,6 +48,10 @@ export interface SnapshotLesson {
   freePreview: boolean;
   completionRule: LessonCompletion;
   effectiveDate: string | null;
+  /** Compliance metadata (absent in releases made before it existed). */
+  lastReviewedAt?: string | null;
+  nextReviewAt?: string | null;
+  sources?: string[];
   blocks: SnapshotBlock[];
   resources: SnapshotResource[];
   assessment: SnapshotAssessment | null;
@@ -59,6 +63,8 @@ export interface SnapshotModule {
   summary: string | null;
   objectives: string[];
   estimatedMinutes: number | null;
+  /** A module of this release that must be completed first (absent in older releases). */
+  prerequisiteModuleId?: string | null;
   lessons: SnapshotLesson[];
 }
 

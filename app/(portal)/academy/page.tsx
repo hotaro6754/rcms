@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { listBookmarks } from "@/lib/services/learning/bookmarks";
 import { requireActor } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { eligibility } from "@/lib/certificates";
@@ -94,6 +95,7 @@ export default async function AcademyPage() {
       .filter((a) => !a.tries.some((t) => t.passed))
       .map((a) => ({ course: c.snap.course, lesson: a.lesson, quiz: a.quiz, best: Math.max(-1, ...a.tries.map((t) => t.score ?? -1)), used: a.tries.length })),
   );
+  const saved = await listBookmarks(user.id);
   const first = user.name.split(" ")[0];
   const statusNote = STATUS_NOTE[account.status];
 
@@ -330,6 +332,20 @@ export default async function AcademyPage() {
               ))}
             </ul>
           </Ruled>
+          {saved.length > 0 && (
+            <Ruled label="Saved lessons">
+              <ul>
+                {saved.slice(0, 8).map((b) => (
+                  <li key={b.lessonId} className="border-b border-border py-3">
+                    <Link href={b.href} className="block text-[14px] hover:underline hover:underline-offset-4">
+                      {b.title}
+                    </Link>
+                    <span className="block text-[12.5px] text-muted-foreground">{b.course}</span>
+                  </li>
+                ))}
+              </ul>
+            </Ruled>
+          )}
         </aside>
       </div>
     </div>

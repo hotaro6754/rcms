@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { PageHeader, Section } from "@/components/site/PageHeader";
+import { whatsappUrl } from "@/lib/contact";
 import { BookingPanel } from "@/components/site/BookingPanel";
+import { MENTORING } from "@/lib/data/catalog";
+import { publicPricing } from "@/lib/services/learning/public-catalog";
 
 export const metadata = {
   title: "Mentoring",
@@ -10,8 +13,8 @@ export const metadata = {
 
 const FLOW = [
   ["01", "Choose the problem", "Career move, KPI defence, team escalation, client governance, or interview preparation for a specific role."],
-  ["02", "Send the artefact", "Aging summary, denial trend, QA scorecard or the job description you are targeting. Reviewed before the call so no time goes on context."],
-  ["03", "Pick a slot", "45 or 90 minutes, IST evenings and Saturday mornings to fit US-shift schedules."],
+  ["02", "Send a de-identified summary", "Trend figures, a QA scorecard outline or the job description you are targeting, with every patient, payer and client identifier removed. Reviewed before the call so no time goes on context."],
+  ["03", "Agree a time", "Send a request with the times that suit you; sessions run on IST evenings and Saturday mornings to fit US-shift schedules. We confirm by email."],
   ["04", "Leave with the document", "A root cause sheet, a capacity model, a governance deck outline or a rewritten CV, whichever the problem called for."],
 ];
 
@@ -22,13 +25,20 @@ const NOT_FOR = [
   "Coding certification preparation",
 ];
 
-export default function MentoringPage() {
+export const revalidate = 300;
+
+export default async function MentoringPage() {
+  const { mentoring } = await publicPricing();
+  const options = mentoring.map((m) => {
+    const info = MENTORING.find((x) => `mentoring-${x.id}` === m.sku);
+    return { sku: m.sku, name: m.name, amount: m.amount, minutes: info?.minutes ?? null, who: info?.who ?? m.description };
+  });
   return (
     <>
       <PageHeader
         eyebrow="Mentoring"
         title="Bring a real problem from your floor."
-        lead="Sessions are working sessions. Bring your aging report, your QA dispute, your appraisal case or your client escalation. You leave with a decision and a document."
+        lead="Sessions are working sessions on a problem you are facing at work, described without any patient or client identifiers. You leave with a decision and a document."
       />
 
       <Section>
@@ -64,7 +74,7 @@ export default function MentoringPage() {
             </div>
           </div>
 
-          <BookingPanel />
+          <BookingPanel options={options} />
         </div>
       </Section>
 
@@ -75,16 +85,16 @@ export default function MentoringPage() {
               Not sure a session is the right spend?
             </h2>
             <p className="mt-4 max-w-[56ch] text-[14px] leading-relaxed text-muted-foreground">
-              Ask on WhatsApp first. If the answer takes two minutes, you will get it in two
-              minutes and no session gets booked.
+              Ask us first. If the answer takes two minutes, you will get it in two minutes and no
+              session gets booked.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <a
-              href="https://wa.me/919999999999"
+              href={whatsappUrl() ?? "/contact"}
               className="inline-flex min-h-11 items-center rounded-md border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary"
             >
-              Ask on WhatsApp
+              {whatsappUrl() ? "Ask on WhatsApp" : "Ask a question"}
             </a>
             <Link
               href="/pricing"

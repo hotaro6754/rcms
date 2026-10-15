@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { LAB, VERDICT_LABEL, type Verdict } from "@/lib/data/lab";
-import { LEVELS } from "@/lib/data/catalog";
 import { Chapter } from "./Chapter";
 import { RemittanceSlip } from "@/components/illustration/RemittanceSlip";
 import { cn } from "@/lib/utils";
@@ -33,7 +32,6 @@ export function OperationsLab() {
   const [tried, setTried] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const choice = LAB.choices.find((c) => c.id === picked);
-  const level = LEVELS[LAB.level - 1];
 
   const pick = (id: string) => {
     setPicked(id);
@@ -189,7 +187,7 @@ export function OperationsLab() {
                   href="/learning-paths"
                   className="mt-5 inline-flex min-h-10 items-center gap-1.5 text-[13.5px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
                 >
-                  This is how Level {String(level.n).padStart(2, "0")}, {level.verb}, teaches you to think
+                  This is how the Professional level teaches you to think
                 </Link>
               </motion.div>
             )}

@@ -106,6 +106,7 @@ model User {
   assignedTickets SupportTicket[]       @relation("TicketAssignee")
   vendorMembers   VendorMember[]
   privacyRequests PrivacyRequest[]
+  bookmarks       Bookmark[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -538,6 +539,12 @@ model Program {
   effectiveDate          DateTime?
   reviewDate             DateTime?
   scheduledFor           DateTime?
+  /// When set, the course is withdrawn from learners at this time by the scheduler.
+  expiresAt              DateTime?
+  /// A template course: never published, only copied to start new courses.
+  isTemplate             Boolean       @default(false)
+  /// Learners need a valid certificate for this course before they can enrol.
+  requiresCourseId       String?
   archivedAt             DateTime?
   thumbnailId            String?
   publishedVersionId     String?       @unique
@@ -564,15 +571,17 @@ model Program {
 }
 
 model Module {
-  id               String       @id @default(cuid())
-  programId        String
-  title            String
-  summary          String?
-  objectives       String[]
-  estimatedMinutes Int?
-  sortOrder        Int          @default(0)
-  state            PublishState @default(PUBLISHED)
-  lockVersion      Int          @default(0)
+  id                   String       @id @default(cuid())
+  programId            String
+  title                String
+  summary              String?
+  objectives           String[]
+  estimatedMinutes     Int?
+  /// Learners must complete this module (every lesson) before opening this one.
+  prerequisiteModuleId String?
+  sortOrder            Int          @default(0)
+  state                PublishState @default(PUBLISHED)
+  lockVersion          Int          @default(0)
 
   program Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
   lessons Lesson[]
@@ -604,6 +613,12 @@ model Lesson {
   freePreview    Boolean          @default(false)
   completionRule LessonCompletion @default(MANUAL)
   effectiveDate  DateTime?
+  /// Compliance metadata for regulated content: who owns it, when it was last reviewed,
+  /// when it must be reviewed next, and the sources it relies on.
+  contentOwnerId String?
+  lastReviewedAt DateTime?
+  nextReviewAt   DateTime?
+  sources        String[]         @default([])
   lockVersion    Int              @default(0)
 
   module    Module         @relation(fields: [moduleId], references: [id], onDelete: Restrict)
@@ -611,6 +626,7 @@ model Lesson {
   resources Resource[]
   quizzes   Quiz[]
   progress  Progress[]
+  bookmarks Bookmark[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -629,6 +645,7 @@ enum BlockKind {
   STEPS
   SCENARIO
   CODE
+  AUDIO
 }
 
 /// One block of lesson content. `data` is validated per kind by lib/cms/blocks.ts before
@@ -2002,4 +2019,71 @@ model FeatureFlag {
   enabled     Boolean  @default(false)
   description String?
   updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Public library: glossary, process library, case studies, leadership toolkit, resources.
+// Reference content with one review stage (reviewer ≠ submitter). Public pages read the
+// approved snapshot in `published`, never the draft fields.
+// ---------------------------------------------------------------------------
+
+enum LibraryKind {
+  GLOSSARY
+  PROCESS
+  CASE_STUDY
+  TOOLKIT
+  RESOURCE
+}
+
+enum LibraryStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+model LibraryEntry {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  kind            LibraryKind
+  title           String
+  summary         String
+  body            String
+  tags            String[]      @default([])
+  sources         String[]      @default([])
+  levelId         String?
+  status          LibraryStatus @default(DRAFT)
+  /// The approved version learners and visitors see. Null until first approval.
+  published       Json?
+  /// True when the draft differs from the published snapshot and is not yet approved.
+  hasDraftChanges Boolean       @default(false)
+  authorId        String
+  submittedById   String?
+  reviewerId      String?
+  reviewNote      String?
+  lastReviewedAt  DateTime?
+  nextReviewAt    DateTime?
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+  lockVersion     Int           @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, status])
+}
+
+/// A lesson a learner saved to come back to.
+model Bookmark {
+  id       String @id @default(cuid())
+  userId   String
+  lessonId String
+  courseId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
 }
