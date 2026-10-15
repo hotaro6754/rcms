@@ -24,6 +24,7 @@ export const ADMIN_NAV: AdminGroup[] = [
     links: [
       { href: "/admin/content", label: "Levels and courses", any: ["content.view"] },
       { href: "/admin/content/review", label: "Review queue", any: ["content.view"] },
+      { href: "/admin/content/library", label: "Library", any: ["content.view"] },
       { href: "/admin/content/banks", label: "Question banks", any: ["assessment.manage", "content.view"] },
       { href: "/admin/content/media", label: "Media library", any: ["media.manage", "content.view"] },
       { href: "/admin/grading", label: "Grading", any: ["assessment.grade", "labs.grade"] },

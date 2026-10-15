@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireActor } from "@/lib/actor";
+import { requireActor, requireFreshSignIn } from "@/lib/actor";
 import { attempt, ServiceError } from "@/lib/errors";
 import { prisma } from "@/lib/db";
 import { cancelApproval, decideApproval, requestApproval } from "@/lib/services/approvals";
@@ -10,6 +10,7 @@ import { bool, opt, str } from "./_form";
 
 export async function decideApprovalAction(fd: FormData) {
   return attempt(async () => {
+    await requireFreshSignIn();
     await decideApproval(await requireActor(), str(fd, "id"), str(fd, "decision") === "approve", opt(fd, "note") ?? undefined);
     revalidatePath("/admin", "layout");
   });
@@ -24,6 +25,7 @@ export async function cancelApprovalAction(fd: FormData) {
 
 export async function requestRoleChangeAction(fd: FormData) {
   return attempt(async () => {
+    await requireFreshSignIn();
     let userId = opt(fd, "userId");
     if (!userId) {
       const user = await prisma.user.findUnique({ where: { email: str(fd, "email").trim().toLowerCase() }, select: { id: true } });
@@ -37,6 +39,7 @@ export async function requestRoleChangeAction(fd: FormData) {
 
 export async function requestSettingChangeAction(fd: FormData) {
   return attempt(async () => {
+    await requireFreshSignIn();
     await requestApproval(await requireActor(), "SECURITY_SETTING", { key: str(fd, "key"), value: str(fd, "value") }, str(fd, "reason"));
     revalidatePath("/admin/settings");
   });

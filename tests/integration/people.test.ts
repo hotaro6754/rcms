@@ -103,3 +103,16 @@ describe("subscriber administration", () => {
     expect(u.status).toBe("ARCHIVED");
   });
 });
+
+describe("self-service deactivation", () => {
+  it("needs the confirmation phrase, ends sessions, and is refused for staff", async () => {
+    const { deactivateOwnAccount } = await import("@/lib/services/people/account");
+    const learner = await makeUser();
+    await prisma.session.create({ data: { userId: learner.id, token: "t-self", expiresAt: new Date(Date.now() + 86400_000) } });
+    await expect(deactivateOwnAccount(learner, "yes please")).rejects.toThrow(/Type DEACTIVATE/);
+    await deactivateOwnAccount(learner, "deactivate");
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: learner.id } })).status).toBe("DEACTIVATED");
+    expect(await prisma.session.count({ where: { userId: learner.id } })).toBe(0);
+    await expect(deactivateOwnAccount(await staff("SUPPORT_AGENT"), "DEACTIVATE")).rejects.toThrow(/administrator/);
+  });
+});

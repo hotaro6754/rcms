@@ -38,6 +38,8 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   outputFileTracingRoot: path.resolve(__dirname),
+  // pdfkit reads its standard font metrics from its own package folder at runtime.
+  serverExternalPackages: ["pdfkit"],
   allowedDevOrigins: ["*.trycloudflare.com"],
   experimental: {
     webpackBuildWorker: false,

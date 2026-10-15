@@ -48,6 +48,7 @@ const INDEX = [
       { href: "/legal/terms", label: "Terms" },
       { href: "/legal/refund", label: "Refunds" },
       { href: "/legal/disclaimer", label: "Disclaimer" },
+      { href: "/legal/content-governance", label: "Content governance" },
     ],
   },
 ];

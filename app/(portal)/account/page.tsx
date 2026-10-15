@@ -5,7 +5,7 @@ import { PageHead } from "@/components/platform/PlatformShell";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
 import { BTN, BTN_OUTLINE, Field, FIELD, Panel, Pill, StatusPill, TEXTAREA, when } from "@/components/admin/kit";
-import { marketingConsentAction, updateOwnProfileAction } from "@/lib/actions/account";
+import { deactivateAccountAction, marketingConsentAction, updateOwnProfileAction } from "@/lib/actions/account";
 import { openPrivacyRequestAction } from "@/lib/actions/subscribers";
 
 export const metadata = { title: "Your account" };
@@ -117,6 +117,17 @@ export default async function AccountPage() {
               <button className={`${BTN_OUTLINE} w-fit`}>Send request</button>
             </ActionForm>
           </Panel>
+          {actor.staffRoles.length === 0 && actor.role === "STUDENT" && (
+            <Panel title="Close your account">
+              <p className="text-[13px] text-muted-foreground">
+                You are signed out everywhere and cannot sign in again until support reactivates the account. Certificates stay verifiable. Any subscription stops renewing. To have your personal data deleted, use a deletion request above instead.
+              </p>
+              <ActionForm action={deactivateAccountAction} className="mt-3 flex flex-col gap-2" confirm="Close your account now?">
+                <input name="confirm" required placeholder="Type DEACTIVATE" aria-label="Type DEACTIVATE to confirm" autoComplete="off" className={FIELD} />
+                <button className="w-fit rounded-[3px] border border-danger/40 px-3 py-1.5 text-[13px] text-danger">Close account</button>
+              </ActionForm>
+            </Panel>
+          )}
         </div>
       </div>
     </div>

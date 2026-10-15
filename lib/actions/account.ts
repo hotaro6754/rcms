@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireActor } from "@/lib/actor";
+import { requireActor, requireFreshSignIn } from "@/lib/actor";
 import { attempt } from "@/lib/errors";
-import { setMarketingConsent, updateOwnProfile } from "@/lib/services/people/account";
+import { deactivateOwnAccount, setMarketingConsent, updateOwnProfile } from "@/lib/services/people/account";
 import { bool, opt, str } from "./_form";
 
 export async function updateOwnProfileAction(fd: FormData) {
@@ -17,5 +17,13 @@ export async function marketingConsentAction(fd: FormData) {
   return attempt(async () => {
     await setMarketingConsent(await requireActor(), bool(fd, "granted"));
     revalidatePath("/account");
+  });
+}
+
+export async function deactivateAccountAction(fd: FormData) {
+  return attempt(async () => {
+    await requireFreshSignIn();
+    await deactivateOwnAccount(await requireActor(), str(fd, "confirm"));
+    return { href: "/" };
   });
 }

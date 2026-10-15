@@ -11,7 +11,7 @@ const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", y
 async function load(serial: string) {
   return prisma.certificate.findUnique({
     where: { serial: serial.toUpperCase() },
-    include: { program: { select: { level: true, slug: true } } },
+    include: { program: { select: { level: true, slug: true, learningLevel: { select: { name: true } } } } },
   });
 }
 
@@ -85,7 +85,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
               {[
                 ["Holder", cert.holderName],
                 ["Program", cert.programName],
-                ["Level", String(cert.program.level).padStart(2, "0")],
+                ...(cert.program.learningLevel ? [["Level", cert.program.learningLevel.name]] : []),
                 ["Issued", DATE.format(cert.issuedAt)],
                 ...(revoked && cert.revokedAt ? [["Revoked", DATE.format(cert.revokedAt)]] : []),
                 ["Serial", cert.serial],
@@ -97,6 +97,9 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
               ))}
             </dl>
 
+            <a href={`/certificates/${cert.serial}/pdf`} className="inline-flex min-h-11 w-fit items-center rounded-[3px] border border-input px-5 text-[14px] font-medium transition-colors hover:bg-secondary">
+              Download PDF
+            </a>
             {!revoked && (
               <PrintButton className="inline-flex min-h-11 w-fit items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover" />
             )}

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { VendorStatus } from "@prisma/client";
-import { requireActor } from "@/lib/actor";
+import { requireActor, requireFreshSignIn } from "@/lib/actor";
 import { attempt, ServiceError } from "@/lib/errors";
 import * as vendors from "@/lib/services/vendors/vendors";
 import { requestApproval } from "@/lib/services/approvals";
@@ -103,6 +103,7 @@ export async function portalProfileAction(fd: FormData) {
 
 export async function vendorPayoutRequestAction(fd: FormData) {
   return attempt(async () => {
+    await requireFreshSignIn();
     const actor = await requireActor();
     const payload = { payoutReference: str(fd, "payoutReference"), payoutLast4: str(fd, "payoutLast4"), taxIdLast4: opt(fd, "taxIdLast4") };
     if (opt(fd, "vendorId")) await requestApproval(actor, "VENDOR_PAYOUT_CHANGE", { vendorId: str(fd, "vendorId"), ...payload }, str(fd, "reason"));
@@ -122,6 +123,7 @@ export async function uploadVendorDocAction(fd: FormData) {
 
 export async function settlementAction(fd: FormData) {
   return attempt(async () => {
+    if (["approve", "pay"].includes(str(fd, "op"))) await requireFreshSignIn();
     const actor = await requireActor();
     const id = str(fd, "id");
     switch (str(fd, "op")) {

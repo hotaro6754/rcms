@@ -145,6 +145,15 @@ describe("rich text and blocks", () => {
 });
 
 describe("upload sniffing", () => {
+  it("renders a certificate PDF, marking revoked ones", async () => {
+    const { renderCertificatePdf } = await import("@/lib/certificate-pdf");
+    const base = { serial: "RCMS-L1-AAAA-BBBB-CCCC", holderName: "Test Learner", programName: "RCM Foundation", levelName: "Trainee", issuedAt: new Date("2026-10-01"), courseVersion: 2, verifyUrl: "https://example.test/certificates/RCMS-L1-AAAA-BBBB-CCCC" };
+    const ok = await renderCertificatePdf({ ...base, revokedAt: null });
+    expect(ok.subarray(0, 5).toString()).toBe("%PDF-");
+    const revoked = await renderCertificatePdf({ ...base, revokedAt: new Date("2026-10-10") });
+    expect(revoked.length).toBeGreaterThan(ok.length);
+  });
+
   it("recognises audio by its bytes", async () => {
     const { sniff } = await import("@/lib/storage");
     expect(sniff(new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0, 0, 0, 0, 0]), "talk.mp3")).toBe("audio/mpeg");

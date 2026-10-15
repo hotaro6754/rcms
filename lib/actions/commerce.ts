@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireActor } from "@/lib/actor";
+import { requireActor, requireFreshSignIn } from "@/lib/actor";
 import { attempt, ServiceError } from "@/lib/errors";
 import * as checkout from "@/lib/services/commerce/checkout";
 import * as refunds from "@/lib/services/commerce/refunds";
@@ -48,6 +48,7 @@ export async function requestRefundAction(fd: FormData) {
 
 export async function decideRefundAction(fd: FormData) {
   return attempt(async () => {
+    await requireFreshSignIn();
     await refunds.decideRefund(await requireActor(), str(fd, "id"), str(fd, "decision") === "approve", opt(fd, "note") ?? undefined);
     refreshFinance();
   });
@@ -104,6 +105,7 @@ export async function productActiveAction(fd: FormData) {
 
 export async function requestPriceChangeAction(fd: FormData) {
   return attempt(async () => {
+    await requireFreshSignIn();
     const rupees = Number(str(fd, "price"));
     if (!Number.isFinite(rupees) || rupees < 0) throw new ServiceError("Enter the new price in rupees.");
     await requestApproval(await requireActor(), "PRICE_CHANGE", { productId: str(fd, "id"), amount: Math.round(rupees * 100), effectiveFrom: str(fd, "effectiveFrom") }, str(fd, "reason"));

@@ -7,6 +7,7 @@ import { CLIENT, METRICS, DENIALS, PODS } from "../lib/data/telemetry";
 import { AGENDA, ESCALATIONS, RCA, RISKS, ACTIONS } from "../lib/data/governance";
 import { NORTHGATE } from "../lib/data/scenarios";
 import { backfillReleases, seedBlocksFromBodies, seedFoundationAssessment, seedLevels, seedPlans } from "./seed-academy";
+import { seedLibrary } from "./seed-library";
 
 /**
  * Seeds a fresh database from the modules that drive the marketing site. Idempotent and
@@ -190,6 +191,7 @@ async function main() {
   await backfillReleases(prisma);
   await seedTracksAndMentoring();
   await seedPlans(prisma);
+  await seedLibrary(prisma);
   await seedScenario();
   await seedChannels();
   await seedPlatform();

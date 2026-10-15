@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import type { AccountStatus, Role } from "@prisma/client";
 import { prisma } from "./db";
 import { auth } from "./auth";
-import { AuthorisationError } from "./errors";
+import { AuthorisationError, ServiceError } from "./errors";
 import { effectiveRoles, permissionsFor, type Permission, type StaffRoleName } from "./permissions";
 import { audit } from "./audit";
 
@@ -155,4 +155,20 @@ export async function requirePagePermission(permission: Permission | Permission[
   if (canAny(actor, list)) return actor;
   await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "deny", entity: "Page", outcome: "denied", after: { permission: list } });
   redirect("/admin?denied=1");
+}
+
+/** How recently the person must have signed in to approve or perform a sensitive action. */
+export const FRESH_SIGN_IN_MINUTES = 15;
+
+/**
+ * Re-authentication for sensitive actions (approvals, role changes, payments, refunds,
+ * deactivation). The session must have been created within FRESH_SIGN_IN_MINUTES; otherwise
+ * the person signs in again. Enforced in the server actions that the browser calls.
+ */
+export async function requireFreshSignIn() {
+  const session = await getSession();
+  const created = session?.session?.createdAt ? new Date(session.session.createdAt) : null;
+  if (!created || Date.now() - created.getTime() > FRESH_SIGN_IN_MINUTES * 60_000) {
+    throw new ServiceError(`For your security, sign in again to do this (your sign-in is more than ${FRESH_SIGN_IN_MINUTES} minutes old).`, "reauth");
+  }
 }

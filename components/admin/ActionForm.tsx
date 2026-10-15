@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ReauthLink } from "./ReauthLink";
 
 export type FormResult = { ok: true; data?: unknown; message?: string } | { ok: false; error: string; field?: string } | null;
 
@@ -80,6 +81,7 @@ export function FormStatus({ state, pending, success }: { state: FormResult; pen
     return (
       <p role="alert" className="mt-2 border-l-2 border-danger pl-2.5 text-micro leading-relaxed text-danger">
         {state.error}
+        {state.field === "reauth" && <ReauthLink />}
       </p>
     );
   }

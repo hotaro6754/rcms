@@ -10,10 +10,9 @@ import { useSession } from "@/lib/auth-client";
 
 const LINKS = [
   { href: "/catalog", label: "Catalogue" },
-  { href: "/courses", label: "Programs" },
-  { href: "/#tracks", label: "Learning path" },
+  { href: "/learning-paths", label: "Learning paths" },
   { href: "/#system", label: "Why RCMS" },
-  { href: "/blog", label: "Resources" },
+  { href: "/resources", label: "Resources" },
   { href: "/about", label: "About" },
 ];
 
