@@ -75,6 +75,9 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
                   <p className="mt-2 text-[12px] text-muted-foreground">Useful if you think the automated check of your note or rationale missed something.</p>
                 </ActionForm>
               )}
+              <Link href={`/support/new?category=ASSESSMENT&from=${encodeURIComponent(`/cases/attempt/${a.id}`)}&ref=${encodeURIComponent(`Case attempt: ${a.view.title}, attempt ${a.attemptNo}`)}`} className="text-[13px] underline underline-offset-4">
+                Question about this result? Contact support
+              </Link>
               <details className="text-[13px]">
                 <summary className="cursor-pointer font-medium">Your answers</summary>
                 <dl className="mt-2 flex flex-col gap-2">

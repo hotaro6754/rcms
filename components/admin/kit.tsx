@@ -163,8 +163,12 @@ export function Table({ head, children, empty, minWidth = "48rem" }: { head: Rea
   );
 }
 
-export function Td({ children, className }: { children?: ReactNode; className?: string }) {
-  return <td className={cn("px-4 py-2.5 align-top", className)}>{children}</td>;
+export function Td({ children, className, colSpan }: { children?: ReactNode; className?: string; colSpan?: number }) {
+  return (
+    <td colSpan={colSpan} className={cn("px-4 py-2.5 align-top", className)}>
+      {children}
+    </td>
+  );
 }
 
 export const DATE = new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });

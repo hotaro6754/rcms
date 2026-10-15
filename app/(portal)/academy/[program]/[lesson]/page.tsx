@@ -88,6 +88,10 @@ export default async function LessonPage({ params }: { params: Promise<{ program
           <p className="text-data mt-3 text-micro text-muted-foreground">
             Lesson {index + 1} of {flat.length} · {lesson.minutes} min
             {lesson.effectiveDate ? ` · effective ${when(lesson.effectiveDate)}` : ""}
+            {" · "}
+            <Link href={`/support/new?category=MODULE_CONTENT&course=${encodeURIComponent(slug)}&from=${encodeURIComponent(`/academy/${slug}/${lessonId}`)}&ref=${encodeURIComponent(`Lesson: ${lesson.title}`)}`} className="font-sans underline underline-offset-4">
+              Ask about this lesson
+            </Link>
           </p>
           {lesson.objectives.length > 0 && (
             <div className="mt-6 rounded-[var(--radius)] border border-border bg-card px-5 py-4">

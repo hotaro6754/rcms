@@ -51,6 +51,7 @@ export const PERMISSIONS = [
   "support.escalate",
   "support.templates.manage",
   "support.templates.approve",
+  "support.configure",
   // Finance
   "finance.view",
   "product.manage",
@@ -177,7 +178,7 @@ export const ROLE_PERMISSIONS: Record<StaffRoleName, ReadonlySet<Permission>> = 
   SUPPORT_MANAGER: new Set<Permission>([
     "support.view_assigned", "support.view_all", "support.respond", "support.assign",
     "support.escalate", "support.templates.manage", "support.templates.approve",
-    "subscriber.view", "reports.view",
+    "support.configure", "subscriber.view", "reports.view",
   ]),
 
   FINANCE_ADMIN: new Set<Permission>([

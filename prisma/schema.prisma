@@ -110,8 +110,9 @@ model User {
   simAttempts        SimAttempt[]
   competencyOutcomes CompetencyOutcome[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  supportTeamMembers SupportTeamMember[]
 
   @@index([role])
   @@index([status])
@@ -564,8 +565,9 @@ model Program {
   groupCourses     OrgGroupCourse[]
   deliverables     Deliverable[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  supportTickets SupportTicket[]
 
   @@index([state, sortOrder])
   @@index([levelId, sortOrder])
@@ -1330,29 +1332,53 @@ enum SupportChannel {
 }
 
 model SupportTicket {
-  id              String          @id @default(cuid())
-  reference       String          @unique
-  requesterId     String
-  subject         String
-  category        SupportCategory
-  priority        SupportPriority @default(NORMAL)
-  status          SupportStatus   @default(WAITING)
-  channel         SupportChannel  @default(TICKET)
-  assigneeId      String?
+  id                      String          @id @default(cuid())
+  reference               String          @unique
+  requesterId             String
+  subject                 String
+  category                SupportCategory
+  priority                SupportPriority @default(NORMAL)
+  status                  SupportStatus   @default(WAITING)
+  channel                 SupportChannel  @default(TICKET)
+  assigneeId              String?
   /// "academic" | "billing" | "technical" | "security"
-  escalatedTo     String?
-  isComplaint     Boolean         @default(false)
-  firstResponseAt DateTime?
-  resolvedAt      DateTime?
-  closedAt        DateTime?
-  followUpAt      DateTime?
-  rating          Int?
-  feedback        String?
-  reopenCount     Int             @default(0)
+  escalatedTo             String?
+  isComplaint             Boolean         @default(false)
+  firstResponseAt         DateTime?
+  resolvedAt              DateTime?
+  closedAt                DateTime?
+  followUpAt              DateTime?
+  rating                  Int?
+  feedback                String?
+  reopenCount             Int             @default(0)
+  /// Team that owns the case; null only if no team exists at all.
+  teamId                  String?
+  source                  TicketSource    @default(WEB_FORM)
+  /// Related course, and a free reference to a lesson, assessment or case attempt.
+  programId               String?
+  relatedRef              String?
+  /// The page the learner raised it from (path only, no query string).
+  pageContext             String?
+  tags                    String[]        @default([])
+  /// 1 (only me, minor) to 3 (stops my learning or affects many).
+  impact                  Int?
+  /// 1 (whenever) to 3 (deadline today).
+  urgency                 Int?
+  /// Learner-visible summary written when the case is resolved.
+  resolutionSummary       String?
+  firstResponseDueAt      DateTime?
+  resolutionDueAt         DateTime?
+  firstResponseBreachedAt DateTime?
+  resolutionBreachedAt    DateTime?
+  slaWarnedAt             DateTime?
 
-  requester User             @relation("TicketRequester", fields: [requesterId], references: [id])
-  assignee  User?            @relation("TicketAssignee", fields: [assigneeId], references: [id])
-  messages  SupportMessage[]
+  requester   User                 @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee    User?                @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  team        SupportTeam?         @relation(fields: [teamId], references: [id])
+  program     Program?             @relation(fields: [programId], references: [id])
+  messages    SupportMessage[]
+  events      SupportTicketEvent[]
+  attachments SupportAttachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1360,6 +1386,7 @@ model SupportTicket {
   @@index([status, priority])
   @@index([requesterId])
   @@index([assigneeId, status])
+  @@index([teamId, status])
 }
 
 model SupportMessage {
@@ -2236,4 +2263,142 @@ model CompetencyOutcome {
 
   @@index([userId, competencyId])
   @@index([attemptId])
+}
+
+// ---------------------------------------------------------------------------
+// Support operations: teams, routing, SLA targets and the case history.
+// ---------------------------------------------------------------------------
+
+enum TicketSource {
+  WEB_FORM
+  CHAT
+  ASSISTANT
+  COURSE_PAGE
+  ACCOUNT
+  STAFF
+}
+
+enum TicketEventKind {
+  CREATED
+  ROUTED
+  ASSIGNED
+  UNASSIGNED
+  TEAM_CHANGED
+  STATUS
+  PRIORITY
+  ESCALATED
+  REOPENED
+  SLA_WARNING
+  SLA_BREACH
+  RESOLVED
+  CLOSED
+}
+
+model SupportTeam {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  name        String
+  description String?
+  active      Boolean @default(true)
+  /// Assign new cases to the least-loaded available member; otherwise they wait in the team queue.
+  autoAssign  Boolean @default(true)
+
+  members    SupportTeamMember[]
+  tickets    SupportTicket[]
+  categories SupportCategorySetting[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTeamMember {
+  id             String    @id @default(cuid())
+  teamId         String
+  userId         String
+  isLead         Boolean   @default(false)
+  /// Set by the member or a lead; unavailable members are skipped by automatic assignment.
+  available      Boolean   @default(true)
+  /// Automatic assignment skips a member with this many open cases.
+  maxOpen        Int       @default(15)
+  lastAssignedAt DateTime?
+
+  team SupportTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+/// Per-category routing and wording. Categories themselves are a fixed list (the enum); their
+/// label, visibility to learners, owning team and default priority are configurable here.
+model SupportCategorySetting {
+  category        SupportCategory @id
+  label           String?
+  description     String?
+  active          Boolean         @default(true)
+  teamId          String?
+  defaultPriority SupportPriority @default(NORMAL)
+
+  team SupportTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+}
+
+model SupportSlaPolicy {
+  priority             SupportPriority @id
+  firstResponseMinutes Int
+  resolutionMinutes    Int
+  /// Count only support hours (SupportCalendar); otherwise calendar time.
+  businessHours        Boolean         @default(true)
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Support hours used for SLA due times. One row, id "default".
+model SupportCalendar {
+  id               String @id @default("default")
+  utcOffsetMinutes Int    @default(330)
+  /// 0 Sunday … 6 Saturday.
+  workDays         Int[]  @default([1, 2, 3, 4, 5, 6])
+  /// Minutes after local midnight.
+  startMinute      Int    @default(600)
+  endMinute        Int    @default(1140)
+
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTicketEvent {
+  id       String          @id @default(cuid())
+  ticketId String
+  /// Null for the system (routing, SLA job).
+  actorId  String?
+  kind     TicketEventKind
+  from     String?
+  to       String?
+  note     String?
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+  @@index([kind, createdAt])
+}
+
+model SupportAttachment {
+  id         String  @id @default(cuid())
+  ticketId   String
+  messageId  String?
+  uploaderId String
+  fileKey    String
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
 }

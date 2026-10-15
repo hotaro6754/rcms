@@ -9,6 +9,7 @@ import { NORTHGATE } from "../lib/data/scenarios";
 import { backfillReleases, seedBlocksFromBodies, seedFoundationAssessment, seedLevels, seedPlans } from "./seed-academy";
 import { seedLibrary } from "./seed-library";
 import { seedCases } from "./seed-cases";
+import { seedSupport } from "./seed-support";
 
 /**
  * Seeds a fresh database from the modules that drive the marketing site. Idempotent and
@@ -194,6 +195,7 @@ async function main() {
   await seedPlans(prisma);
   await seedLibrary(prisma);
   await seedCases(prisma);
+  await seedSupport(prisma);
   await seedScenario();
   await seedChannels();
   await seedPlatform();

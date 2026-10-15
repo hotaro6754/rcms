@@ -117,6 +117,12 @@ export default async function AccountPage() {
               <button className={`${BTN_OUTLINE} w-fit`}>Send request</button>
             </ActionForm>
           </Panel>
+          <Panel title="Problems with your account?">
+            <p className="text-[13px] text-muted-foreground">Sign-in, access or billing trouble goes straight to the right team.</p>
+            <Link href="/support/new?category=LOGIN_ACCESS&source=ACCOUNT&from=%2Faccount" className={`${BTN_OUTLINE} mt-3 w-fit`}>
+              Contact support
+            </Link>
+          </Panel>
           {actor.staffRoles.length === 0 && actor.role === "STUDENT" && (
             <Panel title="Close your account">
               <p className="text-[13px] text-muted-foreground">

@@ -51,6 +51,7 @@ export const ADMIN_NAV: AdminGroup[] = [
     links: [
       { href: "/admin/support", label: "Queue", any: ["support.view_assigned", "support.view_all"] },
       { href: "/admin/support/templates", label: "Approved responses", any: ["support.respond", "support.templates.manage"] },
+      { href: "/admin/support/settings", label: "Teams, routing and SLA", any: ["support.configure", "support.view_all"] },
     ],
   },
   {

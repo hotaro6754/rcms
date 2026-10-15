@@ -63,6 +63,15 @@ async function main() {
   const learner = await prisma.user.findUniqueOrThrow({ where: { email: "student@rcms.test" } });
   await prisma.orgMember.upsert({ where: { orgId_userId: { orgId: org.id, userId: manager.id } }, create: { orgId: org.id, userId: manager.id, isManager: true }, update: { isManager: true } });
   await prisma.orgMember.upsert({ where: { orgId_userId: { orgId: org.id, userId: learner.id } }, create: { orgId: org.id, userId: learner.id }, update: {} });
+  // Support teams: the agent works general and technical cases; the support manager leads general.
+  const teams = await prisma.supportTeam.findMany({ where: { key: { in: ["general", "technical", "academic", "billing"] } } });
+  const agent = await prisma.user.findUniqueOrThrow({ where: { email: "agent@rcms.test" } });
+  const lead = await prisma.user.findUniqueOrThrow({ where: { email: "supportmgr@rcms.test" } });
+  for (const t of teams) {
+    if (t.key === "general" || t.key === "technical") await prisma.supportTeamMember.upsert({ where: { teamId_userId: { teamId: t.id, userId: agent.id } }, create: { teamId: t.id, userId: agent.id }, update: {} });
+    await prisma.supportTeamMember.upsert({ where: { teamId_userId: { teamId: t.id, userId: lead.id } }, create: { teamId: t.id, userId: lead.id, isLead: true }, update: {} });
+  }
+  if (teams.length) console.log("[dev-accounts] support teams: agent@ in general and technical; supportmgr@ leads all teams (run db:seed first)");
   console.log("[dev-accounts] manager@rcms.test (corporate manager of Synthetic Billing Partners; student@ is a member)");
   console.log(`[dev-accounts] password for all: ${PASSWORD}`);
 }

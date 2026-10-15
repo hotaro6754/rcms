@@ -17,7 +17,7 @@ import { randomUUID } from "node:crypto";
  * saveBuffer / readStored / removeStored for S3 or R2 (same signatures).
  */
 
-export type StorageArea = "materials" | "media" | "attempts" | "vendor" | "deliverables";
+export type StorageArea = "materials" | "media" | "attempts" | "vendor" | "deliverables" | "support";
 
 const BASE = resolve(process.cwd(), "storage");
 

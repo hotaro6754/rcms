@@ -2,7 +2,8 @@ import Link from "next/link";
 import { requireActor } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
-import { Empty, StatusPill, Table, Td, when } from "@/components/admin/kit";
+import { Empty, Pill, Table, Td, when } from "@/components/admin/kit";
+import { DONE_STATUSES, LEARNER_STATUS_LABEL } from "@/lib/support/states";
 import { CATEGORY_LABEL } from "@/lib/services/support/tickets";
 import { getSetting } from "@/lib/settings";
 
@@ -43,7 +44,7 @@ export default async function SupportHome() {
                 </Td>
                 <Td>{CATEGORY_LABEL[t.category]}</Td>
                 <Td>
-                  <StatusPill status={t.status} />
+                  <Pill tone={DONE_STATUSES.includes(t.status) ? "green" : t.status === "PENDING_SUBSCRIBER" ? "red" : "amber"}>{LEARNER_STATUS_LABEL[t.status]}</Pill>
                 </Td>
                 <Td>{when(t.updatedAt, true)}</Td>
               </tr>
