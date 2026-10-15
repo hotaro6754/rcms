@@ -125,12 +125,12 @@ export function CaseWorkbench({
   );
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex min-w-0 flex-col gap-8">
       <WorkflowStrip steps={steps} current={current === -1 ? steps.length - 1 : current} />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         {/* Case file */}
-        <section aria-labelledby="file-h" className="flex flex-col gap-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
+        <section aria-labelledby="file-h" className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
           <h2 id="file-h" className="sr-only">
             Case file
           </h2>
@@ -247,7 +247,7 @@ export function CaseWorkbench({
         </section>
 
         {/* Decision */}
-        <section aria-labelledby="decide-h" className="flex flex-col gap-7">
+        <section aria-labelledby="decide-h" className="flex min-w-0 flex-col gap-7">
           <h2 id="decide-h" className="text-[1.25rem] font-semibold">
             Your decision
           </h2>

@@ -11,7 +11,7 @@ export interface StripStep {
 
 export function WorkflowStrip({ steps, current }: { steps: StripStep[]; current?: number }) {
   return (
-    <figure className="w-full overflow-x-auto">
+    <figure className="w-full min-w-0 overflow-x-auto">
       <svg viewBox={`0 0 ${steps.length * 100} 64`} className="h-auto w-full min-w-[600px]" aria-hidden="true" focusable="false">
         <line x1={50} x2={steps.length * 100 - 50} y1={20} y2={20} className="stroke-border" strokeWidth={2} />
         {steps.map((s, i) => {

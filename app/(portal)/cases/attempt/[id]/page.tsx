@@ -41,7 +41,7 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
         {open ? (
           <CaseWorkbench view={a.view} initial={a.answers} save={saveCaseAnswersAction.bind(null, a.id)} submit={submitCaseAction.bind(null, a.id)} />
         ) : (
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <CaseResult
               result={a.result!}
               outcomes={a.outcomes}

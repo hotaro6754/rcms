@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // data-intro is written by the boot script before hydration, hence the warning opt-out.
-    <html lang="en" className={cn("font-sans", geist.variable, serif.variable)} suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" className={cn("font-sans", geist.variable, serif.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: INTRO_BOOT_SCRIPT }} />
       </head>
