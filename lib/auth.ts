@@ -212,18 +212,24 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        // OWNER_EMAILS accounts become OWNER at sign-up, so the owner sets their own password
-        // and nobody else ever handles it. Everyone else starts as STUDENT. Role and status
-        // are forced here whatever the request contained.
+        // An OWNER_EMAILS address becomes OWNER at sign-up only while the platform has no
+        // owner or Super Administrator yet (first-run bootstrap), so the owner sets their own
+        // password and nobody else handles it. The account still cannot sign in until the
+        // address is verified. After bootstrap, authority comes only through approved role
+        // changes. Everyone else starts as STUDENT; role and status are forced here whatever
+        // the request contained.
         before: async (user) => {
           const owners = (process.env.OWNER_EMAILS ?? "")
             .split(",")
             .map((e) => e.trim().toLowerCase())
             .filter(Boolean);
+          const bootstrap =
+            owners.includes(user.email.toLowerCase()) &&
+            (await prisma.user.count({ where: { OR: [{ role: "OWNER" }, { staffRoles: { some: { role: "SUPER_ADMIN" } } }] } })) === 0;
           return {
             data: {
               ...user,
-              role: owners.includes(user.email.toLowerCase()) ? "OWNER" : "STUDENT",
+              role: bootstrap ? "OWNER" : "STUDENT",
               status: user.emailVerified ? "ACTIVE" : "PENDING_VERIFICATION",
               twoFactorEnabled: false,
             },

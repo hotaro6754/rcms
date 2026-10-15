@@ -29,7 +29,7 @@ export interface Board {
 
 const pct = (n: number, d: number) => (d ? Math.round((n / d) * 1000) / 10 : null);
 const since = (days: number) => new Date(Date.now() - days * 86400_000);
-const LEARNER = { role: "STUDENT" as const, NOT: { email: { endsWith: "@deleted.invalid" } } };
+const LEARNER = { role: "STUDENT" as const, staffRoles: { none: {} }, NOT: { email: { endsWith: "@deleted.invalid" } } };
 
 export const BOARDS = {
   executive: "Executive",

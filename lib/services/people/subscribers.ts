@@ -21,6 +21,9 @@ function log(actor: Actor, action: Parameters<typeof audit>[0]["action"], entity
   return audit({ actorId: actor.id, actorRoles: actor.staffRoles, action, entity, entityId, after, before });
 }
 
+/** Learner accounts: staff hold their authority through role grants on top of the base role. */
+const LEARNERS_ONLY = { role: "STUDENT", staffRoles: { none: {} } } satisfies Prisma.UserWhereInput;
+
 export interface DirectoryFilter {
   q?: string;
   status?: AccountStatus;
@@ -31,7 +34,7 @@ export interface DirectoryFilter {
 export async function directory(actor: Actor, f: DirectoryFilter) {
   await assertCan(actor, "subscriber.view");
   const where: Prisma.UserWhereInput = {
-    role: { in: ["STUDENT"] },
+    ...LEARNERS_ONLY,
     ...(f.status ? { status: f.status } : {}),
     ...(f.courseId ? { enrolments: { some: { programId: f.courseId } } } : {}),
     ...(f.q ? { OR: [{ name: { contains: f.q, mode: "insensitive" } }, { email: { contains: f.q, mode: "insensitive" } }, { id: f.q }] } : {}),
@@ -103,9 +106,9 @@ export async function setStatus(actor: Actor, userId: string, status: AccountSta
   if (!STATUS_CHANGE.includes(status)) throw new ServiceError("That status cannot be set by hand.");
   if (!reason?.trim()) throw new ServiceError("Give a reason; it is recorded.");
   if (userId === actor.id) throw new ServiceError("You cannot change your own account status.");
-  const before = await prisma.user.findUnique({ where: { id: userId }, select: { status: true, role: true, emailVerified: true } });
+  const before = await prisma.user.findUnique({ where: { id: userId }, select: { status: true, role: true, emailVerified: true, _count: { select: { staffRoles: true } } } });
   if (!before) throw new ServiceError("That person no longer exists.");
-  if (before.role !== "STUDENT" && !actor.staffRoles.includes("SUPER_ADMIN")) throw new ServiceError("Only a Super Administrator can change the status of staff or vendor accounts.");
+  if ((before.role !== "STUDENT" || before._count.staffRoles > 0) && !actor.staffRoles.includes("SUPER_ADMIN")) throw new ServiceError("Only a Super Administrator can change the status of staff or vendor accounts.");
   if (status === "ACTIVE" && !before.emailVerified) throw new ServiceError("This person has not verified their email yet.");
   await prisma.$transaction(async (tx) => {
     await tx.user.update({ where: { id: userId }, data: { status } });
@@ -180,9 +183,9 @@ export async function addNote(actor: Actor, userId: string, body: string) {
 export async function resetAuthentication(actor: Actor, userId: string, reason: string) {
   await assertCan(actor, "subscriber.suspend", { entity: "User", id: userId });
   if (!reason?.trim()) throw new ServiceError("Give a reason; it is recorded.");
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, role: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, role: true, _count: { select: { staffRoles: true } } } });
   if (!user) throw new ServiceError("That person no longer exists.");
-  if (user.role !== "STUDENT") throw new ServiceError("Staff and vendor authentication is reset by a Super Administrator from Users and roles.");
+  if (user.role !== "STUDENT" || user._count.staffRoles > 0) throw new ServiceError("Staff and vendor authentication is reset by a Super Administrator from Users and roles.");
   await prisma.$transaction([
     prisma.session.deleteMany({ where: { userId } }),
     prisma.user.update({ where: { id: userId }, data: { failedLoginCount: 0, lockedUntil: null } }),
@@ -345,7 +348,7 @@ export function toCsv(rows: Record<string, unknown>[]) {
 export async function exportSubscribers(actor: Actor, f: DirectoryFilter) {
   await assertCan(actor, "subscriber.export");
   const where: Prisma.UserWhereInput = {
-    role: "STUDENT",
+    ...LEARNERS_ONLY,
     ...(f.status ? { status: f.status } : {}),
     ...(f.courseId ? { enrolments: { some: { programId: f.courseId } } } : {}),
     ...(f.q ? { OR: [{ name: { contains: f.q, mode: "insensitive" } }, { email: { contains: f.q, mode: "insensitive" } }] } : {}),
