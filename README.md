@@ -1,9 +1,13 @@
 # RCMS Operations Academy
 
-Public site, student portal, trainer studio and admin OS on one data layer.
-Next.js 15 · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Prisma · PostgreSQL · GSAP · Motion.
+Public site, learner portal, Admin Control Center and vendor portal on one data layer.
+Next.js 15 · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Prisma 7 · PostgreSQL · Better Auth · GSAP · Motion.
 
-Build plan and phase gates: `preview/build-plan.html`.
+Documentation: `docs/IMPLEMENTATION_AUDIT.md` (starting point) · `docs/FEATURE_MATRIX.md` (what
+exists) · `docs/ARCHITECTURE.md` · `docs/SECURITY_REVIEW.md` · `docs/TEST_PLAN.md` ·
+`docs/IMPLEMENTATION_PLAN.md` · `docs/OPERATIONS.md`.
+
+Training data only: the platform must never hold real patient, provider, payer or card data.
 
 ---
 
@@ -11,64 +15,80 @@ Build plan and phase gates: `preview/build-plan.html`.
 
 ```bash
 npm install
-cp .env.example .env      # fill in DATABASE_URL and BETTER_AUTH_SECRET at minimum
+cp .env.example .env      # DATABASE_URL and BETTER_AUTH_SECRET at minimum
 
-# Option A — no database of your own yet:
+# No database of your own yet:
 npm run db:dev            # PGlite serves real Postgres on 127.0.0.1:55432, leave running
 # then set DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/postgres"
 # and DATABASE_POOL_MAX="1"
 
 npm run db:deploy         # applies prisma/migrations
-npm run db:seed           # programs, products, scenario, channels, flags
+npm run db:seed           # levels, courses, sample assessment, plans, reference data (idempotent)
+npm run dev:accounts      # LOCAL ONLY: one synthetic account per role, see below
 npm run dev
 ```
 
-`npm run db:dev` is PostgreSQL compiled to WebAssembly, served over the real wire protocol.
-Prisma, psql and the app cannot tell it from a hosted database — no Docker, no cloud account.
-It serves **one connection at a time**, which is why `DATABASE_POOL_MAX` must be `1` against
-it. Point `DATABASE_URL` at Neon or Supabase later and nothing in the application changes.
+`npm run dev:accounts` creates `student@`, `super@`, `director@`, `content@`, `academic@`,
+`compliance@`, `subscribers@`, `agent@`, `supportmgr@`, `finance@`, `vendormgr@`, `analyst@`,
+`auditor@` and `vendor@rcms.test`, all with the password printed by the script. Never run it
+against a shared or production database.
 
-Without a `DATABASE_URL` the marketing site still runs — every page under `/` is static and
-does not touch the database. Only auth, checkout and the portals need it.
+First administrator in a real deployment: the person signs up and verifies their email, then
+`npm run admin:bootstrap -- their@email` (refuses once a Super Administrator exists). There is
+no web route that creates an administrator.
 
 ### Scripts
 
 | Script | Does |
 |---|---|
-| `npm run dev` | Next dev server |
-| `npm run build` | Production build, 34 routes |
-| `npm run lint` | ESLint |
-| `npm run db:dev` | Local Postgres via PGlite, persisted in `.pgdata/` |
-| `npm run db:dev:fresh` | Same, wiping `.pgdata/` first |
-| `npm run db:migrate` | Apply migrations in development |
-| `npm run db:deploy` | Apply migrations in production, no prompts |
-| `npm run db:seed` | Idempotent seed from `lib/data/*` |
-| `npm run db:studio` | Prisma Studio |
+| `npm run dev` / `build` / `start` | Next.js |
+| `npm run lint` / `typecheck` | ESLint / `tsc --noEmit` |
+| `npm test` | Unit and integration tests (needs a test PostgreSQL, see `docs/TEST_PLAN.md`) |
+| `npm run test:e2e` | Playwright journeys against a running, seeded dev server |
+| `npm run db:dev` / `db:dev:fresh` | Local Postgres via PGlite |
+| `npm run db:migrate` / `db:deploy` | Apply migrations (development / production) |
+| `npm run db:seed` | Idempotent seed |
+| `npm run db:backfill` | Create first releases for courses that have none |
+| `npm run admin:bootstrap -- <email>` | First Super Administrator |
+| `npm run dev:accounts` | Synthetic role accounts, local only |
 | `npm run db:reset` | Drop, re-migrate, re-seed. Destructive |
 | `npm run audit:ownership` | Fails if GSAP and Motion touch the same element |
+
+### Surfaces
+
+| Path | Who |
+|---|---|
+| `/`, `/catalog`, `/certificates/<serial>` | Public |
+| `/academy`, `/library`, `/certificates`, `/support`, `/account`, `/team` | Learners (and corporate managers) |
+| `/admin` | Staff; navigation and every action follow their roles |
+| `/vendor` | Vendor contacts; their own records only |
 
 ---
 
 ## Architecture decisions
 
-**Money is stored in paise.** `Product.amount`, `Order.amount` and every other monetary column
-is an integer in minor units. No float touches money anywhere. Rupees exist only at the
-presentation layer, via `inr()` in `lib/data/catalog.ts`.
+**Money is stored in paise.** Every monetary column is an integer in minor units. Rupees exist
+only at the presentation layer.
 
-**Audit is not optional.** Every mutation calls `audit()` or `withAudit()` from `lib/audit.ts`.
-It never throws — a failed audit write must not roll back a successful business operation —
-and it redacts tokens, passwords and gateway payloads before writing. This went in during
-Phase 0 on purpose: retrofitting audit means reconstructing history you no longer have.
+**Authorisation lives in the services.** Every function in `lib/services/**` that changes data
+takes an `Actor` and calls `assertCan(actor, permission)`; pages use `requirePagePermission`.
+Twelve staff roles and 64 permissions are defined in `lib/permissions.ts`. Sensitive changes
+(roles, prices, payout details, large exports, settings, progress resets, permanent deletion)
+go through maker-checker approval. Hiding a link is presentation, not security.
 
-**Authorisation is enforced server-side.** `lib/rbac.ts` exposes `requireUser`,
-`requireRole`, `requireAdmin` and `requireSelfOrAdmin`. They throw rather than return null, so
-a forgotten check fails loudly instead of leaking. Hiding a link in the UI is presentation,
-not security.
+**Learners only see released content.** Staff edit drafts; publishing stores an immutable
+snapshot (`CourseVersion`) after academic and compliance review by different people. Attempts,
+progress and certificates record the version.
 
-**Prisma 7 connects through a driver adapter.** The connection URL lives in
-`prisma.config.ts` for Migrate and reaches the runtime client via `PrismaPg` in `lib/db.ts`.
-The client is cached on `globalThis` in development so hot reload does not exhaust the
-connection pool.
+**Audit is append-only.** `audit()` writes one row per sensitive action and per refusal, with
+secrets redacted; a database trigger refuses updates and deletes. A failed audit write never
+rolls back a business operation.
+
+**A browser redirect never marks an order paid.** One `fulfil()` path runs after a verified
+checkout signature plus a server-side fetch, or a verified webhook.
+
+**Prisma 7 connects through a driver adapter.** The URL lives in `prisma.config.ts` for Migrate
+and reaches the runtime client via `PrismaPg` in `lib/db.ts`.
 
 **One animation system per property.** GSAP owns the hero timeline, all hero SVG, scroll
 choreography and the Flip into the dashboard. Motion owns tabs, dialogs, the command palette,
@@ -90,61 +110,34 @@ tokens rather than fork components, so anything placed inside one re-themes itse
 
 ```
 app/
-  (site)/            marketing: about, courses, pricing, mentoring, community, blog, contact, legal
-  (product)/         console: overview, metrics, queues, roster, activity, policy-updates, governance
-  page.tsx           homepage: hero, metric strip, programs, ladder, governance walkthrough
-components/
-  hero/              GSAP sequence: blueprint, lifecycle, queue, metric resolve, Flip reveal
-  governance/        the Governance Room, seven stages
-  dashboard/         metric cards, telemetry charts, tables, status
-  site/ product/ ui/ chrome and shadcn primitives
+  (site)/            marketing site and public catalogue
+  (auth)/            sign-in, sign-up, verification, reset, two-step verification, invitations
+  (portal)/          learner portal: academy, library, certificates, labs, support, account, team
+  admin/             Admin Control Center
+  vendor/            vendor portal
+  api/               auth, files, exports, payment webhook, cron
+components/          site, hero, admin kit, cms editor, portal, support, ui primitives
 lib/
-  data/              telemetry, governance, catalog — the single source of truth
-  gsap/              plugin registration and the shared "exec" ease
-  db.ts auth.ts rbac.ts audit.ts
-prisma/
-  schema.prisma      45 tables, 8 enums
-  migrations/        0001_init
-  seed.ts
+  services/          business rules: cms, learning, commerce, support, vendors, people, reports
+  actions/           server actions (thin wrappers over services)
+  assessment/ cms/ payments/
+  actor.ts permissions.ts auth.ts audit.ts storage.ts settings.ts
+prisma/              schema (79 tables), migrations, seed
+tests/               unit, integration, e2e
+docs/                audit, matrix, architecture, security, tests, plan, operations
 ```
-
----
-
-## Data model
-
-45 tables in eight groups: identity, academy, commerce, sales, mentoring, governance,
-community, platform. Every table carries `createdAt`/`updatedAt`; every mutation writes an
-`AuditLog` row.
-
-The governance group is the part with no equivalent in an off-the-shelf LMS. `Scenario` holds
-a whole engagement's telemetry as JSON, and `LabAttempt` plus `CapacityRun`, `RcaBoard`,
-`ActionItem`, `ExecutiveNote` and `RubricScore` capture what a learner decided and how it was
-graded. Storing the computed capacity result on the run means a graded attempt keeps the
-numbers it was graded against even if the teaching model is later edited.
 
 ---
 
 ## Known state
 
-Built and verified end to end: marketing site, design system, GSAP hero, Governance Room,
-telemetry model, database schema, migrations, seed, authentication, email verification,
-RBAC and the audit trail.
-
-The Phase 0 gate is met. Proven against a live database: registration, a verification email
-carrying a working link, sign-in refused with `EMAIL_NOT_VERIFIED` before verification and
-accepted after, `/account` redirecting when signed out and rendering when signed in, and
-audit rows written for both `create User` and `login Session`.
-
-**Phase 2** (thin loop) and **Phase 3** (Trainer Studio) are done. A contact enquiry becomes
-a scored lead; an admin grants enrolment; a student works the curriculum and takes quizzes;
-a trainer authors modules, lessons and questions and publishes them without a developer.
-
-Not built yet: payments (Phase 1, parked), Governance Labs assessment, CRM pipeline,
-finance dashboard, mentoring scheduling, community. See the build plan for the phase each
-belongs to.
-
-Surfaces: `/` public · `/academy` student · `/studio` trainer · `/admin` admin OS.
+See `docs/FEATURE_MATRIX.md` for the full picture and `docs/IMPLEMENTATION_PLAN.md` for what
+remains. In short: the learner loop, CMS with review and releases, assessments, certificates,
+subscriber and corporate administration, support, vendors, dashboards and audit are built and
+tested. Payments and email are implemented but **have not been run against Razorpay or Resend**;
+do that in test mode before going live (`docs/TEST_PLAN.md` §5).
 
 Placeholders that need real values before launch: the WhatsApp number in
 `components/site/SiteFooter.tsx` and `app/(site)/mentoring`, founder credentials on the about
-page, and the business/GST fields in `.env.example`.
+page, the business/GST fields in `.env.example`, and the marketing site's five-step ladder,
+which predates the three learning levels.

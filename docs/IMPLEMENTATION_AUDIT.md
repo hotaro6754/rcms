@@ -99,14 +99,14 @@ There is no technical reason to change any of this, so the platform is built on 
 
 | # | Defect | Severity | Where | Status |
 |---|---|---|---|---|
-| D1 | Deleting a lesson checks for progress but not quiz attempts. `Quiz → Lesson` and `QuizAttempt → Quiz` cascade, so a lesson whose quiz was attempted but never marked complete deletes the learner's attempts. | High (assessment evidence loss) | `lib/actions/studio.ts` `deleteLesson` | Planned |
-| D2 | Deleting a quiz question after attempts exist orphans the stored answers; historical review breaks. | Medium | `deleteQuestion` | Planned |
-| D3 | Re-issuing a revoked certificate overwrites the serial on the same row, so the revoked serial stops resolving and its verification page 404s instead of saying "revoked". | Medium (verification integrity) | `lib/actions/certificates.ts` `issue` | Planned |
-| D4 | `completeLesson` and `submitQuizAttempt` do not check that the lesson is published; a learner who knows a draft lesson id can complete it or attempt its quiz. | Medium | `lib/actions/academy.ts`, `lib/actions/quiz.ts` | Planned |
-| D5 | Uploads trust the browser-declared MIME type. | Medium | `lib/actions/materials.ts` | Planned |
-| D6 | Public contact and newsletter forms have no rate limit. | Low | `lib/actions/leads.ts` | Planned |
-| D7 | No security headers (CSP frame-ancestors, nosniff, referrer policy). | Low | `next.config.ts` | Planned |
-| D8 | `.env.example` missing / ignored. | Low | `.gitignore` | Planned |
+| D1 | Deleting a lesson checks for progress but not quiz attempts. `Quiz → Lesson` and `QuizAttempt → Quiz` cascade, so a lesson whose quiz was attempted but never marked complete deletes the learner's attempts. | High (assessment evidence loss) | `lib/actions/studio.ts` `deleteLesson` | Fixed: restrict FKs; delete only without learner history, otherwise archive (`lib/services/cms/structure.ts`) |
+| D2 | Deleting a quiz question after attempts exist orphans the stored answers; historical review breaks. | Medium | `deleteQuestion` | Fixed: questions with attempts are archived; attempts keep their own snapshot (`assessments.ts`) |
+| D3 | Re-issuing a revoked certificate overwrites the serial on the same row, so the revoked serial stops resolving and its verification page 404s instead of saying "revoked". | Medium (verification integrity) | `lib/actions/certificates.ts` `issue` | Fixed: re-issue creates a new row with `replacesId` (`learning/certificates.ts`); tested |
+| D4 | `completeLesson` and `submitQuizAttempt` do not check that the lesson is published; a learner who knows a draft lesson id can complete it or attempt its quiz. | Medium | `lib/actions/academy.ts`, `lib/actions/quiz.ts` | Fixed: learners read only released snapshots (`learning/catalog.ts`); tested |
+| D5 | Uploads trust the browser-declared MIME type. | Medium | `lib/actions/materials.ts` | Fixed: magic-byte sniffing and allow-lists (`lib/storage.ts`); tested |
+| D6 | Public contact and newsletter forms have no rate limit. | Low | `lib/actions/leads.ts` | Fixed: database-backed limits (`lib/rate-limit.ts`) |
+| D7 | No security headers (CSP frame-ancestors, nosniff, referrer policy). | Low | `next.config.ts` | Fixed: headers and CSP |
+| D8 | `.env.example` missing / ignored. | Low | `.gitignore` | Fixed: `.env.example` added and un-ignored |
 
 ## 6. Decisions taken (conservative, documented)
 
@@ -123,3 +123,21 @@ There is no technical reason to change any of this, so the platform is built on 
 5. **Brand name, INR pricing and Razorpay** (all decided before this work) are kept.
 6. **Rich text is a restricted Markdown subset rendered without HTML**, so stored XSS is not
    possible by construction rather than by sanitiser configuration.
+
+## 7. After implementation
+
+This audit describes the starting point and is kept as written. What exists now is in
+`docs/FEATURE_MATRIX.md`; how it fits together in `docs/ARCHITECTURE.md`; controls, further
+defects found during the work (D9–D11) and residual risks in `docs/SECURITY_REVIEW.md`; how it
+is tested in `docs/TEST_PLAN.md`; remaining work in `docs/IMPLEMENTATION_PLAN.md`; and how to
+run it in `docs/OPERATIONS.md`.
+
+Baseline compared with the end of this work:
+
+| Check | Baseline | Now |
+|---|---|---|
+| Routes | 47 | 100 (build output) |
+| Tables / enums | 45 / 8 (README) | 79 / 35 |
+| Automated tests | none | 71 unit + integration, 4 end to end, all passing |
+| Lint / typecheck / build | clean | clean |
+

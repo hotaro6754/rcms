@@ -12,7 +12,8 @@ import { prisma } from "../lib/db";
  * Center through a maker-checker approval.
  *
  * OWNER_EMAILS remains as an alternative: an address listed there becomes OWNER (which
- * implies Super Administrator) at sign-up.
+ * implies Super Administrator) at sign-up, but only while no owner or Super Administrator
+ * exists yet.
  */
 async function main() {
   const email = process.argv[2]?.trim().toLowerCase();
