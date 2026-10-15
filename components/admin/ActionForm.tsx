@@ -56,7 +56,11 @@ export function ActionForm({
       ref={ref}
       action={formAction}
       onSubmit={(e) => {
-        if (confirm && !window.confirm(confirm)) e.preventDefault();
+        if (confirm && !window.confirm(confirm)) {
+          e.preventDefault();
+          return;
+        }
+        carrySubmitter(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
       }}
       className={cn("relative", className)}
       aria-busy={pending}
@@ -67,6 +71,25 @@ export function ActionForm({
       <FormStatus state={state} pending={pending} success={success} />
     </form>
   );
+}
+
+/**
+ * Puts the clicked button's name and value into the form as a hidden field.
+ *
+ * React adds the submitter itself through a temporary input tied to the form by `form.id`. When
+ * the form has a field named "id" (most of ours do), `form.id` is that field, not a string, so
+ * the temporary input points at no form and the button's value is silently dropped: an
+ * "Approve" button would post without saying it was "approve". The hidden copy avoids that.
+ */
+function carrySubmitter(form: HTMLFormElement, submitter: HTMLElement | null) {
+  form.querySelectorAll("input[data-submitter-copy]").forEach((n) => n.remove());
+  if (!(submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) || !submitter.name) return;
+  const copy = document.createElement("input");
+  copy.type = "hidden";
+  copy.name = submitter.name;
+  copy.value = submitter.value;
+  copy.dataset.submitterCopy = "";
+  form.appendChild(copy);
 }
 
 export function FormStatus({ state, pending, success }: { state: FormResult; pending: boolean; success?: string }) {

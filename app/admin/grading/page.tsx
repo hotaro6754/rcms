@@ -17,6 +17,7 @@ export default async function GradingQueue() {
     can(actor, "assessment.grade") ? pendingGrading() : Promise.resolve([]),
     can(actor, "labs.grade") ? prisma.labAttempt.count({ where: { state: "SUBMITTED" } }) : Promise.resolve(0),
   ]);
+  const cases = can(actor, "assessment.grade") ? await prisma.simAttempt.count({ where: { state: "SCORED" } }) : 0;
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">
       <PageHead kicker="Assessment" title="Grading" lede="Written answers and uploaded assignments are never passed automatically. A reviewer marks each against its rubric; the learner is notified when it is done." />
@@ -41,6 +42,14 @@ export default async function GradingQueue() {
               ))}
             </Table>
           ))}
+        {can(actor, "assessment.grade") && (
+          <p className="text-[14px]">
+            Case practice: {cases} scored attempt{cases === 1 ? "" : "s"} not yet reviewed by an instructor.{" "}
+            <Link href="/admin/grading/cases" className="underline underline-offset-4">
+              Open the case attempts
+            </Link>
+          </p>
+        )}
         {can(actor, "labs.grade") && (
           <p className="text-[14px]">
             Governance Labs: {labs} review{labs === 1 ? "" : "s"} waiting.{" "}

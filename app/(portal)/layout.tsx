@@ -6,6 +6,7 @@ import { ROLE_LABEL } from "@/lib/permissions";
 
 const NAV = [
   { href: "/academy", label: "My academy" },
+  { href: "/cases", label: "Case practice" },
   { href: "/library", label: "Library" },
   { href: "/certificates", label: "Certificates", exact: true },
   { href: "/labs", label: "Governance Labs" },

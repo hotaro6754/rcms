@@ -20,11 +20,13 @@ export const ADMIN_NAV: AdminGroup[] = [
   {
     href: "/admin/content",
     label: "Learning",
-    any: ["content.view", "assessment.grade", "labs.grade", "certificate.issue"],
+    any: ["content.view", "assessment.grade", "labs.grade", "certificate.issue", "assessment.manage"],
     links: [
       { href: "/admin/content", label: "Levels and courses", any: ["content.view"] },
       { href: "/admin/content/review", label: "Review queue", any: ["content.view"] },
       { href: "/admin/content/library", label: "Library", any: ["content.view"] },
+      { href: "/admin/cases", label: "Case simulations", any: ["content.view"] },
+      { href: "/admin/competencies", label: "Competencies", any: ["content.view", "assessment.manage"] },
       { href: "/admin/content/banks", label: "Question banks", any: ["assessment.manage", "content.view"] },
       { href: "/admin/content/media", label: "Media library", any: ["media.manage", "content.view"] },
       { href: "/admin/grading", label: "Grading", any: ["assessment.grade", "labs.grade"] },

@@ -188,7 +188,7 @@ export async function reviewAttempt(actor: Actor, id: string, input: ScoreOverri
     await recordOutcomes(tx, a, d, result, now);
   });
   await log(actor, "update", id, { reviewed: true, overrides, score: result.score, passed: result.passed }, { score: a.score, passed: a.passed });
-  await notifyUsers([a.userId], { kind: "review", title: "An instructor reviewed your case attempt", body: note.slice(0, 200), href: `/academy/cases/attempt/${id}` });
+  await notifyUsers([a.userId], { kind: "review", title: "An instructor reviewed your case attempt", body: note.slice(0, 200), href: `/cases/attempt/${id}` });
   return result;
 }
 

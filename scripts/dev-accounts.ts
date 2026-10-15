@@ -32,7 +32,7 @@ const STAFF: [StaffRole, string][] = [
 
 async function ensure(email: string, name: string) {
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (!existing) await auth.api.signUpEmail({ body: { email, password: PASSWORD, name } });
+  if (!existing) await auth.api.signUpEmail({ body: { email, password: PASSWORD, name, acceptTerms: true } as { email: string; password: string; name: string } });
   return prisma.user.update({ where: { email }, data: { emailVerified: true, status: "ACTIVE" } });
 }
 
@@ -57,6 +57,13 @@ async function main() {
   });
   await prisma.vendorMember.upsert({ where: { vendorId_userId: { vendorId: vendor.id, userId: vendorUser.id } }, create: { vendorId: vendor.id, userId: vendorUser.id }, update: {} });
   console.log("[dev-accounts] vendor@rcms.test (vendor portal, VEN-0001)");
+  // A corporate account whose manager can see the test learner's progress and competencies.
+  const org = await prisma.organisation.upsert({ where: { slug: "synthetic-billing-partners" }, create: { name: "Synthetic Billing Partners (fictional)", slug: "synthetic-billing-partners", seats: 10 }, update: {} });
+  const manager = await ensure("manager@rcms.test", "Test Team Manager");
+  const learner = await prisma.user.findUniqueOrThrow({ where: { email: "student@rcms.test" } });
+  await prisma.orgMember.upsert({ where: { orgId_userId: { orgId: org.id, userId: manager.id } }, create: { orgId: org.id, userId: manager.id, isManager: true }, update: { isManager: true } });
+  await prisma.orgMember.upsert({ where: { orgId_userId: { orgId: org.id, userId: learner.id } }, create: { orgId: org.id, userId: learner.id }, update: {} });
+  console.log("[dev-accounts] manager@rcms.test (corporate manager of Synthetic Billing Partners; student@ is a member)");
   console.log(`[dev-accounts] password for all: ${PASSWORD}`);
 }
 
