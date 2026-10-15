@@ -505,3 +505,15 @@ export async function archiveMediaAction(fd: FormData) {
     revalidatePath("/admin/content/media");
   });
 }
+
+export async function importCourseAction(fd: FormData) {
+  return attempt(async () => {
+    const file = fd.get("file");
+    if (!(file instanceof File) || !file.size) throw new ServiceError("Choose a course export file (.json).");
+    if (file.size > 2_000_000) throw new ServiceError("That file is larger than 2 MB.");
+    const { importCourse } = await import("@/lib/services/cms/transfer");
+    const { course, warnings } = await importCourse(await requireActor(), str(fd, "levelId"), await file.text());
+    revalidatePath("/admin/content", "layout");
+    return { id: course.id, href: `/admin/content/courses/${course.id}`, warnings };
+  });
+}

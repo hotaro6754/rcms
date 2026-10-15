@@ -164,7 +164,16 @@ export default async function CourseWorkspace({ params, searchParams }: { params
     ]);
     editor = (
       <div className="flex flex-col gap-6">
-        <Panel title="Course details" aside={can(actor, "content.create") ? <DuplicateCourse id={id} /> : undefined}>
+        <Panel title="Course details" aside={
+            <span className="flex items-center gap-2">
+              {can(actor, "content.export") && (
+                <a href={`/api/content/courses/${id}/export`} className="text-micro underline">
+                  Export
+                </a>
+              )}
+              {can(actor, "content.create") && <DuplicateCourse id={id} />}
+            </span>
+          }>
           <CourseForm course={course} levels={levels} reviewers={{ academic, compliance }} thumbnails={thumbnails} canEdit={canEdit} />
         </Panel>
       </div>

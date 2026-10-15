@@ -274,3 +274,32 @@ describe("CMS: authorisation at the service layer", () => {
     await expect(structure.updateCourse(author, course.id, { name: "Second editor", levelId: level.id }, stale)).rejects.toThrow(/Someone else saved/);
   });
 });
+
+describe("course export and import", () => {
+  it("round-trips a course as a new draft, refuses PHI, and needs the import permission", async () => {
+    const { exportCourse, importCourse } = await import("@/lib/services/cms/transfer");
+    const author = await staff("CONTENT_ADMIN");
+    const { course, level } = await makeCourseDraft(author, { modules: 2, lessons: 2 });
+    const doc = await exportCourse(author, course.id);
+    expect(doc.modules).toHaveLength(2);
+    const raw = JSON.stringify(doc);
+
+    const { course: copy, warnings } = await importCourse(author, level.id, raw);
+    expect(warnings).toEqual([]);
+    const imported = await prisma.program.findUniqueOrThrow({ where: { id: copy.id }, include: { modules: { include: { lessons: { include: { blocks: true } } } } } });
+    expect(imported.status).toBe("DRAFT");
+    expect(imported.publishedVersionId).toBeNull();
+    expect(imported.modules.flatMap((m) => m.lessons)).toHaveLength(4);
+    expect(imported.modules[0].lessons[0].blocks[0].data).toMatchObject({ text: expect.stringContaining("Synthetic lesson text") });
+
+    const poisoned = JSON.parse(raw);
+    poisoned.modules[0].lessons[0].blocks.push({ kind: "TEXT", data: { text: "Patient SSN 123-45-6789 denied" } });
+    await expect(importCourse(author, level.id, JSON.stringify(poisoned))).rejects.toThrow(/synthetic, de-identified/);
+    await expect(importCourse(author, level.id, "{not json")).rejects.toThrow(/not JSON/);
+    await expect(importCourse(author, level.id, JSON.stringify({ ...doc, format: "other" }))).rejects.toThrow(/not a valid course export/);
+
+    const reviewer = await staff("ACADEMIC_REVIEWER");
+    await expect(importCourse(reviewer, level.id, raw)).rejects.toBeInstanceOf(AuthorisationError);
+    await expect(exportCourse(await staff("SUPPORT_AGENT"), course.id)).rejects.toBeInstanceOf(AuthorisationError);
+  });
+});

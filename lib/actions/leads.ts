@@ -164,6 +164,9 @@ export async function subscribeNotes(formData: FormData): Promise<ContactResult>
   const parsed = NotesInput.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message, field: "email" };
   const { email } = parsed.data;
+  if (!(await allow(`notes:${clientIp(await headers())}`, 10, 3600))) {
+    return { ok: false, error: "Too many sign-ups from here in the last hour. Try again later." };
+  }
   try {
     const existing = await prisma.lead.findFirst({ where: { email }, orderBy: { createdAt: "desc" } });
     const lead = existing

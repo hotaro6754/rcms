@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
 import { BTN, Empty, Field, FIELD, StatusPill, TEXTAREA } from "@/components/admin/kit";
-import { createCourseAction, createLevelAction, moveLevelAction, reorderCoursesAction, setLevelStatusAction } from "@/lib/actions/cms";
+import { createCourseAction, createLevelAction, importCourseAction, moveLevelAction, reorderCoursesAction, setLevelStatusAction } from "@/lib/actions/cms";
 import { STATUS_LABEL } from "@/lib/services/cms/core";
 
 export const metadata = { title: "Levels and courses" };
@@ -231,6 +231,30 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
               <div className="flex items-end">
                 <button className={BTN}>Create level</button>
               </div>
+            </ActionForm>
+          </details>
+        )}
+
+        {can(actor, "content.import") && can(actor, "content.create") && (
+          <details className="rounded-[var(--radius)] border border-border bg-card px-5 py-4">
+            <summary className="cursor-pointer text-[14px] font-semibold">Import a course</summary>
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              Upload a course export (.json) from this or another RCMS installation. It becomes a new draft and goes through review like any other course. Files and media are not included; re-attach them after import.
+            </p>
+            <ActionForm action={importCourseAction} className="mt-4 flex flex-wrap items-end gap-3">
+              <Field label="Into level" htmlFor="imp-level">
+                <select id="imp-level" name="levelId" required className={FIELD}>
+                  {levels
+                    .filter((l) => l.status !== "ARCHIVED")
+                    .map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+              <input name="file" type="file" accept="application/json,.json" required aria-label="Course export file" className="text-[13px]" />
+              <button className={BTN}>Import as draft</button>
             </ActionForm>
           </details>
         )}
