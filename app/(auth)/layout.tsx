@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const INSIDE = [
-  ["Five levels", "From your first revenue cycle role to running a portfolio."],
+  ["Three levels", "Trainee, Professional and Leadership: from your first revenue cycle role to running operations."],
   ["Lessons and materials", "Written from the floor, with the SOPs and templates that go with them."],
   ["Certificates", "Issued when the work is done, with a serial anyone can verify."],
 ];

@@ -18,6 +18,12 @@ export async function sendMail({ to, subject, text }: Mail): Promise<void> {
   const key = process.env.RESEND_API_KEY;
 
   if (!key) {
+    // Message bodies carry sign-in, verification and reset links, which are credentials, so
+    // they are printed only in local development, never in a deployed environment's logs.
+    if (process.env.NODE_ENV === "production") {
+      console.error("EMAIL NOT SENT: RESEND_API_KEY is not set. Configure email delivery.");
+      return;
+    }
     console.warn(
       [
         "",

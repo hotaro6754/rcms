@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { signIn, signUp } from "@/lib/auth-client";
 
@@ -16,9 +16,21 @@ import { signIn, signUp } from "@/lib/auth-client";
 const FIELD =
   "min-h-11 w-full border-b border-input bg-transparent text-[16px] outline-none transition-colors focus:border-foreground";
 
+const COUNTRIES = ["India", "United States", "Philippines", "United Kingdom", "United Arab Emirates", "Canada", "Other"];
+
+/** Only same-site paths are followed after sign-in, never an absolute URL. */
+function safeNext(raw: string | null) {
+  return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : "/academy";
+}
+
 export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const router = useRouter();
+  const params = useSearchParams();
+  const next = safeNext(params.get("next"));
   const isSignUp = mode === "sign-up";
+  const [country, setCountry] = useState("India");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -34,11 +46,17 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       setError("Use at least 10 characters. Length beats complexity.");
       return;
     }
+    if (isSignUp && !acceptTerms) {
+      setError("Accept the terms of use and privacy policy to create an account.");
+      return;
+    }
 
     setBusy(true);
     try {
       if (isSignUp) {
-        const { error } = await signUp.email({ name, email, password });
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        // acceptTerms is checked again on the server; the extra fields are plain profile data.
+        const { error } = await signUp.email({ name, email, password, country, timezone, marketingOptIn, acceptTerms: true, callbackURL: next } as Parameters<typeof signUp.email>[0]);
         if (error) throw new Error(error.message ?? "Could not create the account.");
         router.push("/verify?email=" + encodeURIComponent(email));
       } else {
@@ -50,7 +68,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
               : "That email and password do not match an account.",
           );
         }
-        router.push("/academy");
+        router.push(next);
         router.refresh();
       }
     } catch (err) {
@@ -121,6 +139,39 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         )}
       </div>
 
+      {isSignUp && (
+        <>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="country" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
+              COUNTRY
+            </label>
+            <select id="country" value={country} onChange={(e) => setCountry(e.target.value)} className={FIELD}>
+              {COUNTRIES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <label className="flex items-start gap-2.5 text-[13.5px] leading-snug">
+            <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} required className="mt-0.5 h-4 w-4" />
+            <span>
+              I accept the{" "}
+              <Link href="/legal/terms" className="underline underline-offset-4" target="_blank">
+                terms of use
+              </Link>{" "}
+              and{" "}
+              <Link href="/legal/privacy" className="underline underline-offset-4" target="_blank">
+                privacy policy
+              </Link>
+              .
+            </span>
+          </label>
+          <label className="flex items-start gap-2.5 text-[13.5px] leading-snug text-muted-foreground">
+            <input type="checkbox" checked={marketingOptIn} onChange={(e) => setMarketingOptIn(e.target.checked)} className="mt-0.5 h-4 w-4" />
+            <span>Send me occasional emails about new courses. Optional; change it any time in your account.</span>
+          </label>
+        </>
+      )}
+
       {error && (
         <motion.p
           role="alert"
@@ -144,7 +195,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       <p className="text-[13.5px] text-muted-foreground">
         {isSignUp ? "Already have an account? " : "No account yet? "}
         <Link
-          href={isSignUp ? "/sign-in" : "/sign-up"}
+          href={(isSignUp ? "/sign-in" : "/sign-up") + (next !== "/academy" ? `?next=${encodeURIComponent(next)}` : "")}
           className="text-foreground underline underline-offset-4"
         >
           {isSignUp ? "Sign in" : "Create one"}

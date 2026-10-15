@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 
 export const metadata = { title: "Sign in" };
@@ -15,7 +16,9 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         </p>
       )}
       <div className="mt-10">
-        <AuthForm mode="sign-in" />
+        <Suspense>
+          <AuthForm mode="sign-in" />
+        </Suspense>
       </div>
     </>
   );

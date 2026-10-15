@@ -98,7 +98,7 @@ export default async function OrganisationPage({ params }: { params: Promise<{ i
               <ActionForm action={createGroupAction} className="flex gap-1.5" resetOnSuccess>
                 <input type="hidden" name="orgId" value={org.id} />
                 <input name="name" required placeholder="New group, e.g. AR team" aria-label="Group name" className={FIELD} />
-                <button className={BTN_OUTLINE}>Create group</button>
+                <button className={`${BTN_OUTLINE} whitespace-nowrap`}>Create group</button>
               </ActionForm>
             </div>
           </Panel>

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { requirePermission } from "@/lib/actor";
 import type { LeadStage } from "@prisma/client";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 /**
  * Every enquiry becomes a scored lead. The scoring rules live here rather than in the CRM
@@ -42,7 +43,8 @@ export type ContactResult =
   | { ok: false; error: string; field?: string };
 
 /**
- * Public. Rate-limited by the platform edge rather than here; this only guards content.
+ * Public. Limited to 5 submissions per address per hour (database-backed), and screened for
+ * identifiers.
  *
  * Deliberately never reveals whether an address is already known — the response is the same
  * for a new lead and a returning one.
@@ -62,6 +64,11 @@ export async function submitContact(formData: FormData): Promise<ContactResult> 
   }
 
   const input = parsed.data;
+
+  const ip = clientIp(await headers());
+  if (!(await allow(`contact:${ip}`, 5, 3600)) || !(await allow(`contact-email:${input.email.toLowerCase()}`, 3, 3600))) {
+    return { ok: false, error: "Too many messages from here in the last hour. Try again later, or email us directly." };
+  }
 
   // Never let an operational document or a patient identifier through a public form.
   if (/\b\d{9,}\b/.test(input.message)) {

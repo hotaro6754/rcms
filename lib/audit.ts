@@ -59,6 +59,8 @@ export type AuditAction =
   | "lockout"
   | "mfa_failed"
   | "mfa_enabled"
+  | "mfa_disabled"
+  | "password_change"
   | "password_reset"
   | "enrol"
   | "purchase"

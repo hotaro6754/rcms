@@ -7,7 +7,7 @@ import { IssueForm, IssueNow, RevokeControl } from "@/components/admin/Certifica
 import { ActionButton } from "@/components/admin/ActionForm";
 import { reissueCertificateAction } from "@/lib/actions/learning";
 
-export const metadata = { title: "Certificates · Admin" };
+export const metadata = { title: "Certificates" };
 
 const DATE = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 

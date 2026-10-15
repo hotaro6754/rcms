@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   const integrations: [string, boolean, string][] = [
     ["Payments (Razorpay keys)", paymentsConfigured(), "RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET. Without them, paid checkout is disabled and learners are told so."],
     ["Payment webhooks", webhooksConfigured(), "RAZORPAY_WEBHOOK_SECRET. Webhooks confirm payments and refunds even if the learner closes the browser."],
-    ["Email delivery", !!process.env.RESEND_API_KEY, "RESEND_API_KEY. Without it, emails are written to the server log in development only."],
+    ["Email delivery", !!process.env.RESEND_API_KEY, "RESEND_API_KEY. Without it, emails are printed to the console in development and not sent in production."],
     ["Scheduled jobs", !!process.env.CRON_SECRET, "CRON_SECRET, used by the scheduler calling /api/cron (publications, approvals, subscriptions, retention)."],
     ["Administrator MFA enforced", mfaRequired(), "ADMIN_MFA_REQUIRED (on by default in production)."],
   ];

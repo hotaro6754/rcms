@@ -12,6 +12,10 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    // `const { id: _id, ...rest } = row` is how a record is copied without its keys.
+    rules: { "@typescript-eslint/no-unused-vars": ["warn", { varsIgnorePattern: "^_", argsIgnorePattern: "^_", ignoreRestSiblings: true }] },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",

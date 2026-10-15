@@ -11,7 +11,7 @@ beforeEach(resetDb);
 const PASSWORD = "correct-horse-battery-staple";
 
 async function signUp(email: string, extra: Record<string, unknown> = {}) {
-  await auth.api.signUpEmail({ body: { email, password: PASSWORD, name: "Test Person", ...extra } as never });
+  await auth.api.signUpEmail({ body: { email, password: PASSWORD, name: "Test Person", acceptTerms: true, ...extra } as never });
   return prisma.user.findUniqueOrThrow({ where: { email } });
 }
 
@@ -22,6 +22,25 @@ async function cookieFor(email: string) {
 }
 
 describe("authentication", () => {
+  it("refuses sign-up without terms acceptance and records consent when given", async () => {
+    await expect(auth.api.signUpEmail({ body: { email: "noterms@example.test", password: PASSWORD, name: "No Terms" } as never })).rejects.toMatchObject({ statusCode: 400 });
+    expect(await prisma.user.count({ where: { email: "noterms@example.test" } })).toBe(0);
+    const user = await signUp("consent@example.test", { marketingOptIn: true });
+    expect(user.termsAcceptedAt).not.toBeNull();
+    const consents = await prisma.consentRecord.findMany({ where: { userId: user.id }, orderBy: { kind: "asc" } });
+    expect(consents.map((c) => [c.kind, c.granted])).toEqual([["marketing", true], ["privacy", true], ["terms", true]]);
+  });
+
+  it("promotes an OWNER_EMAILS address only while no owner exists", async () => {
+    process.env.OWNER_EMAILS = "first-owner@example.test,second-owner@example.test";
+    try {
+      expect((await signUp("first-owner@example.test")).role).toBe("OWNER");
+      expect((await signUp("second-owner@example.test")).role).toBe("STUDENT");
+    } finally {
+      delete process.env.OWNER_EMAILS;
+    }
+  });
+
   it("ignores role, status and MFA fields sent at sign-up", async () => {
     const user = await signUp("escalate@example.test", { role: "OWNER", status: "ACTIVE", twoFactorEnabled: true, emailVerified: true });
     expect(user.role).toBe("STUDENT");

@@ -36,7 +36,7 @@ export default async function LessonPage({ params }: { params: Promise<{ program
   const done = !!progress?.done.has(lessonId);
   const quiz = lesson.assessment;
   const tries = quiz && access.tracked ? await attemptsFor(actor.id, quiz.id) : [];
-  const module = course.snapshot.modules.find((m) => m.id === lesson.moduleId)!;
+  const currentModule = course.snapshot.modules.find((m) => m.id === lesson.moduleId)!;
 
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">
@@ -161,7 +161,7 @@ export default async function LessonPage({ params }: { params: Promise<{ program
             <section className="rounded-[var(--radius)] border border-border bg-card px-5 py-5">
               <h2 className="text-[13px] font-semibold">In this module</h2>
               <ol className="mt-3 flex flex-col gap-2">
-                {module.lessons.map((l) => (
+                {currentModule.lessons.map((l) => (
                   <li key={l.id}>
                     <Link href={`/academy/${slug}/${l.id}`} className={`block text-micro leading-snug hover:text-primary ${l.id === lesson.id ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
                       {progress?.done.has(l.id) ? "✓ " : ""}

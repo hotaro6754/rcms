@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { createAuthMiddleware, isAPIError, APIError } from "better-auth/api";
+import { createAuthMiddleware, getSessionFromCtx, isAPIError, APIError } from "better-auth/api";
 import { twoFactor } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./db";
@@ -26,6 +26,9 @@ const googleConfigured = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_
 
 export const LOCKOUT_THRESHOLD = Number(process.env.LOCKOUT_THRESHOLD ?? 5);
 export const LOCKOUT_MINUTES = Number(process.env.LOCKOUT_MINUTES ?? 15);
+
+/** The version of the terms and privacy policy a new account accepts. */
+export const TERMS_VERSION = process.env.TERMS_VERSION ?? "2026-10";
 
 const BLOCKED = new Set(["SUSPENDED", "DEACTIVATED", "ARCHIVED"]);
 
@@ -151,6 +154,30 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/sign-up/email") {
+        // Terms acceptance is required server-side, not just by a checkbox in the form.
+        const body = (ctx.body ?? {}) as { acceptTerms?: unknown; country?: unknown; timezone?: unknown };
+        if (body.acceptTerms !== true) {
+          throw new APIError("BAD_REQUEST", { message: "Accept the terms of use and privacy policy to create an account.", code: "TERMS_REQUIRED" });
+        }
+        for (const k of ["country", "timezone"] as const) {
+          if (body[k] !== undefined && (typeof body[k] !== "string" || (body[k] as string).length > 80)) {
+            throw new APIError("BAD_REQUEST", { message: `Check the ${k} field.` });
+          }
+        }
+        return;
+      }
+      if (ctx.path === "/two-factor/disable") {
+        // Staff cannot switch off MFA while it is required for the admin area.
+        const session = await getSessionFromCtx(ctx);
+        if (session && process.env.ADMIN_MFA_REQUIRED !== "false" && (process.env.NODE_ENV === "production" || process.env.ADMIN_MFA_REQUIRED === "true")) {
+          const staff = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true, _count: { select: { staffRoles: true } } } });
+          if (staff && (staff._count.staffRoles > 0 || ["OWNER", "ADMIN", "TRAINER"].includes(staff.role))) {
+            throw new APIError("FORBIDDEN", { message: "Administrators must keep multi-factor authentication on. Set up a new authenticator instead." });
+          }
+        }
+        return;
+      }
       if (ctx.path !== "/sign-in/email") return;
       const email = String((ctx.body as { email?: string } | undefined)?.email ?? "").trim().toLowerCase();
       if (!email) return;
@@ -203,6 +230,18 @@ export const auth = betterAuth({
         return;
       }
 
+      if (ctx.path === "/two-factor/disable" && !failed) {
+        const userId = ctx.context.session?.user.id;
+        if (userId) await audit({ actorId: userId, action: "mfa_disabled", entity: "TwoFactor", entityId: userId, ...meta });
+        return;
+      }
+
+      if (ctx.path === "/change-password" && !failed) {
+        const userId = ctx.context.session?.user.id;
+        if (userId) await audit({ actorId: userId, action: "password_change", entity: "Account", entityId: userId, ...meta });
+        return;
+      }
+
       if (ctx.path === "/reset-password" && !failed) {
         await audit({ action: "password_reset", entity: "Account", ...meta });
       }
@@ -236,13 +275,25 @@ export const auth = betterAuth({
           };
         },
         after: async (user, ctx) => {
+          const meta = requestMeta(ctx);
+          // Sign-up is only reachable with acceptTerms === true (hooks.before), so acceptance
+          // is recorded here with the policy version in force.
+          const marketing = !!(user as { marketingOptIn?: boolean }).marketingOptIn;
+          await prisma.user.update({ where: { id: user.id }, data: { termsAcceptedAt: new Date() } });
+          await prisma.consentRecord.createMany({
+            data: [
+              { userId: user.id, kind: "terms", granted: true, version: TERMS_VERSION, ip: meta.ip ?? null },
+              { userId: user.id, kind: "privacy", granted: true, version: TERMS_VERSION, ip: meta.ip ?? null },
+              { userId: user.id, kind: "marketing", granted: marketing, version: TERMS_VERSION, ip: meta.ip ?? null },
+            ],
+          });
           await audit({
             actorId: user.id,
             action: "create",
             entity: "User",
             entityId: user.id,
             after: { email: user.email, name: user.name },
-            ...requestMeta(ctx),
+            ...meta,
           });
         },
       },
