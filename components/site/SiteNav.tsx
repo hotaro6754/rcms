@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth-client";
 
 const LINKS = [
+  { href: "/catalog", label: "Catalogue" },
   { href: "/courses", label: "Programs" },
   { href: "/#tracks", label: "Learning path" },
   { href: "/#system", label: "Why RCMS" },

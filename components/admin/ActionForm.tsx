@@ -43,7 +43,9 @@ export function ActionForm({
     if (!state?.ok) return;
     if (resetOnSuccess) ref.current?.reset();
     onSuccess?.(state);
-    if (redirectTo) router.push(redirectTo);
+    // A result can name where to go next (a new course, a new support case).
+    const next = redirectTo ?? ((state as { data?: { href?: unknown } }).data?.href as string | undefined);
+    if (typeof next === "string" && next.startsWith("/")) router.push(next);
     else router.refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
