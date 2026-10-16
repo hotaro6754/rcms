@@ -24,7 +24,8 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:e2e": "playwright test",
-    "demo:record": "playwright test --config scripts/demo/playwright.demo.config.ts"
+    "demo:record": "playwright test --config scripts/demo/playwright.demo.config.ts",
+    "demo:record:admin": "DEMO_ADMIN=1 playwright test --config scripts/demo/playwright.demo.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.131.0",

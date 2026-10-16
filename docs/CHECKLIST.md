@@ -119,7 +119,7 @@ Evidence for every ✅: 132 unit and integration tests, 7 end-to-end tests and 3
 ### Quality and delivery
 - ✅ CI on GitHub Actions; accessibility scans; production build.
 - ✅ Research, audit, architecture, security, plan and validation docs.
-- ✅ **Recorded demo:** `npm run demo:record` re-records it.
+- ✅ **Recorded demos:** `npm run demo:record` (learner, support and manager journey) and `npm run demo:record:admin` (admin control centre) re-record them.
 
 ---
 

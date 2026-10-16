@@ -8,10 +8,10 @@ import { defineConfig } from "@playwright/test";
  */
 export default defineConfig({
   testDir: ".",
-  testMatch: "record-demo.spec.ts",
+  testMatch: process.env.DEMO_ADMIN ? "record-admin-demo.spec.ts" : "record-demo.spec.ts",
   outputDir: path.join(os.tmpdir(), "rcms-demo"),
   timeout: 20 * 60_000,
   workers: 1,
   reporter: [["list"]],
-  use: { baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000" },
+  use: { baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000", actionTimeout: 30_000, navigationTimeout: 90_000 },
 });
