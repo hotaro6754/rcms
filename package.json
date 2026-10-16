@@ -23,7 +23,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "demo:record": "playwright test --config scripts/demo/playwright.demo.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.131.0",

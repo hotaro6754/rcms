@@ -106,7 +106,7 @@ export function SiteFooter() {
               <h3 className="text-data text-[11px] tracking-[0.12em] text-subtle sm:pt-[3px]">{row.title.toUpperCase()}</h3>
               <ul className="flex flex-wrap gap-x-7 gap-y-2">
                 {row.links.map((l) => (
-                  <li key={l.href}>
+                  <li key={l.label}>
                     <Link href={l.href} className="text-[15px] text-foreground/85 transition-colors hover:text-foreground hover:underline hover:underline-offset-4">
                       {l.label}
                     </Link>
