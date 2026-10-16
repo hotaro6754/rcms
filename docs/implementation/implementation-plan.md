@@ -14,7 +14,7 @@ stages and records where each stands.
 | 6 Role workflows and support | Teams, routing, SLA, state machine, attachments, workspace | Done |
 | 7 AI and analytics | Assistant, copilot, support measures | Done (provider optional and unverified live) |
 | 8 Credentials and enterprise | Open Badges, SSO, seat purchase | Not started |
-| 9 Final verification | Build, tests, E2E, accessibility, CI, docs | Done locally; CI first run pending |
+| 9 Final verification | Build, tests, E2E, accessibility, CI, docs | Done; CI passing |
 
 ## Next, in order
 1. Expert review and approval of the three seeded cases and five competencies.

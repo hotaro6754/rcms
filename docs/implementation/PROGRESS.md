@@ -17,7 +17,8 @@ Newest first. Each entry: what changed, how it was verified.
   provider (off by default). `5aa6de3`.
 - **Accessibility scan and fixes; CI workflow.** `911dc09`.
 - **Verified 16 Oct:** 132 unit/integration tests, 7 end-to-end tests, 3 accessibility scans
-  (24 pages), lint, typecheck, production build. CI's first run was in progress when this was written.
+  (24 pages), lint, typecheck, production build. GitHub Actions run 3 passed both jobs; run 2
+  had failed because the build database did not exist in CI (fixed in `483c63e`).
 
 ## 2026-10-15: research and audit round
 

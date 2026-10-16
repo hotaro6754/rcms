@@ -33,4 +33,4 @@ service that was not available; **NOT BUILT** = absent.
 | | Payments, refunds, invoices against Razorpay | NOT VERIFIED | needs gateway keys and webhook URL |
 | Quality | Production build | VERIFIED | `npm run build` passed 16 Oct |
 | | Accessibility (automated) | VERIFIED | `tests/e2e/a11y.spec.ts`: 24 pages, no serious/critical violations |
-| | CI | PARTIAL | workflow added; first run in progress at time of writing (see `PROGRESS.md`) |
+| | CI | VERIFIED | GitHub Actions run 3 (commit `483c63e`) passed: lint, typecheck, unit and integration tests, build, end-to-end and accessibility |
