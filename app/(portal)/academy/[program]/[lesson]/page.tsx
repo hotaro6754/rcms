@@ -90,7 +90,11 @@ export default async function LessonPage({ params }: { params: Promise<{ program
             {lesson.effectiveDate ? ` · effective ${when(lesson.effectiveDate)}` : ""}
             {" · "}
             <Link href={`/support/new?category=MODULE_CONTENT&course=${encodeURIComponent(slug)}&from=${encodeURIComponent(`/academy/${slug}/${lessonId}`)}&ref=${encodeURIComponent(`Lesson: ${lesson.title}`)}`} className="font-sans underline underline-offset-4">
-              Ask about this lesson
+              Ask support about this lesson
+            </Link>
+            {" · "}
+            <Link href={`/assistant?context=${encodeURIComponent(`${slug}/${lessonId}`)}`} className="font-sans underline underline-offset-4">
+              Ask the assistant to explain it
             </Link>
           </p>
           {lesson.objectives.length > 0 && (

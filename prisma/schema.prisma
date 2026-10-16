@@ -110,9 +110,10 @@ model User {
   simAttempts        SimAttempt[]
   competencyOutcomes CompetencyOutcome[]
 
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  supportTeamMembers SupportTeamMember[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  supportTeamMembers     SupportTeamMember[]
+  assistantConversations AssistantConversation[]
 
   @@index([role])
   @@index([status])
@@ -2401,4 +2402,64 @@ model SupportAttachment {
   createdAt DateTime @default(now())
 
   @@index([ticketId])
+}
+
+// ---------------------------------------------------------------------------
+// Learning assistant. Conversations belong to one user and are deleted after the retention
+// period (or by the user). Answers record their sources and which provider produced them.
+// ---------------------------------------------------------------------------
+
+enum AssistantRole {
+  USER
+  ASSISTANT
+}
+
+enum AssistantFeedback {
+  HELPFUL
+  NOT_HELPFUL
+  INCORRECT
+}
+
+model AssistantConversation {
+  id      String  @id @default(cuid())
+  userId  String
+  /// "learner" or "staff": which assistant the conversation is with.
+  mode    String  @default("learner")
+  title   String?
+  /// Optional context the conversation started from (course slug / lesson id).
+  context String?
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AssistantMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model AssistantMessage {
+  id             String             @id @default(cuid())
+  conversationId String
+  role           AssistantRole
+  /// Stored after identifier masking.
+  content        String
+  /// [{ title, href, kind, excerpt }] for answers.
+  citations      Json?
+  /// Structured extras: offered ticket draft, created ticket, proposed action, facts.
+  payload        Json?
+  /// "none" (retrieval only), "anthropic", or "facts" (answered from platform records).
+  provider       String?
+  model          String?
+  latencyMs      Int?
+  inputTokens    Int?
+  outputTokens   Int?
+  feedback       AssistantFeedback?
+  feedbackNote   String?
+
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
 }
