@@ -140,7 +140,8 @@ export function Stat({ label, value, note, href }: { label: string; value: React
       {note && <dd className="mt-1.5 text-[12.5px] text-muted-foreground">{note}</dd>}
     </>
   );
-  return <div className="border-t-2 border-foreground pb-5 pr-4 pt-3">{href ? <Link href={href} className="block hover:opacity-80">{body}</Link> : body}</div>;
+  const list = <dl>{body}</dl>;
+  return <div className="border-t-2 border-foreground pb-5 pr-4 pt-3">{href ? <Link href={href} className="block hover:opacity-80">{list}</Link> : list}</div>;
 }
 
 export function Table({ head, children, empty, minWidth = "48rem" }: { head: ReactNode[]; children: ReactNode; empty?: ReactNode; minWidth?: string }) {

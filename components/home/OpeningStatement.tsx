@@ -115,7 +115,7 @@ export function OpeningStatement() {
                 key={l.noun}
                 className={cn(
                   "flex items-baseline gap-3 transition-colors duration-300",
-                  i === index && !resolved ? "text-foreground" : i < step ? "text-foreground/55" : "text-foreground/25",
+                  i === index && !resolved ? "font-semibold text-foreground" : "text-subtle",
                 )}
               >
                 <span className="w-5">{String(i + 1).padStart(2, "0")}</span>
@@ -130,7 +130,7 @@ export function OpeningStatement() {
           {PROBLEM_LINES.map((l) => (
             <li key={l.noun} className="border-t border-border pt-5">
               <p className="font-serif-display text-[clamp(1.9rem,5vw,2.8rem)] leading-[1.05]">
-                <span className="text-foreground/45">{l.lead} </span>
+                <span className="text-foreground/60">{l.lead} </span>
                 <em className="italic">{l.noun}</em>
               </p>
               <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">{l.fact}</p>

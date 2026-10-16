@@ -57,6 +57,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@electric-sql/pglite": "^0.4.3",
     "@electric-sql/pglite-socket": "^0.2.11",
     "@eslint/eslintrc": "^3",

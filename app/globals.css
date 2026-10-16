@@ -67,7 +67,7 @@
   --chart-4: #4f7187;
   --chart-5: #b0243a;
 
-  --success: #2f7d4f;
+  --success: #256b42;                /* 5.4:1 on success-bg, AA for small text */
   --success-bg: #e3efe6;
   --warning: #8a6508;
   --warning-bg: #f5eed8;

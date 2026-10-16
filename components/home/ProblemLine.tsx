@@ -25,7 +25,7 @@ export function ProblemLine({ index }: { index: number }) {
             className="font-serif-display"
           >
             {/* Lead-in on its own line, so every step is the same height, even the longest noun. */}
-            <span className="block text-[clamp(1.6rem,2.6vw,2.5rem)] leading-tight text-foreground/45">{line.lead}</span>
+            <span className="block text-[clamp(1.6rem,2.6vw,2.5rem)] leading-tight text-foreground/60">{line.lead}</span>
             <em className="block whitespace-nowrap text-[clamp(3rem,6.8vw,7.2rem)] italic leading-[1] tracking-[-0.03em]">{line.noun}</em>
           </motion.p>
         </AnimatePresence>

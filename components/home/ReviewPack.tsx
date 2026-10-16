@@ -180,7 +180,7 @@ function Trend({ metric, strong, className }: { metric: Metric; strong: boolean;
       width={W}
       height={H}
       aria-hidden="true"
-      className={cn("overflow-visible transition-colors duration-200", strong ? "text-foreground" : "text-foreground/35", className)}
+      className={cn("overflow-visible transition-colors duration-200", strong ? "text-foreground" : "text-foreground/60", className)}
     >
       <line x1={2} x2={W - 2} y1={y(metric.target)} y2={y(metric.target)} stroke="currentColor" strokeOpacity={0.35} strokeDasharray="2 3" />
       <path d={d} fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" strokeLinecap="round" />

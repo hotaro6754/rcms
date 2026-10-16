@@ -18,7 +18,7 @@ export function FooterWordmark() {
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        const split = SplitText.create(word.current, { type: "chars" });
+        const split = SplitText.create(word.current, { type: "chars", aria: "none" });
         gsap.fromTo(
           split.chars,
           { yPercent: 70 },

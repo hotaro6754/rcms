@@ -40,10 +40,10 @@ export function Leadership() {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const q = gsap.utils.selector(root);
-        const split = SplitText.create(q(".second")[0], { type: "words" });
+        const split = SplitText.create(q(".second")[0], { type: "words", aria: "none" });
         gsap.fromTo(
           split.words,
-          { opacity: 0.18 },
+          { opacity: 0.6 },
           {
             opacity: 1,
             ease: "none",

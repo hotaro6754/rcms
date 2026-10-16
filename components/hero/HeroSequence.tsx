@@ -60,7 +60,7 @@ export function HeroSequence() {
         Promise.all([fonts, introDone()]).then(() => {
           if (cancelled) return;
           // One split against the real font metrics. Each phrase is a single short line.
-          split = SplitText.create(q(".hero-phrase"), { type: "lines", mask: "lines", linesClass: "hero-line" });
+          split = SplitText.create(q(".hero-phrase"), { type: "lines", mask: "lines", linesClass: "hero-line", aria: "none" });
           const lines = split.lines as HTMLElement[];
           gsap.set(h1, { autoAlpha: 1 });
           gsap.set(lines, { yPercent: 108 });

@@ -136,7 +136,7 @@ export default async function AcademyPage() {
                 <p className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
                   LEVEL {l.sequence} {badge ? "· EARNED" : active ? "· IN PROGRESS" : ""}
                 </p>
-                <p className={cn("font-serif-display mt-1.5 text-[clamp(1.15rem,2vw,1.55rem)] leading-tight", !active && !badge && "text-foreground/45")}>{l.displayTitle}</p>
+                <p className={cn("font-serif-display mt-1.5 text-[clamp(1.15rem,2vw,1.55rem)] leading-tight", !active && !badge && "text-subtle")}>{l.displayTitle}</p>
                 <p className="mt-1 text-[12.5px] text-muted-foreground">
                   {certified} of {l.courses.length} courses certified{badge ? ` · ${badge.name}` : ""}
                 </p>

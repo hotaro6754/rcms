@@ -116,7 +116,7 @@ export function LearningPath({ levels }: { levels: PublicLevel[] }) {
                       <span
                         className={cn(
                           "font-serif-display text-[1.45rem] leading-none transition-colors duration-300",
-                          i === active ? "text-foreground" : "text-foreground/35 group-hover:text-foreground/70",
+                          i === active ? "text-foreground" : "text-foreground/60 group-hover:text-foreground/80",
                         )}
                       >
                         {l.name}
