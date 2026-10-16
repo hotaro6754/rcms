@@ -14,3 +14,5 @@ Each decision is reversible unless stated. Format: decision, why, how to undo.
 | 8 | 2026-10-15 | PDF certificates via a maintained MIT library if installable; otherwise documented as blocked | pdf-lib unmaintained since 2022 | Swap generator behind one function |
 | 9 | 2026-10-15 | No AI assistant this round | The prompt makes it optional; it needs grounding and evaluation work that would displace core gaps | Add later over published library and lessons |
 | 10 | 2026-10-15 | New prompt's documentation folders added; previous `docs/*.md` kept and cross-linked | Avoid losing history and breaking links | Consolidate later |
+
+Decisions 11–18 (simulator first, case JSON with versions, automated writing checks with instructor override, competency from attempts only, fixed category enum with configurable routing, deterministic assignment, optional AI provider, Decision 9 superseded) are recorded with reasons in `risks-and-decisions.md`.
