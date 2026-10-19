@@ -7,6 +7,9 @@ import { blockText, parseBlock, BLOCK_SCHEMAS } from "@/lib/cms/blocks";
 import { refusalFor } from "@/lib/cms/screen";
 import { courseOfLesson, lessonSnapshot, lockedCheck, markEdited, nextSortOrder, recordRevision, transaction, type Tx } from "./core";
 import { assertSameSet, stepMove } from "./structure";
+import { designMediaIds, type Design } from "@/lib/design/schema";
+import { readStored } from "@/lib/storage";
+import { MAX_PDF_PAGES, PdfError, pdfPageCount } from "@/lib/documents/pdf";
 
 /**
  * Lesson content blocks. Every change validates the block for its kind, screens its text
@@ -23,6 +26,28 @@ async function validate(tx: Tx, kind: BlockKind, data: unknown) {
   if (kind === "IMAGE") {
     const media = await tx.mediaAsset.findUnique({ where: { id: (parsed.data as { mediaId: string }).mediaId }, select: { kind: true, archivedAt: true } });
     if (!media || media.archivedAt || media.kind !== "IMAGE") throw new ServiceError("Choose an image from the media library.");
+  }
+  if (kind === "DESIGN") {
+    const ids = designMediaIds((parsed.data as { design: Design }).design);
+    if (ids.length) {
+      const ok = await tx.mediaAsset.count({ where: { id: { in: ids }, kind: "IMAGE", archivedAt: null } });
+      if (ok !== ids.length) throw new ServiceError("An image in this design is no longer in the media library. Choose another.");
+    }
+  }
+  if (kind === "DOCUMENT") {
+    const d = parsed.data as { mediaId: string };
+    const media = await tx.mediaAsset.findUnique({ where: { id: d.mediaId }, select: { kind: true, archivedAt: true, mimeType: true, fileKey: true } });
+    if (!media || media.archivedAt || media.mimeType !== "application/pdf") throw new ServiceError("Choose a PDF from the media library.");
+    const body = await readStored(media.fileKey).catch(() => null);
+    if (!body) throw new ServiceError("That PDF is missing from storage. Upload it again.");
+    let pages: number;
+    try {
+      pages = await pdfPageCount(body);
+    } catch (e) {
+      throw new ServiceError(e instanceof PdfError ? e.message : "That PDF could not be read.");
+    }
+    if (pages > MAX_PDF_PAGES) throw new ServiceError(`Documents can have at most ${MAX_PDF_PAGES} pages. Split this one.`);
+    return { ...d, pages };
   }
   return parsed.data as object;
 }

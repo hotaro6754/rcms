@@ -83,6 +83,9 @@ export const PERMISSIONS = [
   "settings.view",
   "settings.request",
   "settings.approve",
+  // Public website copy (lib/site). Held only by the Super Administrator, who has every
+  // permission; no other role includes it.
+  "site.edit",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

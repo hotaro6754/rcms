@@ -12,7 +12,7 @@ export async function addMaterial(lessonId: string, formData: FormData) {
     const r = await materials.addMaterial(
       await requireActor(),
       lessonId,
-      { title: String(formData.get("title") ?? ""), url: String(formData.get("url") ?? "") || null },
+      { title: String(formData.get("title") ?? ""), url: String(formData.get("url") ?? "") || null, downloadable: formData.get("downloadable") === "true" },
       file instanceof File ? file : null,
     );
     revalidatePath(`/admin/content/courses/${r.courseId}`, "layout");
@@ -23,6 +23,14 @@ export async function addMaterial(lessonId: string, formData: FormData) {
 export async function deleteMaterial(resourceId: string) {
   return attempt(async () => {
     const r = await materials.removeMaterial(await requireActor(), resourceId);
+    revalidatePath(`/admin/content/courses/${r.courseId}`, "layout");
+    revalidatePath("/library");
+  });
+}
+
+export async function setMaterialDownloadable(resourceId: string, downloadable: boolean) {
+  return attempt(async () => {
+    const r = await materials.setDownloadable(await requireActor(), resourceId, downloadable);
     revalidatePath(`/admin/content/courses/${r.courseId}`, "layout");
     revalidatePath("/library");
   });

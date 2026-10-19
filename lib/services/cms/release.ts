@@ -1,4 +1,5 @@
 import type { ContentStatus, Prisma } from "@prisma/client";
+import { designMediaIds, type Design } from "@/lib/design/schema";
 import { prisma } from "@/lib/db";
 import { audit, type AuditAction } from "@/lib/audit";
 import { assertCan, type Actor } from "@/lib/actor";
@@ -157,6 +158,8 @@ export async function buildSnapshot(tx: Tx, courseId: string): Promise<{ snapsho
       for (const b of l.blocks) {
         const mediaId = (b.data as { mediaId?: string } | null)?.mediaId;
         if (mediaId) mediaIds.add(mediaId);
+        // Images placed inside a visual design are listed too, so learners can load them.
+        if (b.kind === "DESIGN") for (const id of designMediaIds((b.data as { design: Design }).design)) mediaIds.add(id);
       }
       return {
         id: l.id,

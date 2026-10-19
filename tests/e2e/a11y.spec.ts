@@ -30,7 +30,7 @@ async function scan(page: Page, path: string) {
 
 test("public pages", async ({ page }) => {
   const bad: string[] = [];
-  for (const p of ["/", "/catalog", "/pricing", "/learning-paths", "/resources", "/resources/glossary", "/contact", "/sign-in", "/legal/content-governance"]) bad.push(...(await scan(page, p)));
+  for (const p of ["/", "/catalog", "/pricing", "/learning-paths", "/resources", "/resources/glossary", "/contact", "/sign-in", "/legal/content-governance", "/about"]) bad.push(...(await scan(page, p)));
   expect(bad).toEqual([]);
 });
 
@@ -44,6 +44,6 @@ test("learner pages", async ({ page }) => {
 test("staff pages", async ({ page }) => {
   await signIn(page, "super@rcms.test");
   const bad: string[] = [];
-  for (const p of ["/admin", "/admin/support", "/admin/support/settings", "/admin/cases", "/admin/competencies", "/admin/grading/cases", "/admin/copilot", "/admin/content"]) bad.push(...(await scan(page, p)));
+  for (const p of ["/admin", "/admin/support", "/admin/support/settings", "/admin/cases", "/admin/competencies", "/admin/grading/cases", "/admin/copilot", "/admin/content", "/admin/site", "/admin/site/about"]) bad.push(...(await scan(page, p)));
   expect(bad).toEqual([]);
 });

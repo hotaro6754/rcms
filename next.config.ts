@@ -38,8 +38,9 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   outputFileTracingRoot: path.resolve(__dirname),
-  // pdfkit reads its standard font metrics from its own package folder at runtime.
-  serverExternalPackages: ["pdfkit"],
+  // pdfkit and pdfjs read font data from their own package folders at runtime; @napi-rs/canvas
+  // is a native module; mammoth is large and server-only. None of them should be bundled.
+  serverExternalPackages: ["pdfkit", "pdfjs-dist", "@napi-rs/canvas", "mammoth"],
   allowedDevOrigins: ["*.trycloudflare.com"],
   experimental: {
     webpackBuildWorker: false,

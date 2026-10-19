@@ -9,7 +9,8 @@ import { courseOfLesson, lockedCheck, markEdited, transaction } from "./core";
 
 /**
  * Lesson materials: an uploaded file (type-sniffed, 25 MB) or an https link to one held
- * elsewhere. Learners reach them only through the access-checked download route.
+ * elsewhere. Learners reach them only through access-checked routes, and download them only
+ * when the course team has allowed it; otherwise PDFs are read in the watermarked reader.
  *
  * Removing a material from the draft archives the row rather than deleting it when a
  * released version lists it, so the released lesson's download keeps working.
@@ -25,7 +26,7 @@ const Input = z.object({
     .optional(),
 });
 
-export async function addMaterial(actor: Actor, lessonId: string, input: { title: string; url?: string | null }, file?: File | null) {
+export async function addMaterial(actor: Actor, lessonId: string, input: { title: string; url?: string | null; downloadable?: boolean }, file?: File | null) {
   await assertCan(actor, "content.edit");
   const parsed = Input.parse({ title: input.title, url: input.url || undefined });
   const refusal = refusalFor(parsed.title);
@@ -46,12 +47,26 @@ export async function addMaterial(actor: Actor, lessonId: string, input: { title
     stored = { fileKey: parsed.url!, mimeType: LINK_TYPE, sizeBytes: null };
   }
   const created = await transaction(async (tx) => {
-    const r = await tx.resource.create({ data: { lessonId, title: parsed.title, ...stored } });
+    const r = await tx.resource.create({ data: { lessonId, title: parsed.title, downloadable: !!input.downloadable, ...stored } });
     await markEdited(tx, courseId);
     return r;
   });
   await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "create", entity: "Resource", entityId: created.id, after: { lessonId, title: created.title, mimeType: created.mimeType, sizeBytes: created.sizeBytes } });
   return { ...created, courseId };
+}
+
+/**
+ * Whether learners may download the file itself. View-only PDFs are still readable in the
+ * lesson, page by page, watermarked with the reader's name.
+ */
+export async function setDownloadable(actor: Actor, resourceId: string, downloadable: boolean) {
+  await assertCan(actor, "content.edit");
+  const res = await prisma.resource.findUnique({ where: { id: resourceId }, select: { lessonId: true, downloadable: true } });
+  if (!res) throw new ServiceError("That material no longer exists.");
+  const courseId = await courseOfLesson(prisma, res.lessonId);
+  await prisma.resource.update({ where: { id: resourceId }, data: { downloadable } });
+  await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "update", entity: "Resource", entityId: resourceId, before: { downloadable: res.downloadable }, after: { downloadable } });
+  return { courseId };
 }
 
 export async function removeMaterial(actor: Actor, resourceId: string) {

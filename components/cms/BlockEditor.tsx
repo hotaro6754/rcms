@@ -32,8 +32,52 @@ function L({ label, children, hint }: { label: string; children: React.ReactNode
 const MD_HINT = "Blank line = new paragraph. ## heading, - bullet, 1. step, **bold**, *italic*, [link](https://…).";
 
 /** The fields for one block kind, pre-filled from `d`. Names match lib/actions/cms.ts blockData. */
-function KindFields({ kind, d, images, audio = [] }: { kind: BlockKind; d: Record<string, unknown>; images: { id: string; title: string }[]; audio?: { id: string; title: string }[] }) {
+function KindFields({ kind, d, images, audio = [], documents = [], blockId }: { kind: BlockKind; d: Record<string, unknown>; images: { id: string; title: string }[]; audio?: { id: string; title: string }[]; documents?: { id: string; title: string }[]; blockId?: string }) {
   switch (kind) {
+    case "DESIGN":
+      return (
+        <>
+          <L label="Name (for authors; not shown to learners)">
+            <input name="title" defaultValue={s(d.title)} maxLength={200} className={IN} placeholder="e.g. Denial categories explained" />
+          </L>
+          {blockId ? (
+            <a href={`/admin/content/design/${blockId}`} className="w-fit rounded-[3px] bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground">
+              Open the visual designer
+            </a>
+          ) : (
+            <>
+              <L label="Start from a document (optional)" hint="PDF or Word (.docx), up to 25 MB. Headings become sections, lists become steps or flip cards, tables become tables and charts, and pictures are kept in place. You can change everything afterwards in the designer.">
+                <input type="file" name="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="text-[13px]" />
+              </L>
+              <label className="flex items-start gap-2 text-[12.5px]">
+                <input type="checkbox" name="keepOriginal" value="true" className="mt-0.5" />
+                For a PDF, also add the original as a view-only document after the design.
+              </label>
+            </>
+          )}
+        </>
+      );
+    case "DOCUMENT":
+      return (
+        <>
+          <L label="PDF" hint={documents.length ? "Learners read it page by page, watermarked with their name. They cannot download it." : "Upload PDFs in the media library first."}>
+            <select name="mediaId" defaultValue={s(d.mediaId)} required className={IN}>
+              <option value="">Choose…</option>
+              {documents.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title}
+                </option>
+              ))}
+            </select>
+          </L>
+          <L label="Title">
+            <input name="title" defaultValue={s(d.title)} required minLength={3} maxLength={200} className={IN} />
+          </L>
+          <L label="Caption (optional)">
+            <input name="caption" defaultValue={s(d.caption)} maxLength={600} className={IN} />
+          </L>
+        </>
+      );
     case "TEXT":
       return (
         <L label="Text" hint={MD_HINT}>
@@ -212,11 +256,13 @@ function KindFields({ kind, d, images, audio = [] }: { kind: BlockKind; d: Recor
 
 function summary(b: EditorBlock) {
   const d = b.data;
+  if (b.kind === "DESIGN") return `${s(d.title) || "Untitled design"} · ${((d.design as { content?: unknown[] } | undefined)?.content ?? []).length} sections`;
+  if (b.kind === "DOCUMENT") return `${s(d.title)} · ${Number(d.pages) || "?"} pages, view only`;
   const t = s(d.text) || s(d.title) || s(d.label) || s(d.alt) || s(d.caption) || s(d.code) || ((d.steps as string[]) ?? [])[0] || ((d.header as string[]) ?? []).join(" · ");
   return t.length > 140 ? t.slice(0, 140) + "…" : t;
 }
 
-export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], canEdit }: { courseId: string; lessonId: string; blocks: EditorBlock[]; images: { id: string; title: string }[]; audio?: { id: string; title: string }[]; canEdit: boolean }) {
+export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], documents = [], canEdit }: { courseId: string; lessonId: string; blocks: EditorBlock[]; images: { id: string; title: string }[]; audio?: { id: string; title: string }[]; documents?: { id: string; title: string }[]; canEdit: boolean }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [newKind, setNewKind] = useState<BlockKind | "">("");
 
@@ -259,7 +305,7 @@ export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], ca
                 <input type="hidden" name="kind" value={b.kind} />
                 <input type="hidden" name="updatedAt" value={b.updatedAt} />
                 <input type="hidden" name="courseId" value={courseId} />
-                <KindFields kind={b.kind} d={b.data} images={images} audio={audio} />
+                <KindFields kind={b.kind} d={b.data} images={images} audio={audio} documents={documents} blockId={b.id} />
                 <div className="flex gap-2">
                   <button className="min-h-9 rounded-[3px] bg-primary px-3 text-[13px] font-medium text-primary-foreground">Save block</button>
                   <button type="button" onClick={() => setEditing(null)} className="min-h-9 rounded-[3px] px-3 text-[13px] hover:bg-secondary">
@@ -292,7 +338,7 @@ export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], ca
               <input type="hidden" name="lessonId" value={lessonId} />
               <input type="hidden" name="kind" value={newKind} />
               <input type="hidden" name="courseId" value={courseId} />
-              <KindFields kind={newKind} d={{}} images={images} audio={audio} />
+              <KindFields kind={newKind} d={{}} images={images} audio={audio} documents={documents} />
               <div className="flex gap-2">
                 <button className="min-h-9 rounded-[3px] bg-primary px-3 text-[13px] font-medium text-primary-foreground">Add {BLOCK_LABEL[newKind].toLowerCase()}</button>
                 <button type="button" onClick={() => setNewKind("")} className="min-h-9 rounded-[3px] px-3 text-[13px] hover:bg-secondary">

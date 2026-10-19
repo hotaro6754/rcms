@@ -18,6 +18,7 @@ export interface AdminGroup extends AdminLink {
 export const ADMIN_NAV: AdminGroup[] = [
   { href: "/admin", label: "Dashboard", any: [], links: [] },
   { href: "/admin/copilot", label: "Copilot", any: [], links: [] },
+  { href: "/admin/site", label: "Website", any: ["site.edit"], links: [] },
   {
     href: "/admin/content",
     label: "Learning",

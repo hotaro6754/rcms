@@ -651,6 +651,8 @@ enum BlockKind {
   SCENARIO
   CODE
   AUDIO
+  DESIGN
+  DOCUMENT
 }
 
 /// One block of lesson content. `data` is validated per kind by lib/cms/blocks.ts before
@@ -773,6 +775,9 @@ model Resource {
   mimeType   String
   sizeBytes  Int?
   watermark  Boolean   @default(true)
+  /// Learners may download the file itself. Off by default: PDFs are read in the watermarked
+  /// page reader and other files stay with the course team.
+  downloadable Boolean  @default(false)
   archivedAt DateTime?
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -2462,4 +2467,55 @@ model AssistantMessage {
   createdAt DateTime @default(now())
 
   @@index([conversationId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Website content (lib/site): administrators' edits to the public pages' copy.
+// ---------------------------------------------------------------------------
+
+/// One public page's edits. Built-in pages (key = the page's definition key) store only what
+/// differs from the copy that ships with the code; custom pages (custom = true) are created
+/// and removed from the admin. `draft` is work in progress, shown only in preview;
+/// `published` is what visitors see. Null means "nothing here", so the defaults apply.
+model SitePage {
+  key            String    @id
+  custom         Boolean   @default(false)
+  /// Custom pages only: served at /p/<slug>.
+  slug           String?   @unique
+  title          String?
+  draft          Json?
+  draftUpdatedAt DateTime?
+  draftById      String?
+  published      Json?
+  publishedAt    DateTime?
+  publishedById  String?
+  /// Number of the latest published version (0 = never published).
+  version        Int       @default(0)
+  /// Optimistic lock for draft saves: two editors cannot silently overwrite each other.
+  lockVersion    Int       @default(0)
+  archivedAt     DateTime?
+
+  versions SitePageVersion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([custom, archivedAt])
+}
+
+/// Every published state of a page, kept for history and rollback. Never edited.
+model SitePageVersion {
+  id            String   @id @default(cuid())
+  pageKey       String
+  version       Int
+  /// Null records "reset to the default copy".
+  content       Json?
+  publishedById String?
+  note          String?
+
+  page SitePage @relation(fields: [pageKey], references: [key], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([pageKey, version])
 }

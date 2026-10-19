@@ -13,6 +13,9 @@ import * as media from "@/lib/services/cms/media";
 import * as assess from "@/lib/services/cms/assessments";
 import { requestApproval } from "@/lib/services/approvals";
 import { bool, fields, int, json, opt, str } from "./_form";
+import { prisma } from "@/lib/db";
+import { EMPTY_DESIGN } from "@/lib/design/schema";
+import { importDocument } from "@/lib/services/cms/import";
 
 /**
  * Server actions for the Admin CMS. Each one resolves the actor from the session and calls
@@ -330,6 +333,11 @@ function blockData(kind: BlockKind, fd: FormData): unknown {
       return { title: str(fd, "title"), context: str(fd, "context"), question: opt(fd, "question") ?? undefined, discussion: opt(fd, "discussion") ?? undefined, synthetic: bool(fd, "synthetic") ? true : undefined };
     case "CODE":
       return { language: opt(fd, "language") ?? undefined, code: str(fd, "code") };
+    case "DOCUMENT":
+      return { mediaId: str(fd, "mediaId"), title: str(fd, "title"), caption: opt(fd, "caption") ?? undefined };
+    case "DESIGN":
+      // The design itself is edited in the visual designer; this form only names it.
+      return { title: opt(fd, "title") ?? undefined, design: EMPTY_DESIGN };
   }
 }
 
@@ -337,7 +345,27 @@ export async function addBlockAction(fd: FormData) {
   return attempt(async () => {
     const kind = str(fd, "kind") as BlockKind;
     const pos = int(fd, "position");
-    await blocks.addBlock(await requireActor(), str(fd, "lessonId"), kind, blockData(kind, fd), pos === null || Number.isNaN(pos) ? undefined : pos);
+    const actor = await requireActor();
+    const lessonId = str(fd, "lessonId");
+    if (kind === "DESIGN") {
+      // A new design starts empty or from an uploaded document, then opens in the designer.
+      const file = fd.get("file");
+      let data = blockData(kind, fd) as { title?: string; design: unknown };
+      let original: { bytes: Uint8Array; name: string } | null = null;
+      if (file instanceof File && file.size > 0) {
+        const imported = await importDocument(actor, file);
+        data = { title: data.title ?? imported.title, design: imported.design };
+        if (bool(fd, "keepOriginal")) original = imported.pdf;
+      }
+      const block = await blocks.addBlock(actor, lessonId, "DESIGN", data, pos === null || Number.isNaN(pos) ? undefined : pos);
+      if (original) {
+        const asset = await media.saveDocumentBuffer(actor, original.bytes, original.name);
+        await blocks.addBlock(actor, lessonId, "DOCUMENT", { mediaId: asset.id, title: data.title ?? asset.title });
+      }
+      refresh(opt(fd, "courseId"));
+      return { href: `/admin/content/design/${block.id}` };
+    }
+    await blocks.addBlock(actor, lessonId, kind, blockData(kind, fd), pos === null || Number.isNaN(pos) ? undefined : pos);
     refresh(opt(fd, "courseId"));
   });
 }
@@ -345,8 +373,26 @@ export async function addBlockAction(fd: FormData) {
 export async function updateBlockAction(fd: FormData) {
   return attempt(async () => {
     const kind = str(fd, "kind") as BlockKind;
-    await blocks.updateBlock(await requireActor(), str(fd, "id"), blockData(kind, fd), opt(fd, "updatedAt") ?? undefined);
+    const actor = await requireActor();
+    let data = blockData(kind, fd);
+    if (kind === "DESIGN") {
+      // Renaming a design keeps the design.
+      const existing = await prisma.contentBlock.findUnique({ where: { id: str(fd, "id") }, select: { data: true } });
+      data = { ...(data as object), design: (existing?.data as { design?: unknown } | null)?.design ?? EMPTY_DESIGN };
+    }
+    await blocks.updateBlock(actor, str(fd, "id"), data, opt(fd, "updatedAt") ?? undefined);
     refresh(opt(fd, "courseId"));
+  });
+}
+
+/** Saves a design from the visual designer. */
+export async function saveDesignAction(blockId: string, design: unknown) {
+  return attempt(async () => {
+    const actor = await requireActor();
+    const existing = await prisma.contentBlock.findUnique({ where: { id: blockId }, select: { kind: true, data: true, lesson: { select: { module: { select: { programId: true } } } } } });
+    if (!existing || existing.kind !== "DESIGN") throw new ServiceError("That design no longer exists.");
+    await blocks.updateBlock(actor, blockId, { title: (existing.data as { title?: string } | null)?.title, design });
+    refresh(existing.lesson.module.programId);
   });
 }
 

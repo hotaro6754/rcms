@@ -486,3 +486,9 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* Course content cannot be printed (components/learning/Protected.tsx). */
+@media print {
+  .protected-content > *:not(.protected-print-note) { display: none !important; }
+  .protected-content .protected-print-note { display: block !important; visibility: visible !important; position: fixed; inset: 0; padding: 2rem; font-size: 14pt; }
+}

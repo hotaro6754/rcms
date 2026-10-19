@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
-import { requireActor } from "@/lib/actor";
+import { can, requireActor } from "@/lib/actor";
+import { Protected } from "@/components/learning/Protected";
+import { watermarkText } from "@/lib/documents/watermark";
 import { getPublishedCourse, lessonAccess } from "@/lib/services/learning/catalog";
 import { moduleLock, recordLessonView, progressFor } from "@/lib/services/learning/progress";
 import { isBookmarked } from "@/lib/services/learning/bookmarks";
@@ -12,7 +14,10 @@ import { Blocks } from "@/components/cms/BlockView";
 import { LessonComplete } from "@/components/portal/LessonComplete";
 import { StartAttempt } from "@/components/portal/StartAttempt";
 import { StatusPill, when } from "@/components/admin/kit";
-import { humanSize, typeLabel } from "@/lib/storage";
+import { humanSize, isAvailable, isLink, typeLabel } from "@/lib/storage";
+import { prisma } from "@/lib/db";
+import { storedPageCount } from "@/lib/documents/pages";
+import { DocumentReader } from "@/components/cms/DocumentReader";
 
 /**
  * One lesson, rendered from the course's released version. Access is checked on the server
@@ -63,6 +68,17 @@ export default async function LessonPage({ params }: { params: Promise<{ program
   const quiz = lesson.assessment;
   const tries = quiz && access.tracked ? await attemptsFor(actor.id, quiz.id) : [];
   const currentModule = course.snapshot.modules.find((m) => m.id === lesson.moduleId)!;
+  // Download rights are read live (the course team can change them without a new release).
+  const staffView = can(actor, "content.view");
+  const live = new Map((await prisma.resource.findMany({ where: { id: { in: lesson.resources.map((r) => r.id) } }, select: { id: true, downloadable: true, fileKey: true } })).map((r) => [r.id, r]));
+  const materials = await Promise.all(
+    lesson.resources.map(async (r) => {
+      const row = live.get(r.id);
+      const download = staffView || !!row?.downloadable;
+      const pages = !download && r.mimeType === "application/pdf" && row && !isLink(row.fileKey) && isAvailable(row.fileKey) ? await storedPageCount(row.fileKey) : 0;
+      return { ...r, download, readable: pages > 0, pages };
+    }),
+  );
 
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">
@@ -109,7 +125,24 @@ export default async function LessonPage({ params }: { params: Promise<{ program
           )}
 
           <div className="mt-8">
-            <Blocks blocks={lesson.blocks} mediaContext={course.id} />
+            {can(actor, "content.view") ? (
+              <Blocks blocks={lesson.blocks} mediaContext={course.id} />
+            ) : (
+              <Protected watermark={watermarkText(actor)}>
+                <Blocks blocks={lesson.blocks} mediaContext={course.id} />
+                {materials.some((m) => m.readable) && (
+                  <div className="mt-10 flex flex-col gap-6">
+                    {materials
+                      .filter((m) => m.readable)
+                      .map((m) => (
+                        <div key={m.id} id={`material-${m.id}`} className="scroll-mt-24">
+                          <DocumentReader mediaId={m.id} pages={m.pages} title={m.title} base={`/api/material-pages/${m.id}`} />
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </Protected>
+            )}
           </div>
 
           {quiz && (
@@ -179,16 +212,28 @@ export default async function LessonPage({ params }: { params: Promise<{ program
             <section className="rounded-[var(--radius)] border border-border bg-card px-5 py-5">
               <h2 className="text-[13px] font-semibold">Resources</h2>
               <ul className="mt-3 flex flex-col gap-2.5">
-                {lesson.resources.map((r) => (
+                {materials.map((r) => (
                   <li key={r.id} className="flex items-start gap-2.5">
                     <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                    <a href={`/api/materials/${r.id}`} className="min-w-0 flex-1 text-micro leading-snug underline-offset-4 hover:underline">
-                      {r.title}
-                      <span className="text-data ml-2 text-[10.5px] text-subtle">
-                        {typeLabel(r.mimeType)}
-                        {r.sizeBytes ? ` · ${humanSize(r.sizeBytes)}` : ""}
+                    {r.download ? (
+                      <a href={`/api/materials/${r.id}`} className="min-w-0 flex-1 text-micro leading-snug underline-offset-4 hover:underline">
+                        {r.title}
+                        <span className="text-data ml-2 text-[10.5px] text-subtle">
+                          {typeLabel(r.mimeType)}
+                          {r.sizeBytes ? ` · ${humanSize(r.sizeBytes)}` : ""}
+                        </span>
+                      </a>
+                    ) : r.readable ? (
+                      <a href={`#material-${r.id}`} className="min-w-0 flex-1 text-micro leading-snug underline-offset-4 hover:underline">
+                        {r.title}
+                        <span className="text-data ml-2 text-[10.5px] text-subtle">READ IN THE LESSON · VIEW ONLY</span>
+                      </a>
+                    ) : (
+                      <span className="min-w-0 flex-1 text-micro leading-snug">
+                        {r.title}
+                        <span className="text-data ml-2 text-[10.5px] text-subtle">VIEW ONLY · ASK YOUR TRAINER</span>
                       </span>
-                    </a>
+                    )}
                   </li>
                 ))}
               </ul>

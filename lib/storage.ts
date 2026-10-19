@@ -17,7 +17,7 @@ import { randomUUID } from "node:crypto";
  * saveBuffer / readStored / removeStored for S3 or R2 (same signatures).
  */
 
-export type StorageArea = "materials" | "media" | "attempts" | "vendor" | "deliverables" | "support";
+export type StorageArea = "materials" | "media" | "attempts" | "vendor" | "deliverables" | "support" | "cache";
 
 const BASE = resolve(process.cwd(), "storage");
 
@@ -163,6 +163,21 @@ export function isAvailable(key: string) {
 
 export async function readStored(key: string): Promise<Buffer> {
   return readFile(pathFor(key));
+}
+
+/**
+ * Derived files (rendered document pages) under storage/cache/, rebuilt on demand if lost.
+ * `name` must be a plain file name made by the caller (no slashes).
+ */
+export async function readCache(name: string): Promise<Buffer | null> {
+  if (!/^[\w.-]+$/.test(name)) throw new Error("Bad cache name.");
+  return readFile(pathFor(`cache/${name}`)).catch(() => null);
+}
+
+export async function writeCache(name: string, buf: Uint8Array): Promise<void> {
+  if (!/^[\w.-]+$/.test(name)) throw new Error("Bad cache name.");
+  await mkdir(root("cache"), { recursive: true });
+  await writeFile(pathFor(`cache/${name}`), buf);
 }
 
 export async function removeStored(key: string): Promise<void> {

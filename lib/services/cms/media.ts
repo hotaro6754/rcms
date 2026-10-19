@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { assertCan, type Actor } from "@/lib/actor";
 import { ServiceError } from "@/lib/errors";
-import { AUDIO_TYPES, DOCUMENT_TYPES, IMAGE_TYPES, MAX_BYTES, MAX_IMAGE_BYTES, saveChecked } from "@/lib/storage";
+import { AUDIO_TYPES, DOCUMENT_TYPES, IMAGE_TYPES, MAX_BYTES, MAX_IMAGE_BYTES, saveBuffer, saveChecked, sniff } from "@/lib/storage";
 import { refusalFor } from "@/lib/cms/screen";
 
 /**
@@ -40,6 +40,17 @@ export async function uploadMedia(actor: Actor, file: File, input: unknown) {
     data: { kind, title: meta.title, altText: meta.altText ?? null, isPublic: meta.isPublic, fileKey: stored.fileKey, mimeType: stored.mimeType, sizeBytes: stored.sizeBytes, uploadedById: actor.id },
   });
   await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "create", entity: "MediaAsset", entityId: asset.id, after: { title: asset.title, kind, mimeType: asset.mimeType, sizeBytes: asset.sizeBytes } });
+  return asset;
+}
+
+/** Stores a PDF that arrived with a document import, as a private document in the library. */
+export async function saveDocumentBuffer(actor: Actor, bytes: Uint8Array, fileName: string) {
+  await assertCan(actor, "content.edit");
+  if (sniff(bytes, fileName) !== "application/pdf") throw new ServiceError("Only PDFs can be kept as view-only documents.");
+  const fileKey = await saveBuffer("media", bytes, fileName);
+  const title = (fileName.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim() || "Document").slice(0, 200);
+  const asset = await prisma.mediaAsset.create({ data: { kind: "DOCUMENT", title, fileKey, mimeType: "application/pdf", sizeBytes: bytes.length, isPublic: false, uploadedById: actor.id } });
+  await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "create", entity: "MediaAsset", entityId: asset.id, after: { title, kind: "DOCUMENT", mimeType: "application/pdf", sizeBytes: bytes.length } });
   return asset;
 }
 

@@ -101,7 +101,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
       },
     });
     if (!lesson) notFound();
-    const [allModules, images, banks, audio] = await Promise.all([
+    const [allModules, images, banks, audio, documents] = await Promise.all([
       prisma.module.findMany({
         where: { state: { not: "ARCHIVED" }, program: { status: { notIn: ["ARCHIVED", "ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED"] } } },
         select: { id: true, title: true, programId: true, program: { select: { name: true } } },
@@ -110,6 +110,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
       prisma.mediaAsset.findMany({ where: { kind: "IMAGE", archivedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }),
       prisma.questionBank.findMany({ where: { archivedAt: null }, select: { id: true, title: true, _count: { select: { questions: { where: { archivedAt: null } } } } } }),
       prisma.mediaAsset.findMany({ where: { kind: "AUDIO", archivedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }),
+      prisma.mediaAsset.findMany({ where: { kind: "DOCUMENT", mimeType: "application/pdf", archivedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }),
     ]);
     const quiz = lesson.quizzes[0] ?? null;
     editor = (
@@ -123,11 +124,11 @@ export default async function CourseWorkspace({ params, searchParams }: { params
           owners={(await usersWithPermission("content.edit")).map((u) => ({ id: u.id, name: u.name }))}
         />
         <Panel title="Content">
-          <BlockEditor courseId={id} lessonId={lesson.id} canEdit={canEdit} images={images} audio={audio} blocks={lesson.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown>, updatedAt: b.updatedAt.toISOString() }))} />
+          <BlockEditor courseId={id} lessonId={lesson.id} canEdit={canEdit} images={images} audio={audio} documents={documents} blocks={lesson.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown>, updatedAt: b.updatedAt.toISOString() }))} />
         </Panel>
         <Panel title="Downloadable resources">
           {canEdit ? (
-            <MaterialsManager lessonId={lesson.id} rows={lesson.resources.map((r) => ({ id: r.id, title: r.title, type: typeLabel(r.mimeType), size: humanSize(r.sizeBytes) }))} />
+            <MaterialsManager lessonId={lesson.id} rows={lesson.resources.map((r) => ({ id: r.id, title: r.title, type: typeLabel(r.mimeType), size: humanSize(r.sizeBytes), downloadable: r.downloadable }))} />
           ) : (
             <ul className="text-[13px]">
               {lesson.resources.map((r) => (

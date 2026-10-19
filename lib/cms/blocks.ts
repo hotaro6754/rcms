@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { BlockKind } from "@prisma/client";
+import { designText, validateDesign, type Design } from "@/lib/design/schema";
 
 /**
  * Content block types and the validation each one gets before it is written.
@@ -16,40 +17,8 @@ const https = z
   .url("That link does not look right.")
   .refine((u) => u.startsWith("https://"), "Links must start with https://.");
 
-export const VIDEO_HOSTS = [
-  "www.youtube-nocookie.com",
-  "www.youtube.com",
-  "youtube.com",
-  "youtu.be",
-  "player.vimeo.com",
-  "vimeo.com",
-  "iframe.mediadelivery.net",
-  "stream.mux.com",
-  "customer-",
-];
-
-export function videoEmbedUrl(url: string): string | null {
-  let u: URL;
-  try {
-    u = new URL(url);
-  } catch {
-    return null;
-  }
-  if (u.protocol !== "https:") return null;
-  const host = u.hostname;
-  if (host === "youtu.be") return `https://www.youtube-nocookie.com/embed/${u.pathname.slice(1)}`;
-  if (host.endsWith("youtube.com") || host === "www.youtube-nocookie.com") {
-    const id = u.searchParams.get("v") ?? (u.pathname.startsWith("/embed/") ? u.pathname.split("/")[2] : null);
-    return id && /^[\w-]{6,20}$/.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null;
-  }
-  if (host === "vimeo.com") {
-    const id = u.pathname.split("/").filter(Boolean)[0];
-    return id && /^\d+$/.test(id) ? `https://player.vimeo.com/video/${id}` : null;
-  }
-  if (host === "player.vimeo.com" || host === "iframe.mediadelivery.net" || host === "stream.mux.com") return u.toString();
-  if (/^customer-[a-z0-9]+\.cloudflarestream\.com$/.test(host)) return u.toString();
-  return null;
-}
+export { VIDEO_HOSTS, videoEmbedUrl } from "./video";
+import { videoEmbedUrl } from "./video";
 
 export const BLOCK_SCHEMAS = {
   TEXT: z.object({ text: text(20_000).min(1, "Write something in the text block.") }),
@@ -95,6 +64,23 @@ export const BLOCK_SCHEMAS = {
     title: text(200).min(3, "Give the recording a title."),
     transcript: text(40_000).min(20, "Add a transcript so the recording is accessible to everyone."),
   }),
+  DESIGN: z
+    .object({ title: text(200).optional(), design: z.unknown() })
+    .transform((v, ctx) => {
+      const r = validateDesign(v.design ?? { root: { props: {} }, content: [] });
+      if (!r.ok) {
+        ctx.addIssue({ code: "custom", message: r.error, path: ["design"] });
+        return z.NEVER;
+      }
+      return { title: v.title, design: r.design };
+    }),
+  DOCUMENT: z.object({
+    mediaId: z.string().min(1, "Choose a PDF from the media library."),
+    title: text(200).min(3, "Give the document a title."),
+    caption: text(600).optional(),
+    /** Set by the server from the file itself. */
+    pages: z.coerce.number().int().min(1).max(1000).optional(),
+  }),
 } satisfies Record<BlockKind, z.ZodType>;
 
 export type BlockData<K extends BlockKind> = z.infer<(typeof BLOCK_SCHEMAS)[K]>;
@@ -111,6 +97,8 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   SCENARIO: "Scenario / case study",
   CODE: "Structured example",
   AUDIO: "Audio",
+  DESIGN: "Visual design",
+  DOCUMENT: "Document (view only)",
 };
 
 /** All the human-readable text in a block, for screening and search. */
@@ -123,6 +111,9 @@ export function blockText(kind: BlockKind, data: unknown): string {
       break;
     case "STEPS":
       parts.push(d.title, ...((d.steps as string[]) ?? []));
+      break;
+    case "DESIGN":
+      parts.push(d.title, d.design ? designText(d.design as Design) : "");
       break;
     default:
       parts.push(d.text, d.title, d.caption, d.alt, d.context, d.question, d.discussion, d.code, d.label, d.description, d.transcript);

@@ -3,6 +3,9 @@ import { AlertTriangle, Info, Lightbulb, ShieldCheck } from "lucide-react";
 import { Markdown, renderInline, safeHref } from "@/lib/cms/markdown";
 import { videoEmbedUrl } from "@/lib/cms/blocks";
 import { cn } from "@/lib/utils";
+import { DesignView } from "@/components/design/DesignView";
+import { DocumentReader } from "./DocumentReader";
+import type { Design } from "@/lib/design/schema";
 
 /**
  * Renders lesson content blocks. Used by the learner's lesson page (from the released
@@ -184,6 +187,10 @@ export function BlockView({ block, mediaContext }: { block: ViewBlock; mediaCont
           </div>
         </section>
       );
+    case "DESIGN":
+      return d.design ? <DesignView design={d.design as Design} ctx={{ mediaUrl: (id) => `/api/media/${id}${mediaContext ? `?c=${encodeURIComponent(mediaContext)}` : ""}` }} /> : null;
+    case "DOCUMENT":
+      return <DocumentReader mediaId={s(d.mediaId)} pages={Number(d.pages) || 1} title={s(d.title)} context={mediaContext} />;
     case "CODE":
       return (
         <figure>
@@ -200,9 +207,12 @@ export function BlockView({ block, mediaContext }: { block: ViewBlock; mediaCont
 
 export function Blocks({ blocks, mediaContext }: { blocks: ViewBlock[]; mediaContext?: string }) {
   return (
-    <div className="flex max-w-[70ch] flex-col gap-6">
+    <div className="flex flex-col gap-6">
       {blocks.map((b) => (
-        <BlockView key={b.id} block={b} mediaContext={mediaContext} />
+        // Designs and documents use the full width; reading text keeps a comfortable measure.
+        <div key={b.id} className={b.kind === "DESIGN" || b.kind === "DOCUMENT" ? undefined : "max-w-[70ch]"}>
+          <BlockView block={b} mediaContext={mediaContext} />
+        </div>
       ))}
     </div>
   );

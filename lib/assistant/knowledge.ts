@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { designText, type Design } from "@/lib/design/schema";
 import { can, type Actor } from "@/lib/actor";
 import { flatLessons, type CourseSnapshot, type SnapshotBlock } from "@/lib/cms/snapshot";
 import { courseAccess } from "@/lib/services/learning/catalog";
@@ -40,6 +41,8 @@ function blockText(b: SnapshotBlock): string {
       return [s("alt"), s("caption")].filter(Boolean).join(". ");
     case "LINK":
       return [s("label"), s("description")].filter(Boolean).join(": ");
+    case "DESIGN":
+      return [s("title"), d.design ? designText(d.design as Design) : ""].filter(Boolean).join("\n\n");
     default:
       // CODE and anything new: not prose; leave out until there is a reason to index it.
       return "";

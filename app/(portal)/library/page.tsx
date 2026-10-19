@@ -45,6 +45,7 @@ export default async function LibraryPage() {
                   mimeType: true,
                   sizeBytes: true,
                   fileKey: true,
+                  downloadable: true,
                 },
               },
             },
@@ -142,7 +143,8 @@ export default async function LibraryPage() {
                               className="border-b border-border last:border-b-0"
                             >
                               <a
-                                href={`/api/materials/${r.id}`}
+                                // View-only materials are read inside their lesson, not downloaded.
+                                href={r.downloadable ? `/api/materials/${r.id}` : `/academy/${p.slug}/${l.id}#material-${r.id}`}
                                 className="group grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 py-3"
                               >
                                 <span className="min-w-0">
