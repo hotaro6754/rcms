@@ -17,6 +17,12 @@ import { caption, go, hideDevOverlay, OUT, pause, saveVideo, scrollBy, signIn, t
  * Output: DEMO_OUT (default ./demo-output/rcms-cms-demo.webm).
  */
 
+/** Opens a page in the website editor and waits until it is interactive. */
+async function openEditor(page: Page, url: string) {
+  await go(page, url);
+  await page.locator('[data-ready="true"]').waitFor();
+}
+
 const SLUG = `corporate-training-${Date.now().toString(36)}`;
 
 function onePager(): Promise<Buffer> {
@@ -93,7 +99,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await scrollBy(page, 900);
   await caption(page, "Each page shows whether it has its original copy, edits, or an unpublished draft.", 3000);
 
-  await go(page, "/admin/site/about");
+  await openEditor(page, "/admin/site/about");
   await caption(page, "A page's words, links, lists and section switches, laid out the way the page is.", 3200);
   const header = page.getByRole("group", { name: "Page header" });
   await header.getByLabel("Title").fill("");
@@ -113,21 +119,21 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await page.getByRole("link", { name: "Exit preview" }).click();
   await page.waitForLoadState("networkidle").catch(() => {});
 
-  await go(page, "/admin/site/about");
+  await openEditor(page, "/admin/site/about");
   await page.getByLabel("What changed (optional)").pressSequentially("Shorter title; beliefs hidden", { delay: 20 });
   await page.getByRole("button", { name: "Publish" }).click();
   await expect(page.getByRole("status").filter({ hasText: /Published as version/ })).toBeVisible();
   await caption(page, "Published. Every version is kept in the history and can be restored.", 3200);
   await go(page, "/about");
   await caption(page, "The live page has changed. No code, no deployment.", 3000);
-  await go(page, "/admin/site/about");
+  await openEditor(page, "/admin/site/about");
   await page.getByRole("button", { name: "Reset to the original copy" }).click();
   await expect(page.getByRole("status").filter({ hasText: "original copy again" })).toBeVisible();
   await caption(page, "And one click brings the original copy back. The edit stays in the history.", 3200);
 
   // 2. Theme
   await title(page, "Colours and fonts", "The whole site's look, with readability checked before anything goes live.");
-  await go(page, "/admin/site/theme");
+  await openEditor(page, "/admin/site/theme");
   const colours = page.getByRole("group", { name: "Colours" });
   await colours.locator("#f-colours-primary").fill("#ffffff");
   await colours.locator("#f-colours-primaryText").fill("#eeeeee");
@@ -146,7 +152,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await caption(page, "The homepage, restyled.", 2600);
   await go(page, "/pricing");
   await caption(page, "And every other public page with it.", 2600);
-  await go(page, "/admin/site/theme");
+  await openEditor(page, "/admin/site/theme");
   await page.getByRole("button", { name: "Reset to the original copy" }).click();
   await expect(page.getByRole("status").filter({ hasText: "original copy again" })).toBeVisible();
   await caption(page, "Back to the original theme.", 2200);
@@ -158,6 +164,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await page.getByLabel("Address").fill(SLUG);
   await page.getByRole("button", { name: "Create page" }).click();
   await page.waitForURL(/\/admin\/site\/custom-/);
+  await page.locator('[data-ready="true"]').waitFor();
   const pageEditor = page.url();
   await page.getByLabel("Label above the title").fill("For teams");
   await page.getByLabel("Introduction").pressSequentially("Training for whole revenue-cycle teams, scoped with you.", { delay: 15 });
@@ -181,7 +188,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await caption(page, "Every piece has its own font, size, colour, alignment and spacing.", 3000);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible({ timeout: 30_000 });
-  await go(page, pageEditor);
+  await openEditor(page, pageEditor);
   await page.getByRole("button", { name: "Publish" }).click();
   await expect(page.getByRole("status").filter({ hasText: /Published as version 1/ })).toBeVisible();
   await go(page, `/p/${SLUG}`);
@@ -268,7 +275,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
     await rows.first().getByRole("button", { name: /Delete block/ }).click();
     await expect(rows).toHaveCount(n - 1);
   }
-  await go(page, pageEditor);
+  await openEditor(page, pageEditor);
   await page.getByRole("button", { name: "Delete this page" }).click();
   await page.waitForURL(/\/admin\/site$/);
 

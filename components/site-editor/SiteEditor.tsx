@@ -42,6 +42,9 @@ export function SiteEditor(props: {
   const dirty = useMemo(() => JSON.stringify(value) !== saved, [value, saved]);
 
   // A fresh server render (after publish, restore or another save) replaces the local copy.
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+
   useEffect(() => {
     setValue(props.initial);
     setSaved(JSON.stringify(props.initial));
@@ -159,7 +162,9 @@ export function SiteEditor(props: {
     });
 
   return (
-    <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    // data-ready marks the editor as interactive (hydrated), so automated tests and recordings
+    // never type into fields before the page can keep what they type.
+    <div data-ready={ready ? "true" : undefined} className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="flex min-w-0 flex-col gap-6">
         {props.custom && (
           <div className="flex flex-wrap items-end gap-2 rounded-[var(--radius)] border border-border p-4">

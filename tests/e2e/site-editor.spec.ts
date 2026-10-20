@@ -10,6 +10,12 @@ import { expect, test, type Page } from "@playwright/test";
 const PASSWORD = "Rcms-dev-password-1";
 const ORIGINAL = "Twenty-one years on the operations floor, turned into a curriculum.";
 
+/** Opens a page in the website editor and waits until it is interactive. */
+async function openEditor(page: Page, path: string) {
+  await page.goto(path);
+  await page.locator('[data-ready="true"]').waitFor();
+}
+
 async function signIn(page: Page, email: string) {
   await page.context().clearCookies();
   await page.goto("/sign-in");
@@ -41,6 +47,7 @@ test("edit, preview, publish and reset a page's copy", async ({ browser }) => {
   await page.goto("/admin/site");
   await page.getByRole("link", { name: "About", exact: true }).click();
   await expect(page.getByRole("heading", { name: "About" })).toBeVisible();
+  await page.locator('[data-ready="true"]').waitFor();
   const header = page.getByRole("group", { name: "Page header" });
   await header.getByLabel("Title").fill(title);
   await page.getByRole("button", { name: "Save draft" }).click();
@@ -84,6 +91,7 @@ test("create, publish and delete a custom page", async ({ page, browser }) => {
   await page.getByLabel("Address").fill(slug);
   await page.getByRole("button", { name: "Create page" }).click();
   await page.waitForURL(/\/admin\/site\/custom-/);
+  await page.locator('[data-ready="true"]').waitFor();
 
   // Not visible until published.
   const visitor = await browser.newPage();
@@ -97,6 +105,7 @@ test("create, publish and delete a custom page", async ({ page, browser }) => {
   await expect(page.getByText("Freeform canvas", { exact: true }).first()).toBeVisible({ timeout: 30_000 });
   await page.getByRole("link", { name: "Back to the page" }).click();
   await page.waitForURL(/\/admin\/site\/custom-[^/]+$/);
+  await page.locator('[data-ready="true"]').waitFor();
   await expect(page.getByLabel("Introduction")).toHaveValue("Training for whole teams, scoped with you.");
 
   await page.getByRole("button", { name: "Publish" }).click();
@@ -116,7 +125,7 @@ test("theme: unreadable colours are refused, a change reaches the site, and rese
   const page = await ctx.newPage();
   page.on("dialog", (d) => d.accept());
   await signIn(page, "super@rcms.test");
-  await page.goto("/admin/site/theme");
+  await openEditor(page, "/admin/site/theme");
   const colours = page.getByRole("group", { name: "Colours" });
 
   // Light grey button text on a white button: refused.
