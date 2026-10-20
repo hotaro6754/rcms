@@ -13,6 +13,19 @@ Training data only: the platform must never hold real patient, provider, payer o
 
 ## Running it
 
+**Quickest, on your own computer** (needs only Node.js 22; no database install, no setup):
+
+```bash
+npm install
+npm run local
+```
+
+It creates `.env`, starts a local database, adds the starter content and the synthetic test
+accounts (password `Rcms-dev-password-1`; sign in as `super@rcms.test`), and opens the site at
+http://localhost:3000. Ctrl-C stops everything; your data is kept in `.pgdata/`.
+
+The same steps by hand, if you want to run each part yourself:
+
 ```bash
 npm install
 cp .env.example .env      # DATABASE_URL and BETTER_AUTH_SECRET at minimum
