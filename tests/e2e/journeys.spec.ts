@@ -36,10 +36,14 @@ test("learner journey: access granted by a subscriber admin, lesson completed, p
   const page = await ctx.newPage();
   await signIn(page, "student@rcms.test");
   await page.goto("/academy");
-  await page.locator('a[href^="/academy/foundation"]').first().click();
-  await page.waitForURL(/\/academy\/foundation/);
-  await page.locator('a[href^="/academy/foundation/"]').first().click();
-  await page.waitForURL(/\/academy\/foundation\/.+/);
+  await expect(page.locator('a[href^="/academy/foundation"]').first()).toBeVisible();
+  await page.goto("/academy/foundation");
+  // Wait for the exact lesson clicked: a looser pattern matches the current page before the
+  // navigation finishes, and "Mark complete" would then be pressed on the wrong lesson.
+  const first = page.locator('a[href^="/academy/foundation/"]').first();
+  const href = (await first.getAttribute("href"))!.split(/[?#]/)[0];
+  await first.click();
+  await page.waitForURL((u) => u.pathname === href);
   const lessonUrl = page.url();
   const complete = page.getByRole("button", { name: /Mark complete|Mark as not done/ });
   await expect(complete).toBeVisible();
