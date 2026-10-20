@@ -68,7 +68,7 @@ export default async function NewTicket({ searchParams }: { searchParams: Promis
             <select id="impact" name="impact" defaultValue="1" className={FIELD}>
               <option value="1">A little: I can carry on</option>
               <option value="2">It stops me finishing something</option>
-              <option value="3">I cannot use the academy at all</option>
+              <option value="3">I cannot use RCMExcel at all</option>
             </select>
           </Field>
           <Field label="How soon do you need it?" htmlFor="urgency">

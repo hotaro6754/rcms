@@ -5,10 +5,11 @@ import { SiteLink } from "@/components/site/SiteLink";
 import { publicPaths } from "@/lib/services/learning/public-catalog";
 import { getPageContent } from "@/lib/site/content";
 import { learningPathsPage } from "@/lib/site/pages/learning-paths";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(learningPathsPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/learning-paths" });
 }
 
 export const revalidate = 300;

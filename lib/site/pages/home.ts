@@ -5,6 +5,7 @@ import { LAB, VERDICT_LABEL } from "@/lib/data/lab";
 import { CAREER, FOUNDER, ROLE_LADDER } from "@/lib/data/founder";
 import { FOUNDER_PORTRAIT } from "@/lib/data/media";
 import { METRICS, type MetricId } from "@/lib/data/telemetry";
+import { BRAND } from "@/lib/brand";
 
 /**
  * The homepage's copy. Defaults are the copy that shipped with the page; several come straight
@@ -30,7 +31,7 @@ export const homePage = definePage({
   group: "Pages",
   fields: {
     seo: group("Search and browser tab", {
-      title: text("Page title", "RCMS Operations Academy | RCM and Operations Management Training", { max: 120 }),
+      title: text("Page title", `${BRAND.name} | RCM and Operations Management Training`, { max: 120 }),
       description: text(
         "Search description",
         "Structured training and mentoring in US healthcare revenue cycle and operations management, from your first claim to leading teams and clients.",
@@ -91,7 +92,7 @@ export const homePage = definePage({
       title: text("Heading", "Ten stages, and a claim has to clear every one of them.", { max: 120 }),
       lead: area(
         "Introduction",
-        "Scroll through them in order: what each stage does, how it usually breaks, the number that gives it away, and where the Academy teaches it.",
+        "Scroll through them in order: what each stage does, how it usually breaks, the number that gives it away, and where RCMExcel teaches it.",
         { max: 400 },
       ),
       phases: group("Phase names", {

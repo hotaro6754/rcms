@@ -185,7 +185,7 @@ async function seedPlatform() {
 }
 
 async function main() {
-  console.log("Seeding RCMS Operations Academy…");
+  console.log("Seeding RCMExcel…");
   await seedPrograms();
   await seedLevels(prisma);
   await seedBlocksFromBodies(prisma);

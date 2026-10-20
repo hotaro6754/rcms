@@ -6,10 +6,11 @@ import { publicPricing } from "@/lib/services/learning/public-catalog";
 import { paymentsConfigured } from "@/lib/payments/razorpay";
 import { getPageContent } from "@/lib/site/content";
 import { pricingPage } from "@/lib/site/pages/pricing";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(pricingPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/pricing" });
 }
 
 export const revalidate = 300;

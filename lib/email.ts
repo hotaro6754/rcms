@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 /**
  * Transactional email.
  *
@@ -6,7 +7,7 @@
  * loud, so nobody mistakes a dev environment for a configured one.
  */
 
-const from = process.env.EMAIL_FROM ?? "RCMS Operations Academy <onboarding@resend.dev>";
+const from = process.env.EMAIL_FROM ?? `${BRAND.name} <onboarding@resend.dev>`;
 
 export interface Mail {
   to: string;

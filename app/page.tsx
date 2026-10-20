@@ -18,6 +18,8 @@ import { LottieView } from "@/components/illustration/LottieView";
 import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { homePage } from "@/lib/site/pages/home";
+import { jsonLd, organisationLd, pageMeta, siteUrl } from "@/lib/seo";
+import { BRAND } from "@/lib/brand";
 
 /**
  * The homepage is one case file: the claim, at a different moment in each chapter, on a
@@ -63,7 +65,7 @@ async function loadMentoringPrices(): Promise<Record<string, number>> {
 
 export async function generateMetadata() {
   const c = await getPageContent(homePage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/", absoluteTitle: true });
 }
 
 export default async function Home() {
@@ -129,6 +131,7 @@ export default async function Home() {
       </main>
 
       <SiteFooter />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({ "@graph": [organisationLd(), { "@type": "WebSite", name: BRAND.name, url: siteUrl().origin }] }) }} />
       <PreviewBar />
       <ThemeStyle />
     </>

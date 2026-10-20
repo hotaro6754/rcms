@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { getActor, can, BLOCKED_STATUSES } from "@/lib/actor";
 import { downloadHeaders, readStored } from "@/lib/storage";
 import { canSeeCourseMedia } from "@/lib/services/learning/media-access";
-import { watermarkImage, watermarkText } from "@/lib/documents/watermark";
 
 /**
  * Serves a media-library file. Public assets (catalogue and website images) to anyone;
@@ -11,9 +10,9 @@ import { watermarkImage, watermarkText } from "@/lib/documents/watermark";
  * course that lists the asset (lib/services/learning/media-access.ts). Knowing the URL is not
  * enough.
  *
- * Learners never receive course files as files: images come back with their name, email and
- * the date burned in, and documents (PDFs) are only readable page by page in the lesson's
- * view-only reader (/api/doc-pages). `?c=<courseId>` names the course the file is shown in.
+ * Learners never receive course documents (PDFs) as files: they are only readable page by page
+ * in the lesson's view-only reader (/api/doc-pages). `?c=<courseId>` names the course the file
+ * is shown in.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,14 +37,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const body = await readStored(asset.fileKey).catch(() => null);
   if (!body) return new NextResponse("This file is missing from storage.", { status: 404 });
 
-  if (!staff && asset.kind === "IMAGE") {
-    const marked = await watermarkImage(body, watermarkText(actor), asset.mimeType === "image/jpeg" ? "jpeg" : "png").catch(() => null);
-    if (!marked) return new NextResponse("This image could not be prepared.", { status: 500 });
-    return new NextResponse(new Uint8Array(marked), {
-      headers: { ...downloadHeaders(asset.mimeType === "image/jpeg" ? "image/jpeg" : "image/png", marked.length, asset.title, true), "Cache-Control": "private, no-store" },
-    });
-  }
-
   const inline = asset.kind === "IMAGE" || asset.kind === "AUDIO";
-  return new NextResponse(new Uint8Array(body), { headers: downloadHeaders(asset.mimeType, body.length, asset.title, inline) });
+  return new NextResponse(new Uint8Array(body), { headers: { ...downloadHeaders(asset.mimeType, body.length, asset.title, inline), "Cache-Control": "private, no-store" } });
 }

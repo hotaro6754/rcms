@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
+import { NOINDEX } from "@/lib/seo";
 import { getActor, isStaff, mfaRequired, BLOCKED_STATUSES } from "@/lib/actor";
 import { visibleNav } from "@/lib/admin-nav";
 import { PlatformShell } from "@/components/platform/PlatformShell";
 import { AdminSubNav } from "@/components/admin/AdminSubNav";
 import { ROLE_LABEL } from "@/lib/permissions";
 
-export const metadata = { title: { default: "Admin Control Center", template: "%s · Admin" } };
+export const metadata = { ...NOINDEX, title: { default: "Admin Control Center", template: "%s · Admin" } };
 
 /**
  * The Admin Control Center shell. Any staff role opens it; what each person sees inside is

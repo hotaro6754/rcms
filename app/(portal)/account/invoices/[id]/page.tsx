@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { inr, when } from "@/components/admin/kit";
 import { PrintButton } from "@/components/certificates/PrintButton";
+import { Wordmark } from "@/components/brand/Wordmark";
 
 export const metadata = { title: "Invoice" };
 
@@ -22,8 +23,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
       <article className="rounded-[var(--radius)] border border-border bg-card p-8 print:border-0">
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">
           <div>
-            <p className="text-data text-[13px] font-semibold tracking-[0.18em]">RCMS</p>
-            <p className="font-serif-display text-[1.4rem]">Operations Academy</p>
+            <p className="text-[1.4rem]"><Wordmark /></p>
             <p className="mt-1 text-[12px] text-muted-foreground">{process.env.BUSINESS_LEGAL_NAME ?? "Legal name not configured"}{process.env.BUSINESS_GSTIN ? ` · GSTIN ${process.env.BUSINESS_GSTIN}` : ""}</p>
           </div>
           <div className="text-right text-[13px]">

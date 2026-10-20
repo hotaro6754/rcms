@@ -5,10 +5,11 @@ import { flatLessons } from "@/lib/cms/snapshot";
 import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { resourcesTestsPage } from "@/lib/site/pages/resources-tests";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(resourcesTestsPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/resources/tests" });
 }
 
 export const revalidate = 300;

@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import { NOINDEX } from "@/lib/seo";
 import { getActor, BLOCKED_STATUSES, isStaff } from "@/lib/actor";
 import { PlatformShell } from "@/components/platform/PlatformShell";
 
-export const metadata = { title: { default: "Vendor portal", template: "%s · Vendor portal" } };
+export const metadata = { ...NOINDEX, title: { default: "Vendor portal", template: "%s · Vendor portal" } };
 
 const NAV = [
   { href: "/vendor", label: "Overview", exact: true },

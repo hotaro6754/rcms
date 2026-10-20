@@ -60,7 +60,7 @@ function KindFields({ kind, d, images, audio = [], documents = [], blockId }: { 
     case "DOCUMENT":
       return (
         <>
-          <L label="PDF" hint={documents.length ? "Learners read it page by page, watermarked with their name. They cannot download it." : "Upload PDFs in the media library first."}>
+          <L label="PDF" hint={documents.length ? "Learners read it page by page. They cannot download it." : "Upload PDFs in the media library first."}>
             <select name="mediaId" defaultValue={s(d.mediaId)} required className={IN}>
               <option value="">Choose…</option>
               {documents.map((m) => (

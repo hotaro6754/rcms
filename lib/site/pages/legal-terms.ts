@@ -46,7 +46,7 @@ export const legalTermsPage = legalPage({
     {
       h: "Intellectual property",
       p: [
-        "Frameworks, curricula, SOP templates, benchmark libraries and simulation scenarios remain the property of the academy. Your licence is to use them, not to own them.",
+        "Frameworks, curricula, SOP templates, benchmark libraries and simulation scenarios remain the property of RCMExcel. Your licence is to use them, not to own them.",
         "Work you produce during a program — your capacity model, your review deck — is yours.",
       ],
     },

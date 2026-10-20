@@ -7,10 +7,11 @@ import { SiteLink } from "@/components/site/SiteLink";
 import { cn } from "@/lib/utils";
 import { getPageContent } from "@/lib/site/content";
 import { catalogPage } from "@/lib/site/pages/catalog";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(catalogPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/catalog" });
 }
 export const dynamic = "force-dynamic";
 

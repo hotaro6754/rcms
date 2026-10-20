@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 import { getActor, isStaff } from "@/lib/actor";
 import { PlatformShell } from "@/components/platform/PlatformShell";
 import { ROLE_LABEL } from "@/lib/permissions";
+import { NOINDEX } from "@/lib/seo";
+
+/** Signed-in and sign-in pages are kept out of search engines. */
+export const metadata = NOINDEX;
 
 const NAV = [
   { href: "/academy", label: "My academy" },

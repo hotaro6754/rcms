@@ -130,7 +130,7 @@ describe("design and document blocks", () => {
 });
 
 describe("view-only materials", () => {
-  it("are view-only unless the course team allows downloading, and are read as watermarked page images", async () => {
+  it("are view-only unless the course team allows downloading, and are read as page images", async () => {
     const author = await staff("CONTENT_ADMIN");
     const { course, modules } = await makeCourseDraft(author, { modules: 1, lessons: 1 });
     const res = await addMaterial(author, modules[0].lessons[0].id, { title: "Remittance walkthrough" }, file(await samplePdf(), "walkthrough.pdf"));
@@ -148,16 +148,16 @@ describe("view-only materials", () => {
     const again = await resourceAccess(learner, res.id);
     expect(again.ok && again.res.downloadable).toBe(true);
 
-    // Two readers get differently watermarked images of the same page.
+    // Page images carry no watermark: two readers get the same image of the same page.
     const other = await makeUser({ name: "Ben Learner" });
     const a = await pageImageResponse(learner, again.ok ? again.res.fileKey : "", 1);
     const b = await pageImageResponse(other, again.ok ? again.res.fileKey : "", 1);
     expect(a.status).toBe(200);
-    expect(a.headers.get("content-type")).toBe("image/webp");
+    expect(a.headers.get("content-type")).toBe("image/png");
     expect(a.headers.get("cache-control")).toContain("no-store");
     const [ab, bb] = [Buffer.from(await a.arrayBuffer()), Buffer.from(await b.arrayBuffer())];
     expect(ab.length).toBeGreaterThan(1000);
-    expect(ab.equals(bb)).toBe(false);
+    expect(ab.equals(bb)).toBe(true);
     expect((await pageImageResponse(learner, again.ok ? again.res.fileKey : "", 9)).status).toBe(404);
   });
 });

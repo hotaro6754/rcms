@@ -5,7 +5,7 @@ import { canSeeCourseMedia } from "@/lib/services/learning/media-access";
 import { pageImageResponse } from "@/lib/documents/pages";
 
 /**
- * One page of a view-only document block, as a watermarked image. The PDF itself never leaves
+ * One page of a view-only document block, as an image. The PDF itself never leaves
  * the server. Same access rule as the media route.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string; page: string }> }) {

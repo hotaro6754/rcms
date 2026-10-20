@@ -8,14 +8,16 @@ import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { resourcesPage } from "@/lib/site/pages/resources";
 import { resourcesEntryPage } from "@/lib/site/pages/resources-entry";
+import { pageMeta } from "@/lib/seo";
 
 export const revalidate = 300;
 
 const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const e = await publicEntry((await params).slug);
-  return e ? { title: e.title, description: e.summary } : { title: "Not found" };
+export async function generateMetadata({ params }: { params: Promise<{ section: string; slug: string }> }) {
+  const { section, slug } = await params;
+  const e = await publicEntry(slug);
+  return e ? pageMeta({ title: e.title, description: e.summary, path: `/resources/${section}/${slug}`, type: "article" }) : { title: "Not found" };
 }
 
 export default async function EntryPage({ params }: { params: Promise<{ section: string; slug: string }> }) {

@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { gsap, useGSAP } from "@/lib/gsap/register";
 import { EASE } from "@/lib/gsap/eases";
 import { finishIntro, markIntroDone } from "@/lib/intro";
+import { Wordmark } from "@/components/brand/Wordmark";
 
 const TERMS = ["Revenue cycle", "Operations", "Leadership"];
 
@@ -65,8 +66,7 @@ export function Preloader() {
       <div className="pl-veil absolute inset-0 bg-background" />
       <div className="pl-content relative mx-auto w-full max-w-[1320px] px-6">
         <p className="pl-mark flex items-baseline gap-3">
-          <span className="text-data text-[13px] font-semibold tracking-[0.18em]">RCMS</span>
-          <span className="font-serif-display text-[19px] leading-none">Operations Academy</span>
+          <Wordmark />
         </p>
         <span className="pl-rule mt-5 block h-px w-[min(26rem,70vw)] bg-brand" />
         <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1">

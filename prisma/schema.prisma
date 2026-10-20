@@ -775,8 +775,8 @@ model Resource {
   mimeType   String
   sizeBytes  Int?
   watermark  Boolean   @default(true)
-  /// Learners may download the file itself. Off by default: PDFs are read in the watermarked
-  /// page reader and other files stay with the course team.
+  /// Learners may download the file itself. Off by default: PDFs are read in the
+  /// page-by-page reader and other files stay with the course team.
   downloadable Boolean  @default(false)
   archivedAt DateTime?
 

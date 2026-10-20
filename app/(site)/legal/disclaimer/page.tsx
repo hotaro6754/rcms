@@ -3,7 +3,7 @@ import { getPageContent } from "@/lib/site/content";
 import { legalDisclaimerPage } from "@/lib/site/pages/legal-disclaimer";
 
 export async function generateMetadata() {
-  return legalMetadata(await getPageContent(legalDisclaimerPage));
+  return legalMetadata(await getPageContent(legalDisclaimerPage), "/legal/disclaimer");
 }
 
 export default async function DisclaimerPage() {

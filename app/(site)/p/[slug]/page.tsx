@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/site/PageHeader";
 import { DesignView } from "@/components/design/DesignView";
 import { getCustomPage } from "@/lib/site/content";
+import { pageMeta } from "@/lib/seo";
 
 /** Pages made from scratch in the website editor (/admin/site). */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const page = await getCustomPage((await params).slug).catch(() => null);
   if (!page) return { title: "Page not found" };
-  return { title: page.content.title, description: page.content.seoDescription || undefined };
+  return pageMeta({ title: page.content.title, description: page.content.seoDescription, path: page.def.path });
 }
 
 export default async function CustomPage({ params }: { params: Promise<{ slug: string }> }) {

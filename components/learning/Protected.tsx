@@ -8,14 +8,13 @@ import { useEffect, useRef, useState } from "react";
  * What it does: no text selection, copying, right-click or dragging inside the lesson; the
  * copy, save, print and view-source shortcuts do nothing; printing shows a notice instead of
  * the lesson; content is hidden while the window is in the background (when screenshot tools
- * usually take focus); and the learner's name, email and the date are watermarked across the
- * content, so any photo or screenshot that does get taken can be traced.
+ * usually take focus).
  *
  * What it cannot do: stop a phone camera or an operating-system screenshot. No website can.
- * Files are protected on the server as well (watermarked images, documents served only as
- * page images), so this is one layer of several.
+ * Files are protected on the server as well (documents are served only as page images, never
+ * as files), so this is one layer of several.
  */
-export function Protected({ watermark, children }: { watermark: string; children: React.ReactNode }) {
+export function Protected({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [hidden, setHidden] = useState(false);
 
@@ -58,14 +57,9 @@ export function Protected({ watermark, children }: { watermark: string; children
     };
   }, []);
 
-  const tile = `url("data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='180'><text x='0' y='110' transform='rotate(-22 210 90)' font-family='Arial' font-size='13' fill='#1a1a1a' fill-opacity='0.09'>${watermark.replace(/[<>&'"]/g, "")}</text></svg>`,
-  )}")`;
-
   return (
     <div ref={ref} className="protected-content relative select-none [-webkit-touch-callout:none]">
       <div className={hidden ? "invisible" : undefined}>{children}</div>
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-10" style={{ backgroundImage: tile }} />
       {hidden && (
         <div className="absolute inset-0 z-20 grid place-items-start justify-center bg-background/95 pt-24 text-center">
           <p className="max-w-sm text-[14px] text-muted-foreground">The lesson is hidden while this window is in the background. Click here to carry on reading.</p>

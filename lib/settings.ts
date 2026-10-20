@@ -10,7 +10,7 @@ import { prisma } from "./db";
 export const SETTINGS = {
   "refund.windowDays": { label: "Refund window (days from purchase)", default: 7, kind: "int", min: 0, max: 365 },
   "refund.maxConsumptionPct": { label: "Refundable if less than this % of lessons completed", default: 20, kind: "int", min: 0, max: 100 },
-  "refund.routineLimit": { label: "Routine refund limit (₹); above this needs the Academy Director", default: 10000, kind: "int", min: 0, max: 10_000_000 },
+  "refund.routineLimit": { label: "Routine refund limit (₹); above this needs RCMExcel Director", default: 10000, kind: "int", min: 0, max: 10_000_000 },
   "export.approvalThreshold": { label: "Subscriber exports above this many rows need approval", default: 500, kind: "int", min: 1, max: 1_000_000 },
   "support.hours": { label: "Support hours shown to learners", default: "Monday to Saturday, 10:00–19:00 IST", kind: "text" },
   "support.firstResponseHours": { label: "First-response target (hours)", default: 8, kind: "int", min: 1, max: 240 },

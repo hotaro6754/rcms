@@ -12,7 +12,7 @@ export default async function VendorHome() {
   const overdue = open.filter((d) => d.dueDate && d.dueDate < new Date());
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-10">
-      <PageHead kicker={`${vendor.code} · ${vendor.status.replace(/_/g, " ").toLowerCase()}`} title={vendor.tradingName ?? vendor.legalName} lede="Your assigned work, submissions and invoices. Anything you upload is reviewed by the Academy before it reaches learners." />
+      <PageHead kicker={`${vendor.code} · ${vendor.status.replace(/_/g, " ").toLowerCase()}`} title={vendor.tradingName ?? vendor.legalName} lede="Your assigned work, submissions and invoices. Anything you upload is reviewed by RCMExcel before it reaches learners." />
       <dl className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           ["Open deliverables", open.length],

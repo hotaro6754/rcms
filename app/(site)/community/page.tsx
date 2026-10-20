@@ -1,10 +1,11 @@
 import { PageHeader, Section } from "@/components/site/PageHeader";
 import { getPageContent } from "@/lib/site/content";
 import { communityPage } from "@/lib/site/pages/community";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(communityPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/community" });
 }
 
 export default async function CommunityPage() {

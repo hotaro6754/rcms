@@ -52,7 +52,7 @@ export async function caption(page: Page, text: string, ms = 2600) {
 
 export async function title(page: Page, heading: string, sub: string) {
   await page.setContent(`<!doctype html><html><body style="margin:0;height:100vh;display:grid;place-items:center;background:#161513;color:#f4efe6;font-family:Georgia,serif">
-    <div style="text-align:center;max-width:900px;padding:24px"><div style="font:600 14px/1 system-ui;letter-spacing:.2em;color:#b9b2a7">RCMS OPERATIONS ACADEMY</div>
+    <div style="text-align:center;max-width:900px;padding:24px"><div style="font:600 14px/1 system-ui;letter-spacing:.2em;color:#b9b2a7">RCMEXCEL</div>
     <h1 style="font-size:52px;line-height:1.1;margin:24px 0 16px">${heading}</h1><p style="font:400 22px/1.5 system-ui;color:#d9d2c6">${sub}</p></div></body></html>`);
   await pause(page, 3500);
 }

@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Course content protection as a learner meets it: the lesson carries a watermark with their
- * own email, copying, right-click and the print shortcut do nothing inside it, printing shows
- * a notice instead. (View-only materials are covered by tests/integration/design.test.ts.)
+ * Course content protection as a learner meets it: no watermark is drawn over the lesson;
+ * copying, right-click and the print shortcut do nothing inside it; printing shows a notice
+ * instead. (View-only materials are covered by tests/integration/design.test.ts.)
  * Needs `npm run db:seed && npm run dev:accounts` (student@ is enrolled in the foundation course).
  */
 
@@ -17,7 +17,7 @@ async function signIn(page: Page, email: string) {
   await page.waitForURL((u) => !u.pathname.startsWith("/sign-in"));
 }
 
-test("lessons are watermarked and resist copying and printing", async ({ page }) => {
+test("lessons carry no watermark and resist copying and printing", async ({ page }) => {
   await signIn(page, "student@rcms.test");
   await page.goto("/academy/foundation");
   await page.locator('a[href^="/academy/foundation/"]').first().click();
@@ -25,8 +25,9 @@ test("lessons are watermarked and resist copying and printing", async ({ page })
 
   const protectedArea = page.locator(".protected-content");
   await expect(protectedArea).toHaveCount(1);
-  const tile = await protectedArea.locator("> div[aria-hidden]").first().getAttribute("style");
-  expect(decodeURIComponent(tile ?? "")).toContain("student@rcms.test");
+  // No watermark: nothing in the protected area carries the learner's details.
+  expect(await protectedArea.evaluate((el) => el.outerHTML.includes("student@rcms.test"))).toBe(false);
+  await expect(protectedArea.locator("[style*='svg']")).toHaveCount(0);
 
   // Right-click, copy and the print shortcut are cancelled inside the lesson.
   const prevented = await protectedArea.evaluate((el) => {

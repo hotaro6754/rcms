@@ -10,6 +10,7 @@ import { sendMail } from "@/lib/email";
 import { getSetting } from "@/lib/settings";
 import { usableExportApproval } from "@/lib/services/approvals";
 import { notifyUsers } from "./staff-lookup";
+import { BRAND } from "@/lib/brand";
 
 /**
  * Subscriber administration (blueprint §5): directory, profile, status, enrolments, access
@@ -232,8 +233,8 @@ export async function invite(actor: Actor, emails: string[], orgId: string | nul
     await prisma.invitation.create({ data: { email, orgId, tokenHash: hashToken(token), invitedById: actor.id, expiresAt: new Date(Date.now() + 14 * 86400_000) } });
     await sendMail({
       to: email,
-      subject: org ? `${org.name} has invited you to RCMS Operations Academy` : "You are invited to RCMS Operations Academy",
-      text: [`You have been invited to RCMS Operations Academy${org ? ` by ${org.name}` : ""}.`, "", "Create your account (or sign in) from this link within 14 days:", "", `${base}/invite/${token}`].join("\n"),
+      subject: org ? `${org.name} has invited you to ${BRAND.name}` : `You are invited to ${BRAND.name}`,
+      text: [`You have been invited to ${BRAND.name}${org ? ` by ${org.name}` : ""}.`, "", "Create your account (or sign in) from this link within 14 days:", "", `${base}/invite/${token}`].join("\n"),
     });
   }
   await log(actor, "create", "Invitation", orgId, { count: clean.length, orgId });
@@ -286,7 +287,7 @@ export async function personalDataExport(userId: string) {
       notifications: { select: { title: true, createdAt: true } },
     },
   });
-  return { generatedAt: new Date().toISOString(), note: "Internal administrative notes and security logs are excluded under the Academy's retention policy.", user };
+  return { generatedAt: new Date().toISOString(), note: "Internal administrative notes and security logs are excluded under RCMExcel's retention policy.", user };
 }
 
 /**

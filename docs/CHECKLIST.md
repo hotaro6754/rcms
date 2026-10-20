@@ -133,10 +133,10 @@ Evidence for every ✅: 132 unit and integration tests, 7 end-to-end tests and 3
   - 🟡 Scanned PDFs cannot be imported; use a view-only document instead.
 - ✅ **Content protection for learners:**
   - Copying, right-click, printing and save are blocked inside lessons, and lessons are hidden when the window is in the background.
-  - Watermarks with the learner's name, email and date cover the lesson and are drawn into images.
-  - PDFs are shown as watermarked page images and never sent as files.
+  - PDFs are shown as page images and never sent as files.
+  - No watermarks (removed at the owner's request).
   - Materials are view-only unless downloading is allowed.
-  - 🟡 Nothing on the web can stop a phone camera or a system screenshot; the watermark makes leaks traceable.
+  - 🟡 Nothing on the web can stop a phone camera or a system screenshot, and without a watermark a leaked copy cannot be traced to an account.
 - ⬜ AI structuring of imported documents (better infographics, generated questions). 👤 Needs your approval to send document text to an AI provider, plus an API key.
 - ⬜ Restyling the learner and staff dashboards themselves. This round covered the website and lessons, as agreed.
 

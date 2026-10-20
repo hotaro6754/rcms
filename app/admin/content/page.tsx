@@ -260,7 +260,7 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
           <details className="rounded-[var(--radius)] border border-border bg-card px-5 py-4">
             <summary className="cursor-pointer text-[14px] font-semibold">Import a course</summary>
             <p className="mt-2 text-[13px] text-muted-foreground">
-              Upload a course export (.json) from this or another RCMS installation. It becomes a new draft and goes through review like any other course. Files and media are not included; re-attach them after import.
+              Upload a course export (.json) from this or another RCMExcel installation. It becomes a new draft and goes through review like any other course. Files and media are not included; re-attach them after import.
             </p>
             <ActionForm action={importCourseAction} className="mt-4 flex flex-wrap items-end gap-3">
               <Field label="Into level" htmlFor="imp-level">

@@ -30,7 +30,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   });
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">
-      <PageHead kicker="Payments and finance" title="Orders and payments" lede="An order is marked paid only after the server verifies the payment provider's signature. Card details never reach the Academy." />
+      <PageHead kicker="Payments and finance" title="Orders and payments" lede="An order is marked paid only after the server verifies the payment provider's signature. Card details never reach RCMExcel." />
       <p className="mt-4 text-[13px]">
         Razorpay: {paymentsConfigured() ? <span className="text-success">API keys configured</span> : <span className="text-warning">not configured — checkout is disabled</span>} · webhooks:{" "}
         {webhooksConfigured() ? <span className="text-success">secret configured</span> : <span className="text-warning">no secret — events are rejected</span>}

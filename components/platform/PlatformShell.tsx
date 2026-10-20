@@ -2,10 +2,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { PlatformNav, type NavItem } from "./PlatformNav";
+import { Wordmark } from "@/components/brand/Wordmark";
+import { BRAND } from "@/lib/brand";
 
 /**
  * The shell for everything behind sign-in: the student academy, Trainer Studio and the
- * admin. Same masthead as the public site (mono RCMS, serif name), then the area it is,
+ * admin. Same masthead as the public site (mono RCM, serif Excel), then the area it is,
  * set as a running head, the area's links, and who is signed in. Ruled, flat, no pills.
  */
 export function PlatformShell({
@@ -28,9 +30,8 @@ export function PlatformShell({
     <div className="editorial flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-6 px-6">
-          <Link href="/" className="flex shrink-0 items-baseline gap-2.5" aria-label="RCMS Operations Academy, public site">
-            <span className="text-data text-[13px] font-semibold tracking-[0.18em]">RCMS</span>
-            <span className="font-serif-display hidden text-[17px] leading-none md:inline">Operations Academy</span>
+          <Link href="/" className="flex shrink-0 items-baseline gap-2.5" aria-label={`${BRAND.name}, public site`}>
+            <Wordmark />
           </Link>
           <Link href={home} className="text-data shrink-0 border-l border-border pl-5 text-[11px] tracking-[0.14em] text-subtle hover:text-foreground">
             {area.toUpperCase()}
@@ -56,7 +57,7 @@ export function PlatformShell({
       <main className="flex-1">{children}</main>
       <footer className="border-t border-border">
         <div className="text-data mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-3 px-6 py-5 text-[10.5px] tracking-[0.1em] text-subtle">
-          <span>RCMS OPERATIONS ACADEMY</span>
+          <span>{BRAND.caps}</span>
           <span className="flex gap-5">
             <Link href="/contact" className="hover:text-foreground">HELP</Link>
             <Link href="/legal/terms" className="hover:text-foreground">TERMS</Link>

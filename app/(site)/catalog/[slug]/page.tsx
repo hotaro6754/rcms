@@ -11,12 +11,13 @@ import { when } from "@/components/admin/kit";
 import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { coursePage } from "@/lib/site/pages/course";
+import { jsonLd, organisationLd, pageMeta, siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const c = await getPublishedCourse((await params).slug);
-  return { title: c ? c.snapshot.course.name : "Course", description: c?.snapshot.course.description ?? undefined };
+  return c ? pageMeta({ title: c.snapshot.course.name, description: c.snapshot.course.description, path: `/catalog/${c.slug}` }) : { title: "Course" };
 }
 
 const BTN = "inline-flex min-h-12 items-center rounded-[3px] bg-primary px-6 text-[15px] font-medium text-primary-foreground hover:bg-primary-hover";
@@ -75,8 +76,19 @@ export default async function CourseDetail({ params }: { params: Promise<{ slug:
     );
   }
 
+  // Structured data so search engines can show the course, its provider and its price.
+  const ld = jsonLd({
+    "@type": "Course",
+    name: s.course.name,
+    description: s.course.description ?? undefined,
+    url: `${siteUrl().origin}/catalog/${slug}`,
+    provider: organisationLd(),
+    ...(s.course.isFree ? { isAccessibleForFree: true } : product ? { offers: { "@type": "Offer", price: (product.amount / 100).toFixed(2), priceCurrency: "INR", category: "Paid" } } : {}),
+  });
+
   return (
     <div className="mx-auto max-w-[1320px] px-6 pb-24">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <SiteLink link={t.nav.back} className="text-[13px] text-muted-foreground hover:text-foreground" />
       <div className="mt-6 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div>

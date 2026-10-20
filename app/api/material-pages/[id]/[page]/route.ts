@@ -4,7 +4,7 @@ import { isLink } from "@/lib/storage";
 import { resourceAccess } from "@/lib/services/learning/resource-access";
 import { pageImageResponse } from "@/lib/documents/pages";
 
-/** One page of a PDF lesson material, as a watermarked image (for view-only materials). */
+/** One page of a PDF lesson material, as an image (for view-only materials). */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string; page: string }> }) {
   const { id, page } = await params;
   const pageNo = Number(page);

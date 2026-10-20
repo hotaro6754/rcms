@@ -4,8 +4,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
- * Reads a view-only document page by page. Each page is an image rendered and watermarked on
- * the server; the PDF itself is never sent to the browser, and there is no download button.
+ * Reads a view-only document page by page. Each page is an image rendered on the server; the PDF itself is never sent to the browser, and there is no download button.
  */
 export function DocumentReader({ mediaId, pages, title, context, base }: { mediaId: string; pages: number; title: string; context?: string; base?: string }) {
   const [page, setPage] = useState(1);

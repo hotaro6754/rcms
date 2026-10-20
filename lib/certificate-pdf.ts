@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { BRAND } from "@/lib/brand";
 
 export interface CertificatePdfInput {
   serial: string;
@@ -21,7 +22,7 @@ const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", y
  */
 export function renderCertificatePdf(c: CertificatePdfInput): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 56, info: { Title: `Certificate ${c.serial}`, Author: "RCMS Operations Academy", Subject: c.programName } });
+    const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 56, info: { Title: `Certificate ${c.serial}`, Author: BRAND.name, Subject: c.programName } });
     const chunks: Buffer[] = [];
     doc.on("data", (d: Buffer) => chunks.push(d));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
@@ -31,7 +32,7 @@ export function renderCertificatePdf(c: CertificatePdfInput): Promise<Buffer> {
     doc.rect(28, 28, width - 56, height - 56).lineWidth(1).strokeColor("#161513").stroke();
     doc.rect(34, 34, width - 68, height - 68).lineWidth(0.5).strokeColor("#8f887e").stroke();
 
-    doc.fillColor("#161513").font("Helvetica-Bold").fontSize(11).text("RCMS OPERATIONS ACADEMY", 56, 70, { characterSpacing: 3 });
+    doc.fillColor("#161513").font("Helvetica-Bold").fontSize(11).text(BRAND.caps, 56, 70, { characterSpacing: 3 });
     doc.font("Helvetica").fontSize(10).fillColor("#57534c").text(c.levelName ? `${c.levelName.toUpperCase()} LEVEL` : "", 56, 70, { align: "right", characterSpacing: 2 });
 
     doc.moveDown(4);

@@ -4,10 +4,11 @@ import { whatsappUrl } from "@/lib/contact";
 import { publicPricing } from "@/lib/services/learning/public-catalog";
 import { getPageContent } from "@/lib/site/content";
 import { contactPage } from "@/lib/site/pages/contact";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(contactPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/contact" });
 }
 
 export const dynamic = "force-dynamic";

@@ -6,6 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./db";
 import { sendMail } from "./email";
 import { audit } from "./audit";
+import { BRAND } from "@/lib/brand";
 
 /**
  * Authentication for every surface: one user table, one session.
@@ -45,7 +46,7 @@ const rateLimitEnabled =
   (process.env.AUTH_RATE_LIMIT !== "off" && process.env.NODE_ENV === "production");
 
 export const auth = betterAuth({
-  appName: "RCMS Operations Academy",
+  appName: BRAND.name,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
 
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
@@ -73,7 +74,7 @@ export const auth = betterAuth({
     async sendResetPassword({ user, url }) {
       await sendMail({
         to: user.email,
-        subject: "Reset your RCMS Operations Academy password",
+        subject: `Reset your ${BRAND.name} password`,
         text: [
           `Hello ${user.name || "there"},`,
           "",
@@ -94,7 +95,7 @@ export const auth = betterAuth({
     async sendVerificationEmail({ user, url }) {
       await sendMail({
         to: user.email,
-        subject: "Verify your email — RCMS Operations Academy",
+        subject: `Verify your email — ${BRAND.name}`,
         text: [`Hello ${user.name || "there"},`, "", "Confirm this address to activate your account:", "", url, "", "The link expires in 24 hours."].join(
           "\n",
         ),
@@ -146,7 +147,7 @@ export const auth = betterAuth({
 
   plugins: [
     twoFactor({
-      issuer: "RCMS Operations Academy",
+      issuer: BRAND.name,
       backupCodeOptions: { amount: 10, length: 10 },
     }),
     nextCookies(),

@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/brand/Wordmark";
+import { BRAND } from "@/lib/brand";
 
 const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
@@ -38,8 +40,7 @@ export function CertificateSheet({ cert, origin, className }: { cert: Certificat
       <div className="relative flex h-full flex-col px-[8%] pb-[6.5%] pt-[7%] [container-type:inline-size]">
         <header className="flex items-baseline justify-between">
           <p className="flex items-baseline gap-[1cqw]">
-            <span className="text-data text-[1.35cqw] font-semibold tracking-[0.18em]">RCMS</span>
-            <span className="font-serif-display text-[1.9cqw] leading-none">Operations Academy</span>
+            <Wordmark size="lg" />
           </p>
           <p className="text-data text-[1.05cqw] tracking-[0.16em] text-subtle">LEVEL {String(cert.level).padStart(2, "0")}</p>
         </header>
@@ -59,7 +60,7 @@ export function CertificateSheet({ cert, origin, className }: { cert: Certificat
           <div>
             <div aria-hidden="true" className="h-px w-full bg-foreground/60" />
             <p className="mt-[0.8cqw] text-[1.15cqw]">V K Chakradhar Gangaraju</p>
-            <p className="text-data text-[0.95cqw] tracking-[0.1em] text-subtle">FOUNDER, FOR THE ACADEMY</p>
+            <p className="text-data text-[0.95cqw] tracking-[0.1em] text-subtle">FOUNDER, {BRAND.caps}</p>
           </div>
           <dl className="text-data grid grid-cols-[auto_1fr] gap-x-[1.4cqw] gap-y-[0.5cqw] text-[1cqw]">
             <dt className="tracking-[0.12em] text-subtle">ISSUED</dt>
@@ -85,7 +86,7 @@ export function CertificateSheet({ cert, origin, className }: { cert: Certificat
 }
 
 function Seal({ level }: { level: number }) {
-  const text = "RCMS OPERATIONS ACADEMY · CERTIFIED · ";
+  const text = `${BRAND.caps} · CERTIFIED · `;
   return (
     <svg viewBox="0 0 120 120" aria-hidden="true" className="w-[10.5cqw] text-foreground">
       <defs>

@@ -1,4 +1,5 @@
 import { area, definePage, group, link, list, text, texts, toggle, type PageContent } from "../fields";
+import { BRAND } from "@/lib/brand";
 
 const navLink = { link: link("Link", { label: "", href: "/" }) };
 const footerRow = {
@@ -17,15 +18,15 @@ export const sitePage = definePage({
   description: "The bar at the top of every page and the footer at the bottom.",
   fields: {
     nav: group("Navigation bar", {
-      brandShort: text("Wordmark", "RCMS", { max: 40 }),
-      brandName: text("Name beside the wordmark", "Operations Academy", { max: 60 }),
+      brandShort: text("Wordmark", BRAND.markShort, { max: 40 }),
+      brandName: text("Name beside the wordmark", BRAND.markRest, { max: 60 }),
       links: list(
         "Links",
         navLink,
         [
           { link: { label: "Catalogue", href: "/catalog" } },
           { link: { label: "Learning paths", href: "/learning-paths" } },
-          { link: { label: "Why RCMS", href: "/#system" } },
+          { link: { label: `Why ${BRAND.name}`, href: "/#system" } },
           { link: { label: "Resources", href: "/resources" } },
           { link: { label: "About", href: "/about" } },
         ],
@@ -129,7 +130,7 @@ export const sitePage = definePage({
       whatsappLabel: text("WhatsApp link text", "WhatsApp", { max: 40 }),
     }),
     colophon: group("Footer: colophon", {
-      name: text("Name", "RCMS Operations Academy", { max: 80 }),
+      name: text("Name", BRAND.name, { max: 80 }),
       line: text("Line under the name", "© 2026. Set in Newsreader and Satoshi.", { max: 120 }),
       disclaimer: area(
         "Disclaimer",
@@ -140,7 +141,7 @@ export const sitePage = definePage({
     }),
     wordmark: group("Footer: large wordmark", {
       show: toggle("Show this section", true),
-      text: text("Wordmark", "RCMS", { max: 12, help: "Set very large across the page; keep it to a few letters." }),
+      text: text("Wordmark", BRAND.name, { max: 12, help: "Set very large across the page; keep it to a few letters." }),
     }),
   },
 });

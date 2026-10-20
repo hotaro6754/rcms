@@ -5,10 +5,11 @@ import { SECTIONS } from "@/lib/library-sections";
 import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { resourcesPage } from "@/lib/site/pages/resources";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(resourcesPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/resources" });
 }
 export const revalidate = 300;
 

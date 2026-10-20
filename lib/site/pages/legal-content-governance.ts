@@ -40,7 +40,7 @@ export const legalContentGovernancePage = legalPage({
       h: "Approval is not a compliance guarantee",
       p: [
         "Review reduces the chance of error; it does not make content a substitute for payer policy, CMS guidance, coding authority publications or legal advice. Where they disagree with this material, they win.",
-        "The Academy does not claim that its content or platform is HIPAA-compliant, accredited or certified by any body.",
+        "RCMExcel does not claim that its content or platform is HIPAA-compliant, accredited or certified by any body.",
       ],
     },
     {

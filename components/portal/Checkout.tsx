@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { confirmCheckoutAction, quoteAction, startCheckoutAction } from "@/lib/actions/commerce";
+import { BRAND } from "@/lib/brand";
 
 declare global {
   interface Window {
@@ -50,7 +51,7 @@ export function Checkout({ sku, name, email, initial }: { sku: string; name: str
         amount: s.amount,
         currency: s.currency,
         order_id: s.gatewayOrderId,
-        name: "RCMS Operations Academy",
+        name: BRAND.name,
         description: s.product,
         prefill: { name, email },
         theme: { color: "#1c1b19" },
@@ -107,7 +108,7 @@ export function Checkout({ sku, name, email, initial }: { sku: string; name: str
           {error}
         </p>
       )}
-      <p className="text-[12px] leading-relaxed text-muted-foreground">Payments are processed by Razorpay. The Academy never receives or stores your card or bank details. By paying you accept the <a href="/legal/terms" className="underline">terms</a> and <a href="/legal/refund" className="underline">refund policy</a>.</p>
+      <p className="text-[12px] leading-relaxed text-muted-foreground">Payments are processed by Razorpay. RCMExcel never receives or stores your card or bank details. By paying you accept the <a href="/legal/terms" className="underline">terms</a> and <a href="/legal/refund" className="underline">refund policy</a>.</p>
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import { can, requireActor } from "@/lib/actor";
 import { Protected } from "@/components/learning/Protected";
-import { watermarkText } from "@/lib/documents/watermark";
 import { getPublishedCourse, lessonAccess } from "@/lib/services/learning/catalog";
 import { moduleLock, recordLessonView, progressFor } from "@/lib/services/learning/progress";
 import { isBookmarked } from "@/lib/services/learning/bookmarks";
@@ -128,7 +127,7 @@ export default async function LessonPage({ params }: { params: Promise<{ program
             {can(actor, "content.view") ? (
               <Blocks blocks={lesson.blocks} mediaContext={course.id} />
             ) : (
-              <Protected watermark={watermarkText(actor)}>
+              <Protected>
                 <Blocks blocks={lesson.blocks} mediaContext={course.id} />
                 {materials.some((m) => m.readable) && (
                   <div className="mt-10 flex flex-col gap-6">
@@ -254,7 +253,7 @@ export default async function LessonPage({ params }: { params: Promise<{ program
               </ol>
             </section>
           )}
-          <p className="text-[12px] leading-relaxed text-muted-foreground">Educational content only; all examples are synthetic. Never enter patient information anywhere in the Academy.</p>
+          <p className="text-[12px] leading-relaxed text-muted-foreground">Educational content only; all examples are synthetic. Never enter patient information anywhere in RCMExcel.</p>
         </aside>
       </div>
     </div>

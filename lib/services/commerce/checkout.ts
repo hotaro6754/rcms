@@ -7,6 +7,7 @@ import { sendMail } from "@/lib/email";
 import * as rzp from "@/lib/payments/razorpay";
 import { notifyUsers } from "@/lib/services/people/staff-lookup";
 import { coursePrerequisiteMissing } from "@/lib/services/learning/catalog";
+import { BRAND } from "@/lib/brand";
 
 /**
  * Orders, checkout and fulfilment.
@@ -187,7 +188,7 @@ export async function fulfil(orderId: string, payment: VerifiedPayment): Promise
     if (user) {
       await sendMail({
         to: user.email,
-        subject: `Receipt ${full.invoice?.number} — RCMS Operations Academy`,
+        subject: `Receipt ${full.invoice?.number} — ${BRAND.name}`,
         text: [`Hello ${user.name},`, "", `We received ₹${(full.amount / 100).toLocaleString("en-IN")} for ${full.product.name}.`, `Order ${full.number}, invoice ${full.invoice?.number}.`, "", `Your invoice: ${process.env.BETTER_AUTH_URL ?? ""}/account/invoices/${orderId}`].join("\n"),
       }).catch((e) => console.error("[checkout] receipt email failed", e));
     }

@@ -1,10 +1,11 @@
 import { PageHeader, Section } from "@/components/site/PageHeader";
 import { getPageContent } from "@/lib/site/content";
 import { blogPage } from "@/lib/site/pages/blog";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(blogPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/blog" });
 }
 
 export default async function BlogPage() {

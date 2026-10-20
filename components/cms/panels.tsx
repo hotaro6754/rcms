@@ -360,7 +360,7 @@ export function CourseForm({
             ))}
           </select>
         </Field>
-        <Field label="Course disclaimer (in addition to the academy-wide one)" htmlFor="c-disc" className="sm:col-span-2">
+        <Field label="Course disclaimer (in addition to RCMExcel-wide one)" htmlFor="c-disc" className="sm:col-span-2">
           <textarea id="c-disc" name="disclaimer" rows={2} defaultValue={course.disclaimer ?? ""} className={TEXTAREA} />
         </Field>
         <div className="flex flex-col gap-2 sm:col-span-2">

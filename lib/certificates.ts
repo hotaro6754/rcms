@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { prisma } from "./db";
 import { flatLessons, type CourseSnapshot } from "./cms/snapshot";
+import { BRAND } from "@/lib/brand";
 
 /**
  * Certificates: what earns one, and how it is identified.
@@ -55,11 +56,11 @@ export async function eligibility(userId: string, programId: string): Promise<El
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const block = () => Array.from({ length: 4 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
 
-/** RCMS-L1-7KQ4-M9TX-3HPA: the level, then three random blocks (about 10^17 combinations). */
+/** RCMX-L1-7KQ4-M9TX-3HPA: the level, then three random blocks (about 10^17 combinations). */
 export async function newSerial(prefix: string | number): Promise<string> {
   const head = typeof prefix === "number" ? `L${prefix}` : prefix;
   for (let i = 0; i < 8; i++) {
-    const serial = `RCMS-${head}-${block()}-${block()}-${block()}`;
+    const serial = `${BRAND.serialPrefix}-${head}-${block()}-${block()}-${block()}`;
     const [cert, badge] = await Promise.all([
       prisma.certificate.findUnique({ where: { serial }, select: { id: true } }),
       prisma.levelBadge.findUnique({ where: { serial }, select: { id: true } }),

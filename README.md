@@ -1,4 +1,4 @@
-# RCMS Operations Academy
+# RCMExcel
 
 Public site, learner portal, Admin Control Center and vendor portal on one data layer.
 Next.js 15 · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Prisma 7 · PostgreSQL · Better Auth · GSAP · Motion.

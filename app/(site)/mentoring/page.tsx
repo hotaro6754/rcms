@@ -6,10 +6,11 @@ import { MENTORING } from "@/lib/data/catalog";
 import { publicPricing } from "@/lib/services/learning/public-catalog";
 import { getPageContent } from "@/lib/site/content";
 import { mentoringPage } from "@/lib/site/pages/mentoring";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(mentoringPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/mentoring" });
 }
 
 export const revalidate = 300;

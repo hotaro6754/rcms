@@ -1,0 +1,103 @@
+# One server running everything: the app, Caddy (HTTPS certificates), the 15-minute scheduler,
+# and, if COMPOSE_PROFILES=localdb, PostgreSQL. Run it through deploy.sh, which does the steps
+# in the right order. Settings come from deploy/.env (copy deploy/.env.example).
+#
+# Host networking keeps it simple on a single server: the app and database listen on
+# 127.0.0.1 only, and only Caddy (ports 80 and 443) faces the internet.
+
+name: rcmexcel
+
+services:
+  db:
+    image: postgres:16-alpine
+    profiles: ["localdb"]
+    network_mode: host
+    command: ["postgres", "-c", "listen_addresses=127.0.0.1", "-c", "port=5432"]
+    environment:
+      POSTGRES_DB: rcmexcel
+      POSTGRES_USER: rcmexcel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "rcmexcel"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # Applies database migrations: `docker compose run --rm migrate`.
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: ..
+      target: deps
+      network: host
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
+    image: rcmexcel-deps
+    network_mode: host
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in deploy/.env}
+    command: ["npx", "prisma", "migrate", "deploy"]
+
+  app:
+    build:
+      context: ..
+      target: runtime
+      network: host
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?set NEXT_PUBLIC_APP_URL in deploy/.env}
+        SITE_INDEXING: ${SITE_INDEXING:-off}
+      secrets: [database_url, auth_secret]
+    image: rcmexcel-app
+    network_mode: host
+    env_file: .env
+    environment:
+      HOSTNAME: 127.0.0.1
+      PORT: "3000"
+    volumes:
+      - storage:/app/storage
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    network_mode: host
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in deploy/.env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+  # Scheduled work (course releases, renewals, SLA timers, retention purges) every 15 minutes.
+  cron:
+    image: curlimages/curl:8.11.1
+    network_mode: host
+    environment:
+      CRON_SECRET: ${CRON_SECRET:?set CRON_SECRET in deploy/.env}
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        sleep 60
+        while true; do
+          curl -fsS -m 300 -o /dev/null -H "Authorization: Bearer $$CRON_SECRET" http://127.0.0.1:3000/api/cron \
+            && echo "$$(date -u +%FT%TZ) cron ok" || echo "$$(date -u +%FT%TZ) cron FAILED"
+          sleep 900
+        done
+    restart: unless-stopped
+
+secrets:
+  database_url:
+    environment: DATABASE_URL
+  auth_secret:
+    environment: BETTER_AUTH_SECRET
+
+volumes:
+  pgdata:
+  storage:
+  caddy_data:
+  caddy_config:

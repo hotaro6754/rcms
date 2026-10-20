@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
 import type { LegalContent } from "@/lib/site/pages/legal";
+import { pageMeta } from "@/lib/seo";
 
 /** Browser-tab title and search description for a legal page, from the website editor. */
-export function legalMetadata(c: LegalContent): Metadata {
-  return c.seo.description ? { title: c.seo.title, description: c.seo.description } : { title: c.seo.title };
+export function legalMetadata(c: LegalContent, path: string): Metadata {
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path });
 }
 
 export function LegalPage({ content: c }: { content: LegalContent }) {

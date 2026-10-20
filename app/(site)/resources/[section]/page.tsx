@@ -7,13 +7,15 @@ import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { resourcesPage } from "@/lib/site/pages/resources";
 import { resourcesSectionPage } from "@/lib/site/pages/resources-section";
+import { pageMeta } from "@/lib/seo";
 
 export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ section: string }> }) {
-  const s = sectionByPath((await params).section);
+  const { section } = await params;
+  const s = sectionByPath(section);
   const copy = s ? (await getPageContent(resourcesPage)).sections[s.kind] : null;
-  return { title: copy?.title ?? "Resources", description: copy?.lead };
+  return copy ? pageMeta({ title: copy.title, description: copy.lead, path: `/resources/${section}` }) : { title: "Resources" };
 }
 
 export default async function SectionPage({ params, searchParams }: { params: Promise<{ section: string }>; searchParams: Promise<{ q?: string }> }) {

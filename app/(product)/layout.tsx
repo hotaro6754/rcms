@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { Sidebar } from "@/components/product/Sidebar";
 import { Topbar } from "@/components/product/Topbar";
+import { NOINDEX } from "@/lib/seo";
+
+/** Signed-in and sign-in pages are kept out of search engines. */
+export const metadata = NOINDEX;
 
 /**
  * The operations console is teaching material: a worked example built around a fictional

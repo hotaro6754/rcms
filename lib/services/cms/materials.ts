@@ -10,7 +10,7 @@ import { courseOfLesson, lockedCheck, markEdited, transaction } from "./core";
 /**
  * Lesson materials: an uploaded file (type-sniffed, 25 MB) or an https link to one held
  * elsewhere. Learners reach them only through access-checked routes, and download them only
- * when the course team has allowed it; otherwise PDFs are read in the watermarked reader.
+ * when the course team has allowed it; otherwise PDFs are read in the page-by-page reader.
  *
  * Removing a material from the draft archives the row rather than deleting it when a
  * released version lists it, so the released lesson's download keeps working.
@@ -57,7 +57,7 @@ export async function addMaterial(actor: Actor, lessonId: string, input: { title
 
 /**
  * Whether learners may download the file itself. View-only PDFs are still readable in the
- * lesson, page by page, watermarked with the reader's name.
+ * lesson, page by page.
  */
 export async function setDownloadable(actor: Actor, resourceId: string, downloadable: boolean) {
   await assertCan(actor, "content.edit");

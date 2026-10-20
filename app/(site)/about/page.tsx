@@ -2,10 +2,11 @@ import { SiteLink } from "@/components/site/SiteLink";
 import { PageHeader, Section } from "@/components/site/PageHeader";
 import { getPageContent } from "@/lib/site/content";
 import { aboutPage } from "@/lib/site/pages/about";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata() {
   const c = await getPageContent(aboutPage);
-  return { title: c.seo.title, description: c.seo.description };
+  return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/about" });
 }
 
 export default async function AboutPage() {

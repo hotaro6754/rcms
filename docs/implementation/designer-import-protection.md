@@ -71,18 +71,15 @@ In a lesson, add a **Visual design** block and choose a file under "Start from a
   - The copy, select-all, save, print and view-source shortcuts do nothing. Normal copy and paste still work inside answer boxes.
   - Printing shows a notice instead of the lesson.
   - The lesson is hidden while the window is in the background, which is when screenshot tools usually take focus. Clicking into a video does not count as leaving.
-- **Watermarks:**
-  - A faint watermark with the learner's name, email and the date covers the lesson.
-  - Images in lessons are served with the same watermark drawn into the image itself.
-  - Staff previews are not watermarked.
-- **Documents:** a **Document (view only)** lesson block shows a PDF page by page as watermarked images (`/api/doc-pages`). The PDF file itself is never sent to the browser. Requests are limited to 240 pages per 10 minutes per account.
+- **No watermarks:** lessons, images and document pages are shown to learners without any watermark (removed at the owner's request).
+- **Documents:** a **Document (view only)** lesson block shows a PDF page by page as images (`/api/doc-pages`). The PDF file itself is never sent to the browser. Requests are limited to 240 pages per 10 minutes per account.
 - **Materials:** lesson materials are view-only by default.
-  - View-only PDFs are read in the lesson, watermarked, page by page.
+  - View-only PDFs are read in the lesson, page by page.
   - Other view-only files are not downloadable at all.
   - The course team can tick "Learners may download this file" for templates that are meant to be taken away.
   - The download route refuses view-only files to learners, whatever link they use.
 
-**What it cannot do:** no website can stop a phone camera or an operating-system screenshot, so these measures are deterrents. They raise the effort and make leaks traceable to an account, rather than making copying impossible. Anyone with developer tools can still see what their own browser shows; the watermark is what identifies them.
+**What it cannot do:** no website can stop a phone camera or an operating-system screenshot, so these measures are deterrents. They raise the effort rather than making copying impossible. Anyone with developer tools can still see what their own browser shows, and without a watermark a leaked copy cannot be traced to an account.
 
 ## For developers
 
@@ -94,7 +91,7 @@ In a lesson, add a **Visual design** block and choose a file under "Start from a
   - Designer: `components/design/Designer.tsx`.
   - Canvas editor: `components/design/CanvasEditor.tsx`.
 - **Import:** `lib/design/import/{docx,pdf,structure}.ts` and `lib/services/cms/import.ts`.
-- **PDF handling:** reading, rendering and page images are in `lib/documents/{pdf,pages,watermark}.ts`. Access checks are in `lib/services/learning/{media-access,resource-access}.ts`.
+- **PDF handling:** reading, rendering and page images are in `lib/documents/{pdf,pages}.ts`. Access checks are in `lib/services/learning/{media-access,resource-access}.ts`.
 - **Routes:** `/api/doc-pages/[id]/[page]`, `/api/material-pages/[id]/[page]` and the updated `/api/media/[id]` and `/api/materials/[id]`.
 
 **Database:** migrations `0009_design_and_document_blocks` (block kinds `DESIGN` and `DOCUMENT`) and `0010_resource_download_control` (`Resource.downloadable`). Both are additive.
@@ -105,6 +102,6 @@ In a lesson, add a **Visual design** block and choose a file under "Start from a
 - `mammoth` brings in `argparse` → `sprintf-js`, which has a moderate advisory. It is used only by mammoth's command-line tool, which the app never runs.
 
 **Tests**
-- `tests/integration/design.test.ts` covers the import rules for Word and PDF, refusals, design validation, image access in releases, document page counts, view-only materials and watermarked pages.
+- `tests/integration/design.test.ts` covers the import rules for Word and PDF, refusals, design validation, image access in releases, document page counts, view-only materials and unwatermarked page images.
 - `tests/e2e/designer.spec.ts` imports a file, edits and styles a heading, drags in a canvas, places an item, saves and reloads, with no console errors.
-- `tests/e2e/protection.spec.ts` checks the watermark, the copy, right-click and print blocking, and the print notice.
+- `tests/e2e/protection.spec.ts` checks the copy, right-click and print blocking, and the print notice.

@@ -118,7 +118,7 @@ export function MaterialsManager({ lessonId, rows }: { lessonId: string; rows: M
         )}
         <label className="flex items-start gap-2 text-[12.5px] text-muted-foreground">
           <input type="checkbox" name="downloadable" value="true" className="mt-0.5" />
-          Learners may download this file. Leave unticked to keep it view-only: PDFs are read in the lesson, watermarked with the reader&apos;s name.
+          Learners may download this file. Leave unticked to keep it view-only: PDFs are read in the lesson, page by page.
         </label>
         <button
           type="submit"

@@ -248,24 +248,24 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await caption(page, "Saved into the lesson's draft. It reaches learners after the usual academic and compliance review.", 3600);
 
   // 5. What a learner sees
-  await title(page, "What learners can't take away", "Watermarked lessons, no copying or printing, and documents that are read, never downloaded.");
+  await title(page, "What learners can't take away", "No copying or printing, and documents that are read, never downloaded.");
   await signIn(page, "student@rcms.test");
   await go(page, "/academy/foundation");
   await page.locator('a[href^="/academy/foundation/"]').first().click();
   await page.waitForURL(/\/academy\/foundation\/[^/#?]+$/);
   await page.waitForLoadState("networkidle").catch(() => {});
-  await caption(page, "A lesson as the learner sees it: their name and email are faintly watermarked across it.", 3600);
+  await caption(page, "A lesson as the learner sees it.", 3600);
   await page.locator(".protected-content").click({ button: "right", position: { x: 200, y: 60 } }).catch(() => {});
   await caption(page, "No selecting, copying, right-click or saving. Printing shows a notice instead of the lesson.", 3400);
   const reader = page.locator('[id^="material-"]').first();
   if (await reader.count()) {
     await reader.scrollIntoViewIfNeeded();
     await pause(page, 2500);
-    await caption(page, "A view-only PDF: each page is an image stamped with the reader's name. The file never reaches the browser.", 4000);
+    await caption(page, "A view-only PDF: each page is shown as an image. The file never reaches the browser.", 4000);
     await reader.getByRole("button", { name: "Next page" }).click();
     await pause(page, 2500);
   }
-  await caption(page, "No website can stop a phone camera; the watermark makes any copy traceable to its account.", 3600);
+  await caption(page, "No website can stop a phone camera or a system screenshot; these measures are deterrents.", 3600);
 
   // Put everything back.
   await signIn(page, "super@rcms.test");

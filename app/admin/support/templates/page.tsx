@@ -14,7 +14,7 @@ export default async function TemplatesPage() {
   const templates = await prisma.responseTemplate.findMany({ where: { archivedAt: null }, orderBy: [{ approved: "asc" }, { title: "asc" }] });
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-10">
-      <PageHead kicker="Chat and support" title="Approved responses" lede="Standard answers for common questions. They must not state policy the Academy has not adopted, or give legal, coding, clinical or payer-specific decisions." />
+      <PageHead kicker="Chat and support" title="Approved responses" lede="Standard answers for common questions. They must not state policy RCMExcel has not adopted, or give legal, coding, clinical or payer-specific decisions." />
       <div className="mt-8 flex flex-col gap-4">
         {templates.length === 0 && <Empty title="No responses yet." />}
         {templates.map((t) => (

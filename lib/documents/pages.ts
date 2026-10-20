@@ -3,18 +3,17 @@ import { NextResponse } from "next/server";
 import { readCache, readStored, writeCache } from "@/lib/storage";
 import { allow } from "@/lib/rate-limit";
 import { pdfPageCount, renderPdfPage } from "./pdf";
-import { watermarkImage, watermarkText } from "./watermark";
 
 /**
- * Serving view-only PDFs as watermarked page images (shared by the lesson document reader and
- * view-only lesson materials). Rendered pages are cached unwatermarked under storage/cache;
- * the watermark naming the reader is added on every request.
+ * Serving view-only PDFs as page images (shared by the lesson document reader and view-only
+ * lesson materials), so the PDF file itself never reaches the browser. Rendered pages are
+ * cached under storage/cache.
  */
 
 const WIDTH = 1400;
 const key = (fileKey: string, extra: string) => createHash("sha256").update(`${fileKey}:${extra}`).digest("hex");
 
-export async function pageImageResponse(person: { id: string; name?: string | null; email: string }, fileKey: string, pageNo: number) {
+export async function pageImageResponse(person: { id: string }, fileKey: string, pageNo: number) {
   // Generous for reading, but stops a script from pulling a whole library page by page.
   if (!(await allow(`doc-pages:${person.id}`, 240, 600))) return new NextResponse("Too many pages requested. Wait a few minutes.", { status: 429 });
   const name = `${key(fileKey, `${pageNo}:${WIDTH}`)}.png`;
@@ -29,9 +28,8 @@ export async function pageImageResponse(person: { id: string; name?: string | nu
     }
     await writeCache(name, png).catch(() => {});
   }
-  const marked = await watermarkImage(png, watermarkText(person), "webp");
-  return new NextResponse(new Uint8Array(marked), {
-    headers: { "Content-Type": "image/webp", "Content-Length": String(marked.length), "Content-Disposition": "inline", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" },
+  return new NextResponse(new Uint8Array(png), {
+    headers: { "Content-Type": "image/png", "Content-Length": String(png.length), "Content-Disposition": "inline", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" },
   });
 }
 

@@ -139,7 +139,7 @@ export function HeroSequence({ content: c }: { content: PageContent<typeof homeP
           </dl>
         </div>
 
-        {/* The Academy's signature visual: one claim, filled in as it moves round the cycle. */}
+        {/* RCMExcel's signature visual: one claim, filled in as it moves round the cycle. */}
         <ClaimDocument className="w-full" />
       </div>
 

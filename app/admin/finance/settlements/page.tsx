@@ -19,7 +19,7 @@ export default async function SettlementsPage() {
   const name = (id: string | null) => people.find((p) => p.id === id)?.name;
   return (
     <div className="mx-auto max-w-[1320px] px-6 py-10">
-      <PageHead kicker="Payments and finance" title="Vendor settlements" lede="Payment is recorded here after it is made through the bank or payout provider; the Academy does not move vendor money itself." />
+      <PageHead kicker="Payments and finance" title="Vendor settlements" lede="Payment is recorded here after it is made through the bank or payout provider; RCMExcel does not move vendor money itself." />
       <div className="mt-8">
         {invoices.length === 0 ? (
           <Empty title="No vendor invoices." />
