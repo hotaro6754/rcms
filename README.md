@@ -5,7 +5,7 @@ Next.js 15 · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Prisma 7 · 
 
 Documentation: `docs/IMPLEMENTATION_AUDIT.md` (starting point) · `docs/FEATURE_MATRIX.md` (what
 exists) · `docs/ARCHITECTURE.md` · `docs/SECURITY_REVIEW.md` · `docs/TEST_PLAN.md` ·
-`docs/IMPLEMENTATION_PLAN.md` · `docs/OPERATIONS.md`.
+`docs/IMPLEMENTATION_PLAN.md` · `docs/OPERATIONS.md` · `docs/DEPLOYMENT.md` (putting it online).
 
 Training data only: the platform must never hold real patient, provider, payer or card data.
 

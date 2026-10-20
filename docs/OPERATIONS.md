@@ -6,6 +6,8 @@ rehearse each procedure on staging before relying on it.
 
 ## 1. First deployment
 
+The step-by-step guide for a single server with Docker is `docs/DEPLOYMENT.md`. In short:
+
 1. Provision PostgreSQL 16 with automated backups and point-in-time recovery.
 2. Set the environment (host secret store, not a committed file): `DATABASE_URL`,
    `BETTER_AUTH_SECRET` (32+ random bytes), `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` (the

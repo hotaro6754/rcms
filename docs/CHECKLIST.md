@@ -46,14 +46,19 @@ Evidence for every ✅: 132 unit and integration tests, 7 end-to-end tests and 3
 
 ### Production readiness
 - ✅ **Production build succeeds from a clean checkout** (CI).
-- 🟡 **Environment variables and deployment configuration:** documented in `.env.example`. 👤 Not deployed anywhere yet.
-- ⬜ **Monitoring, backups and rollback plan:** not set up. 👤 This needs your hosting and database provider (`OPERATIONS.md` has the starting points).
+- ✅ **Deployment package:** Dockerfile, `deploy/` (Caddy HTTPS, scheduler, optional on-server PostgreSQL, deploy and backup scripts) and `docs/DEPLOYMENT.md`.
+  - Built and run end to end on a test machine with `localhost`: migrations, seed, health check, scheduler, backup and a restore drill.
+  - The app refuses to start in production when a required setting is missing or unsafe, and names it (`lib/env.ts`).
+  - 🟡 Not yet tried with a real domain, certificate, managed database or email. 👤 Needs your accounts.
+- 🟡 **Monitoring, backups and rollback:** `/api/health` for an uptime monitor, a nightly backup script, and rollback steps in `DEPLOYMENT.md` §7–8. 👤 Set up the uptime monitor and off-server backup copies once the server exists.
+- ✅ **SEO:** page titles and descriptions, canonical addresses, sharing cards, sitemap, robots.txt and structured data. Nothing is indexed until `SITE_INDEXING=on`; private areas are never indexed.
 
 ### Business readiness
 - 🟡 **Pricing and permissions:** prices on the site are the ones checkout charges, and permissions are tested. 👤 The gateway is not live.
 - 🟡 **Privacy, retention and legal:**
   - Retention is implemented: support transcripts after 730 days, assistant conversations after 90 days.
   - Data requests are built in.
+  - The privacy policy was rewritten to match what the platform actually does (no analytics, the cookies used, providers, retention).
   - 👤 Terms, privacy and refund pages need a lawyer's review.
   - No HIPAA or PCI claims are made.
 - ✅ **Documentation and support paths** are in place.
@@ -151,7 +156,8 @@ Evidence for every ✅: 132 unit and integration tests, 7 end-to-end tests and 3
 - [ ] An RCM expert reviews and approves the three seeded cases, the five competencies and the 21 library entries.
 - [ ] Razorpay test-mode keys and a reachable webhook URL, then run `TEST_PLAN.md` §5.
 - [ ] Resend API key and a verified sending domain, so email notifications can be checked.
-- [ ] Choose hosting and a database provider; set up monitoring, backups and a rollback plan.
+- [ ] **Check the name:** "Excel" is a Microsoft trademark. Ask a trademark lawyer before buying the domain.
+- [ ] Buy the domain, create the DigitalOcean (or other) accounts, then follow `docs/DEPLOYMENT.md`.
 - [ ] Legal review of terms, privacy and refund pages.
 - [ ] **Decide the assistant's ML direction.**
   - Proposal: local embedding search and re-ranking, with a confidence-based hand-off and n8n as orchestrator.

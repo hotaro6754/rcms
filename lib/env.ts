@@ -46,3 +46,18 @@ export function checkEnv(env: Record<string, string | undefined> = process.env):
   if (env.SITE_INDEXING !== "on") warnings.push("SITE_INDEXING is not \"on\": search engines are asked not to index the site.");
   return { errors, warnings };
 }
+
+/**
+ * Logs the report and, in production, stops the process when there are errors, so the
+ * container exits (and its log says why) instead of running without serving anything.
+ */
+export function enforceEnv() {
+  const { errors, warnings } = checkEnv();
+  for (const w of warnings) console.warn(`[config] ${w}`);
+  if (errors.length === 0) return;
+  for (const e of errors) console.error(`[config] ${e}`);
+  if (process.env.NODE_ENV === "production") {
+    console.error(`[config] Refusing to start: ${errors.length} configuration problem(s).`);
+    process.exit(1);
+  }
+}

@@ -8,7 +8,7 @@
 ARG NODE_IMAGE=node:22-bookworm-slim
 
 FROM ${NODE_IMAGE} AS base
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 NPM_CONFIG_UPDATE_NOTIFIER=false
 WORKDIR /app
 # The PDF page renderer falls back to system fonts for text whose font is not embedded.
 RUN apt-get update \
