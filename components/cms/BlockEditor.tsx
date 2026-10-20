@@ -60,7 +60,7 @@ function KindFields({ kind, d, images, audio = [], documents = [], blockId }: { 
     case "DOCUMENT":
       return (
         <>
-          <L label="PDF from the media library" hint={documents.length ? "Only PDFs are listed here. Learners read it page by page and cannot download it." : "No PDFs in the media library yet. Upload one below. Only PDFs can be shown this way."}>
+          <L label="PDF from the media library" hint={documents.length ? "Learners read it page by page and cannot download it. Only PDFs are listed here; upload a Word file below." : "No PDFs in the media library yet. Upload a PDF or Word file below."}>
             <select name="mediaId" defaultValue={s(d.mediaId)} className={IN}>
               <option value="">Choose…</option>
               {documents.map((m) => (
@@ -70,8 +70,8 @@ function KindFields({ kind, d, images, audio = [], documents = [], blockId }: { 
               ))}
             </select>
           </L>
-          <L label="Or upload a PDF here" hint="PDF only, up to 25 MB; it is also added to the media library. For a Word file, add a Design block and start it from the document instead.">
-            <input type="file" name="file" accept=".pdf,application/pdf" className="text-[13px]" />
+          <L label="Or upload a PDF or Word file here" hint="PDF or Word (.docx), up to 25 MB. A Word file is turned into a PDF (simple layout: headings, text, lists, tables and pictures; use a PDF export from Word for an exact copy). It is added to the media library as a PDF.">
+            <input type="file" name="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="text-[13px]" />
           </L>
           <L label="Title">
             <input name="title" defaultValue={s(d.title)} required minLength={3} maxLength={200} className={IN} />

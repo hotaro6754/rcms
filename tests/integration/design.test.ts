@@ -9,6 +9,9 @@ import { importDocument } from "@/lib/services/cms/import";
 import { canSeeCourseMedia } from "@/lib/services/learning/media-access";
 import { designMediaIds, type Design, type DesignNode } from "@/lib/design/schema";
 import { saveBuffer } from "@/lib/storage";
+import { saveDocumentUpload } from "@/lib/services/cms/media";
+import { docxToPdf } from "@/lib/documents/docx-to-pdf";
+import { pdfPageCount, renderPdfPage } from "@/lib/documents/pdf";
 import { addMaterial, setDownloadable } from "@/lib/services/cms/materials";
 import { resourceAccess } from "@/lib/services/learning/resource-access";
 import { pageImageResponse } from "@/lib/documents/pages";
@@ -159,5 +162,31 @@ describe("view-only materials", () => {
     expect(ab.length).toBeGreaterThan(1000);
     expect(ab.equals(bb)).toBe(true);
     expect((await pageImageResponse(learner, again.ok ? again.res.fileKey : "", 9)).status).toBe(404);
+  });
+});
+
+describe("Word files as view-only documents", () => {
+  const docx = () => fs.readFileSync(path.join(process.cwd(), "tests/fixtures/denials-guide.docx"));
+
+  it("converts a Word file to a readable PDF with its headings, lists, table and picture", async () => {
+    const pdf = await docxToPdf(docx());
+    expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+    expect(await pdfPageCount(pdf)).toBeGreaterThanOrEqual(1);
+    expect((await renderPdfPage(pdf, 1, 900)).png.length).toBeGreaterThan(5000);
+    // Its words are in the PDF: importing the PDF back finds the Word file's title.
+    const author = await staff("CONTENT_ADMIN");
+    const back = await importDocument(author, file(pdf, "back.pdf"));
+    expect(JSON.stringify(back.design)).toContain("Working denials");
+  });
+
+  it("stores a Word upload as a private PDF in the library, and refuses other files", async () => {
+    const author = await staff("CONTENT_ADMIN");
+    const asset = await saveDocumentUpload(author, file(docx(), "Denials guide.docx"));
+    expect(asset).toMatchObject({ kind: "DOCUMENT", mimeType: "application/pdf", isPublic: false });
+    const { id: lessonId } = (await makeCourseDraft(author, { modules: 1, lessons: 1 })).modules[0].lessons[0];
+    const block = await addBlock(author, lessonId, "DOCUMENT", { mediaId: asset.id, title: "Denials guide" });
+    expect((block.data as { pages: number }).pages).toBeGreaterThanOrEqual(1);
+    await expect(saveDocumentUpload(author, file(Buffer.from("just some text"), "notes.txt"))).rejects.toThrow(/PDF and Word/);
+    await expect(saveDocumentUpload(await makeUser(), file(docx(), "x.docx"))).rejects.toBeInstanceOf(AuthorisationError);
   });
 });

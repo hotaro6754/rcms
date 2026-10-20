@@ -37,7 +37,7 @@ async function validate(tx: Tx, kind: BlockKind, data: unknown) {
   if (kind === "DOCUMENT") {
     const d = parsed.data as { mediaId: string };
     const media = await tx.mediaAsset.findUnique({ where: { id: d.mediaId }, select: { kind: true, archivedAt: true, mimeType: true, fileKey: true } });
-    if (!media || media.archivedAt || media.mimeType !== "application/pdf") throw new ServiceError("Choose a PDF, or upload one here. Word and other files cannot be shown as a view-only document; for a Word file, add a Design block and start it from the document.");
+    if (!media || media.archivedAt || media.mimeType !== "application/pdf") throw new ServiceError("Choose a PDF from the list, or upload a PDF or Word file here.");
     const body = await readStored(media.fileKey).catch(() => null);
     if (!body) throw new ServiceError("That PDF is missing from storage. Upload it again.");
     let pages: number;

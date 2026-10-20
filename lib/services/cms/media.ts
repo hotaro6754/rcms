@@ -6,6 +6,7 @@ import { assertCan, type Actor } from "@/lib/actor";
 import { ServiceError } from "@/lib/errors";
 import { AUDIO_TYPES, DOCUMENT_TYPES, IMAGE_TYPES, MAX_BYTES, MAX_IMAGE_BYTES, saveBuffer, saveChecked, sniff } from "@/lib/storage";
 import { refusalFor } from "@/lib/cms/screen";
+import { docxToPdf } from "@/lib/documents/docx-to-pdf";
 
 /**
  * The media library. Uploads are type-sniffed and size-limited, stored privately, and served
@@ -47,12 +48,36 @@ export async function uploadMedia(actor: Actor, file: File, input: unknown) {
 export async function saveDocumentBuffer(actor: Actor, bytes: Uint8Array, fileName: string) {
   await assertCan(actor, "content.edit");
   if (bytes.length > MAX_BYTES) throw new ServiceError(`Files must be ${Math.round(MAX_BYTES / (1024 * 1024))} MB or smaller.`);
-  if (sniff(bytes, fileName) !== "application/pdf") throw new ServiceError("Only PDFs can be shown as a view-only document. To use a Word file, add a Design block and start it from the document.");
+  if (sniff(bytes, fileName) !== "application/pdf") throw new ServiceError("Only PDF and Word (.docx) files can be shown as a view-only document.");
   const fileKey = await saveBuffer("media", bytes, fileName);
   const title = (fileName.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim() || "Document").slice(0, 200);
   const asset = await prisma.mediaAsset.create({ data: { kind: "DOCUMENT", title, fileKey, mimeType: "application/pdf", sizeBytes: bytes.length, isPublic: false, uploadedById: actor.id } });
   await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "create", entity: "MediaAsset", entityId: asset.id, after: { title, kind: "DOCUMENT", mimeType: "application/pdf", sizeBytes: bytes.length } });
   return asset;
+}
+
+const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+/**
+ * A PDF or a Word (.docx) file chosen in a document block's form. A PDF is stored as it is; a
+ * Word file is converted to a PDF first (see lib/documents/docx-to-pdf.ts), so both are read
+ * page by page and neither can be downloaded.
+ */
+export async function saveDocumentUpload(actor: Actor, file: File) {
+  await assertCan(actor, "content.edit");
+  if (file.size > MAX_BYTES) throw new ServiceError(`Files must be ${Math.round(MAX_BYTES / (1024 * 1024))} MB or smaller.`);
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const type = sniff(bytes, file.name);
+  if (type === DOCX) {
+    let pdf: Buffer;
+    try {
+      pdf = await docxToPdf(Buffer.from(bytes));
+    } catch {
+      throw new ServiceError("That Word file could not be read. Open it in Word, save it again as .docx (or export it as a PDF) and upload that.");
+    }
+    return saveDocumentBuffer(actor, pdf, file.name.replace(/\.docx$/i, ".pdf"));
+  }
+  return saveDocumentBuffer(actor, bytes, file.name);
 }
 
 export async function updateMedia(actor: Actor, id: string, input: unknown) {

@@ -2,9 +2,9 @@ import PDFDocument from "pdfkit";
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Adding a PDF to a lesson as a view-only document: a PDF uploaded to the media library shows
- * up in the block's picker; a PDF can be uploaded right in the block's form; a Word file is
- * refused with a message that says what to do instead. The block is removed again at the end.
+ * Adding a view-only document to a lesson: a PDF uploaded to the media library shows up in the
+ * block's picker; a PDF or a Word file can be uploaded right in the block's form (Word is
+ * converted to a PDF); anything else is refused with a message. The blocks are removed again.
  * Needs `npm run db:seed && npm run dev:accounts`.
  */
 
@@ -37,7 +37,7 @@ async function firstLesson(page: Page) {
   return page.url();
 }
 
-test("a PDF from the library or uploaded in the form becomes a view-only document; Word files are explained", async ({ page }) => {
+test("a PDF from the library, or a PDF or Word file uploaded in the form, becomes a view-only document", async ({ page }) => {
   test.setTimeout(180_000);
   page.on("dialog", (d) => d.accept());
   const stamp = Date.now().toString(36);
@@ -55,17 +55,25 @@ test("a PDF from the library or uploaded in the form becomes a view-only documen
   // ...is offered when adding a document to a lesson.
   const lessonUrl = await firstLesson(page);
   await page.getByLabel("Add a block").selectOption("DOCUMENT");
-  const form = page.locator("form", { has: page.getByLabel("Or upload a PDF here") });
+  const form = page.locator("form", { has: page.getByLabel("Or upload a PDF or Word file here") });
   await expect(page.getByLabel("PDF from the media library").locator("option", { hasText: libraryTitle })).toHaveCount(1);
 
-  // A Word file cannot be a view-only document, and the message says what to do.
-  await page.getByLabel("Or upload a PDF here").setInputFiles("tests/fixtures/denials-guide.docx");
-  await form.getByLabel("Title", { exact: true }).fill("Word attempt");
+  // A Word file uploaded in the form is turned into a PDF and shown as a view-only document.
+  const wordTitle = `Word ${stamp}`;
+  await form.getByLabel("Or upload a PDF or Word file here").setInputFiles("tests/fixtures/denials-guide.docx");
+  await form.getByLabel("Title", { exact: true }).fill(wordTitle);
   await form.getByRole("button", { name: /^Add document/ }).click();
-  await expect(form.getByRole("alert").filter({ hasText: /Design block/ })).toBeVisible();
+  await expect(page.getByText(new RegExp(`${wordTitle} · \\d+ pages, view only`))).toBeVisible({ timeout: 30_000 });
+
+  // Anything else is refused with a message that says what is accepted.
+  await page.getByLabel("Add a block").selectOption("DOCUMENT");
+  await form.getByLabel("Or upload a PDF or Word file here").setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("just text") });
+  await form.getByLabel("Title", { exact: true }).fill("Text attempt");
+  await form.getByRole("button", { name: /^Add document/ }).click();
+  await expect(form.getByRole("alert").filter({ hasText: /PDF and Word/ })).toBeVisible();
 
   // A PDF uploaded in the form is stored, chosen and shown as a block.
-  await page.getByLabel("Or upload a PDF here").setInputFiles({ name: `form-${stamp}.pdf`, mimeType: "application/pdf", buffer: await pdf("Form PDF") });
+  await page.getByLabel("Or upload a PDF or Word file here").setInputFiles({ name: `form-${stamp}.pdf`, mimeType: "application/pdf", buffer: await pdf("Form PDF") });
   await form.getByLabel("Title", { exact: true }).fill(formTitle);
   await form.getByRole("button", { name: /^Add document/ }).click();
   await expect(page.getByText(`${formTitle} · 1 pages, view only`)).toBeVisible({ timeout: 30_000 });
@@ -76,6 +84,9 @@ test("a PDF from the library or uploaded in the form becomes a view-only documen
 
   // Remove the block again.
   await page.goto(lessonUrl);
-  await page.getByRole("button", { name: /^Delete block/ }).last().click();
-  await expect(page.getByText(`${formTitle} · 1 pages, view only`)).toHaveCount(0);
+  for (const t of [formTitle, wordTitle]) {
+    const row = page.locator("li", { hasText: t }).filter({ has: page.getByRole("button", { name: /^Delete block/ }) }).last();
+    await row.getByRole("button", { name: /^Delete block/ }).click();
+    await expect(page.getByText(t)).toHaveCount(0);
+  }
 });

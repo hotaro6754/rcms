@@ -72,7 +72,10 @@ In a lesson, add a **Visual design** block and choose a file under "Start from a
   - Printing shows a notice instead of the lesson.
   - The lesson is hidden while the window is in the background, which is when screenshot tools usually take focus. Clicking into a video does not count as leaving.
 - **No watermarks:** lessons, images and document pages are shown to learners without any watermark (removed at the owner's request).
-- **Which file goes where:** only PDFs can be a **Document (view only)** block. You can choose one from the media library or upload it right in the block's form (it is added to the library too). A Word file is turned into a designed page with a **Design** block started from the document; uploaded to the media library it is only stored, and the block form says so.
+- **Which file goes where:** a **Document (view only)** block shows a PDF. Choose one from the media library, or upload a PDF or a Word (.docx) file right in the block's form; either is added to the library as a PDF.
+  - A Word file is converted on the server (`lib/documents/docx-to-pdf.ts`). The result is a simple re-typeset: headings, bold and italic, lists, tables and pictures are kept; Word's fonts, columns, headers, footers, text boxes and exact page breaks are not. Text outside the Latin alphabet becomes "?". For an exact copy, export a PDF from Word and upload that.
+  - To turn a Word file into a designed, interactive page instead, use a **Design** block started from the document.
+  - A Word file uploaded only to the media library is stored as it is and does not appear in the picker.
 - **Documents:** a **Document (view only)** lesson block shows a PDF page by page as images (`/api/doc-pages`). The PDF file itself is never sent to the browser. Requests are limited to 240 pages per 10 minutes per account.
 - **Materials:** lesson materials are view-only by default.
   - View-only PDFs are read in the lesson, page by page.

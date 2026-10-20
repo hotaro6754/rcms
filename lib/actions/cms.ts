@@ -341,11 +341,11 @@ function blockData(kind: BlockKind, fd: FormData): unknown {
   }
 }
 
-/** A PDF uploaded inside the document block's form is stored in the media library and chosen. */
+/** A PDF or Word file uploaded inside the document block's form is stored in the media library (as a PDF) and chosen. */
 async function attachUploadedPdf(actor: Awaited<ReturnType<typeof requireActor>>, fd: FormData) {
   const file = fd.get("file");
   if (!(file instanceof File) || file.size === 0) return;
-  const asset = await media.saveDocumentBuffer(actor, new Uint8Array(await file.arrayBuffer()), file.name);
+  const asset = await media.saveDocumentUpload(actor, file);
   fd.set("mediaId", asset.id);
 }
 
