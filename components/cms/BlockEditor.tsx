@@ -60,8 +60,8 @@ function KindFields({ kind, d, images, audio = [], documents = [], blockId }: { 
     case "DOCUMENT":
       return (
         <>
-          <L label="PDF" hint={documents.length ? "Learners read it page by page. They cannot download it." : "Upload PDFs in the media library first."}>
-            <select name="mediaId" defaultValue={s(d.mediaId)} required className={IN}>
+          <L label="PDF from the media library" hint={documents.length ? "Only PDFs are listed here. Learners read it page by page and cannot download it." : "No PDFs in the media library yet. Upload one below. Only PDFs can be shown this way."}>
+            <select name="mediaId" defaultValue={s(d.mediaId)} className={IN}>
               <option value="">Choose…</option>
               {documents.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -69,6 +69,9 @@ function KindFields({ kind, d, images, audio = [], documents = [], blockId }: { 
                 </option>
               ))}
             </select>
+          </L>
+          <L label="Or upload a PDF here" hint="PDF only, up to 25 MB; it is also added to the media library. For a Word file, add a Design block and start it from the document instead.">
+            <input type="file" name="file" accept=".pdf,application/pdf" className="text-[13px]" />
           </L>
           <L label="Title">
             <input name="title" defaultValue={s(d.title)} required minLength={3} maxLength={200} className={IN} />

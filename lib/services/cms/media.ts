@@ -46,7 +46,8 @@ export async function uploadMedia(actor: Actor, file: File, input: unknown) {
 /** Stores a PDF that arrived with a document import, as a private document in the library. */
 export async function saveDocumentBuffer(actor: Actor, bytes: Uint8Array, fileName: string) {
   await assertCan(actor, "content.edit");
-  if (sniff(bytes, fileName) !== "application/pdf") throw new ServiceError("Only PDFs can be kept as view-only documents.");
+  if (bytes.length > MAX_BYTES) throw new ServiceError(`Files must be ${Math.round(MAX_BYTES / (1024 * 1024))} MB or smaller.`);
+  if (sniff(bytes, fileName) !== "application/pdf") throw new ServiceError("Only PDFs can be shown as a view-only document. To use a Word file, add a Design block and start it from the document.");
   const fileKey = await saveBuffer("media", bytes, fileName);
   const title = (fileName.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim() || "Document").slice(0, 200);
   const asset = await prisma.mediaAsset.create({ data: { kind: "DOCUMENT", title, fileKey, mimeType: "application/pdf", sizeBytes: bytes.length, isPublic: false, uploadedById: actor.id } });

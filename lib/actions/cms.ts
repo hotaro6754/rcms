@@ -341,6 +341,14 @@ function blockData(kind: BlockKind, fd: FormData): unknown {
   }
 }
 
+/** A PDF uploaded inside the document block's form is stored in the media library and chosen. */
+async function attachUploadedPdf(actor: Awaited<ReturnType<typeof requireActor>>, fd: FormData) {
+  const file = fd.get("file");
+  if (!(file instanceof File) || file.size === 0) return;
+  const asset = await media.saveDocumentBuffer(actor, new Uint8Array(await file.arrayBuffer()), file.name);
+  fd.set("mediaId", asset.id);
+}
+
 export async function addBlockAction(fd: FormData) {
   return attempt(async () => {
     const kind = str(fd, "kind") as BlockKind;
@@ -365,6 +373,7 @@ export async function addBlockAction(fd: FormData) {
       refresh(opt(fd, "courseId"));
       return { href: `/admin/content/design/${block.id}` };
     }
+    if (kind === "DOCUMENT") await attachUploadedPdf(actor, fd);
     await blocks.addBlock(actor, lessonId, kind, blockData(kind, fd), pos === null || Number.isNaN(pos) ? undefined : pos);
     refresh(opt(fd, "courseId"));
   });
@@ -374,6 +383,7 @@ export async function updateBlockAction(fd: FormData) {
   return attempt(async () => {
     const kind = str(fd, "kind") as BlockKind;
     const actor = await requireActor();
+    if (kind === "DOCUMENT") await attachUploadedPdf(actor, fd);
     let data = blockData(kind, fd);
     if (kind === "DESIGN") {
       // Renaming a design keeps the design.

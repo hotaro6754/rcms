@@ -33,6 +33,10 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
           <Field label="Alternative text (images)" htmlFor="alt" className="sm:col-span-2">
             <input id="alt" name="altText" className={FIELD} placeholder="Diagram of the claim lifecycle from eligibility to payment posting" />
           </Field>
+          <p className="text-[12.5px] text-muted-foreground sm:col-span-2">
+            Which files work where: <strong>PDFs</strong> can be shown in a lesson as a view-only document (Document block). <strong>Word files</strong> can be turned into a designed
+            lesson page (add a Design block and start it from the document); uploaded here they are only stored. Images are chosen in lessons and on the website.
+          </p>
           <Checkbox name="isPublic" label="Public (for catalogue images only)" />
           <div>
             <button className={BTN}>Upload</button>
