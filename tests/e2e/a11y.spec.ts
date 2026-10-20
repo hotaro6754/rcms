@@ -19,6 +19,9 @@ async function signIn(page: Page, email: string) {
 }
 
 async function scan(page: Page, path: string) {
+  // Check the settled page: animations that fade text in would otherwise be measured mid-fade.
+  // Every animation on the site honours reduced motion and ends in the same state.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(path);
   await page.waitForLoadState("networkidle");
   // The home page's preloader is decorative (aria-hidden) and fades out; scan the page under it.

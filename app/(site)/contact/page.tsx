@@ -2,16 +2,18 @@ import { PageHeader, Section } from "@/components/site/PageHeader";
 import { ContactForm } from "@/components/site/ContactForm";
 import { whatsappUrl } from "@/lib/contact";
 import { publicPricing } from "@/lib/services/learning/public-catalog";
+import { getPageContent } from "@/lib/site/content";
+import { contactPage } from "@/lib/site/pages/contact";
 
-export const metadata = {
-  title: "Contact",
-  description: "Enrol, request mentoring, or ask about a corporate account.",
-};
+export async function generateMetadata() {
+  const c = await getPageContent(contactPage);
+  return { title: c.seo.title, description: c.seo.description };
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ interest?: string }> }) {
-  const [{ interest }, pricing] = await Promise.all([searchParams, publicPricing().catch(() => null)]);
+  const [{ interest }, pricing, c] = await Promise.all([searchParams, publicPricing().catch(() => null), getPageContent(contactPage)]);
   const options = {
     courses: (pricing?.courses ?? []).map((c) => ({ name: c.name, amount: c.amount })),
     mentoring: (pricing?.mentoring ?? []).map((m) => ({ name: m.name, amount: m.amount })),
@@ -20,43 +22,45 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <PageHeader
-        eyebrow="Contact"
-        title="Tell me what you are trying to move."
-        lead="Enrolment, mentoring and corporate accounts all start the same way: what level you are at now, and what you want to be doing in twelve months."
+        eyebrow={c.header.eyebrow}
+        title={c.header.title}
+        lead={c.header.lead}
       />
 
       <Section>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-          <ContactForm options={options} defaultInterest={interest?.slice(0, 120) ?? ""} />
+          <ContactForm options={options} defaultInterest={interest?.slice(0, 120) ?? ""} copy={c.form} />
 
           <aside className="flex flex-col gap-4">
-            {wa && (
+            {c.whatsapp.show && wa && (
               <div className="rounded-[var(--radius)] border border-border bg-card p-6">
-                <h2 className="text-[15px] font-semibold">Faster on WhatsApp</h2>
+                <h2 className="text-[15px] font-semibold">{c.whatsapp.title}</h2>
                 <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
-                  For a quick question about fit or level. Enrolment and invoices go through email. Never send patient information.
+                  {c.whatsapp.body}
                 </p>
                 <a href={wa} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary">
-                  Open WhatsApp
+                  {c.whatsapp.button}
                 </a>
               </div>
             )}
 
-            <div className="rounded-[var(--radius)] border border-border bg-card p-6">
-              <h2 className="text-[15px] font-semibold">Corporate accounts</h2>
-              <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
-                Ten or more people get a corporate account with seats, groups and a manager view.
-                Choose &ldquo;Corporate account&rdquo; and include headcount and specialty.
-              </p>
-            </div>
+            {c.corporate.show && (
+              <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+                <h2 className="text-[15px] font-semibold">{c.corporate.title}</h2>
+                <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
+                  {c.corporate.body}
+                </p>
+              </div>
+            )}
 
-            <div className="rounded-[var(--radius)] border border-border bg-card p-6">
-              <h2 className="text-[15px] font-semibold">Response time</h2>
-              <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
-                Weekdays, within one working day, IST. Mentoring requests are confirmed by email
-                with an agreed time.
-              </p>
-            </div>
+            {c.response.show && (
+              <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+                <h2 className="text-[15px] font-semibold">{c.response.title}</h2>
+                <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
+                  {c.response.body}
+                </p>
+              </div>
+            )}
           </aside>
         </div>
       </Section>

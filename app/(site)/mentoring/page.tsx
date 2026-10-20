@@ -1,34 +1,22 @@
-import Link from "next/link";
 import { PageHeader, Section } from "@/components/site/PageHeader";
+import { SiteLink } from "@/components/site/SiteLink";
 import { whatsappUrl } from "@/lib/contact";
 import { BookingPanel } from "@/components/site/BookingPanel";
 import { MENTORING } from "@/lib/data/catalog";
 import { publicPricing } from "@/lib/services/learning/public-catalog";
+import { getPageContent } from "@/lib/site/content";
+import { mentoringPage } from "@/lib/site/pages/mentoring";
 
-export const metadata = {
-  title: "Mentoring",
-  description:
-    "Working sessions on a real problem from your floor. You leave with a decision and a document, not advice.",
-};
-
-const FLOW = [
-  ["01", "Choose the problem", "Career move, KPI defence, team escalation, client governance, or interview preparation for a specific role."],
-  ["02", "Send a de-identified summary", "Trend figures, a QA scorecard outline or the job description you are targeting, with every patient, payer and client identifier removed. Reviewed before the call so no time goes on context."],
-  ["03", "Agree a time", "Send a request with the times that suit you; sessions run on IST evenings and Saturday mornings to fit US-shift schedules. We confirm by email."],
-  ["04", "Leave with the document", "A root cause sheet, a capacity model, a governance deck outline or a rewritten CV, whichever the problem called for."],
-];
-
-const NOT_FOR = [
-  "Generic career advice you could get from a search",
-  "Reviewing your CV without a role you are targeting",
-  "Anything requiring real patient data on the screen",
-  "Coding certification preparation",
-];
+export async function generateMetadata() {
+  const c = await getPageContent(mentoringPage);
+  return { title: c.seo.title, description: c.seo.description };
+}
 
 export const revalidate = 300;
 
 export default async function MentoringPage() {
-  const { mentoring } = await publicPricing();
+  const [{ mentoring }, c] = await Promise.all([publicPricing(), getPageContent(mentoringPage)]);
+  const wa = whatsappUrl();
   const options = mentoring.map((m) => {
     const info = MENTORING.find((x) => `mentoring-${x.id}` === m.sku);
     return { sku: m.sku, name: m.name, amount: m.amount, minutes: info?.minutes ?? null, who: info?.who ?? m.description };
@@ -36,75 +24,82 @@ export default async function MentoringPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Mentoring"
-        title="Bring a real problem from your floor."
-        lead="Sessions are working sessions on a problem you are facing at work, described without any patient or client identifiers. You leave with a decision and a document."
+        eyebrow={c.header.eyebrow}
+        title={c.header.title}
+        lead={c.header.lead}
       />
 
       <Section>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
           <div>
             <ol className="border-t border-border">
-              {FLOW.map(([n, title, body]) => (
-                <li key={n} className="grid grid-cols-[2.5rem_1fr] gap-4 border-b border-border py-5">
-                  <span className="text-data text-[13px] font-semibold text-primary">{n}</span>
+              {c.steps.items.map((step, i) => (
+                <li key={i} className="grid grid-cols-[2.5rem_1fr] gap-4 border-b border-border py-5">
+                  <span className="text-data text-[13px] font-semibold text-primary">{String(i + 1).padStart(2, "0")}</span>
                   <div>
-                    <h2 className="text-[16px] font-semibold">{title}</h2>
+                    <h2 className="text-[16px] font-semibold">{step.title}</h2>
                     <p className="mt-1.5 max-w-[62ch] text-[13.5px] leading-relaxed text-muted-foreground">
-                      {body}
+                      {step.body}
                     </p>
                   </div>
                 </li>
               ))}
             </ol>
 
-            <div className="mt-8 rounded-[var(--radius)] border border-border bg-card p-5">
-              <h2 className="text-[14px] font-semibold">What this is not for</h2>
-              <ul className="mt-3 flex flex-col gap-2">
-                {NOT_FOR.map((n) => (
-                  <li key={n} className="text-micro leading-relaxed text-muted-foreground">
-                    {n}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 border-t border-border pt-3 text-micro leading-relaxed text-muted-foreground">
-                Anonymise anything you send. No PHI, no real patient identifiers, no client
-                documents you are not authorised to share.
+            {c.notFor.show && (
+              <div className="mt-8 rounded-[var(--radius)] border border-border bg-card p-5">
+                <h2 className="text-[14px] font-semibold">{c.notFor.title}</h2>
+                <ul className="mt-3 flex flex-col gap-2">
+                  {c.notFor.items.map((n, i) => (
+                    <li key={i} className="text-micro leading-relaxed text-muted-foreground">
+                      {n}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 border-t border-border pt-3 text-micro leading-relaxed text-muted-foreground">
+                  {c.notFor.note}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <BookingPanel options={options} copy={c.booking} />
+        </div>
+      </Section>
+
+      {c.closing.show && (
+        <Section tint>
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <h2 className="text-[clamp(1.7rem,3vw,2.4rem)] leading-[1.08]">
+                {c.closing.title}
+              </h2>
+              <p className="mt-4 max-w-[56ch] text-[14px] leading-relaxed text-muted-foreground">
+                {c.closing.body}
               </p>
             </div>
+            <div className="flex flex-wrap gap-3">
+              {wa ? (
+                <a
+                  href={wa}
+                  className="inline-flex min-h-11 items-center rounded-md border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary"
+                >
+                  {c.closing.whatsapp}
+                </a>
+              ) : (
+                <SiteLink
+                  link={c.closing.question}
+                  className="inline-flex min-h-11 items-center rounded-md border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary"
+                />
+              )}
+              <SiteLink
+                link={c.closing.pricing}
+                className="inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+              />
+            </div>
           </div>
-
-          <BookingPanel options={options} />
-        </div>
-      </Section>
-
-      <Section tint>
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <h2 className="text-[clamp(1.7rem,3vw,2.4rem)] leading-[1.08]">
-              Not sure a session is the right spend?
-            </h2>
-            <p className="mt-4 max-w-[56ch] text-[14px] leading-relaxed text-muted-foreground">
-              Ask us first. If the answer takes two minutes, you will get it in two minutes and no
-              session gets booked.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <a
-              href={whatsappUrl() ?? "/contact"}
-              className="inline-flex min-h-11 items-center rounded-md border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary"
-            >
-              {whatsappUrl() ? "Ask on WhatsApp" : "Ask a question"}
-            </a>
-            <Link
-              href="/pricing"
-              className="inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-            >
-              See all pricing
-            </Link>
-          </div>
-        </div>
-      </Section>
+        </Section>
+      )}
     </>
   );
 }

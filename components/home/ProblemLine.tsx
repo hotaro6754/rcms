@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { PROBLEM_LINES } from "@/lib/data/problem";
+import type { ProblemLine as Line } from "@/lib/data/problem";
 
 const EASE = [0.2, 0, 0.1, 1] as const;
 
@@ -10,8 +10,7 @@ const EASE = [0.2, 0, 0.1, 1] as const;
  * the fact beneath it. Motion owns the swap: the outgoing line lifts out of its mask as
  * the incoming one rises into it. Kept in its own file so no GSAP code shares it.
  */
-export function ProblemLine({ index }: { index: number }) {
-  const line = PROBLEM_LINES[index];
+export function ProblemLine({ index, line }: { index: number; line: Line }) {
   return (
     <div>
       <div className="relative overflow-hidden pb-[0.12em]">

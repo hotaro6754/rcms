@@ -2,19 +2,26 @@ import Link from "next/link";
 import { PageHeader, Section } from "@/components/site/PageHeader";
 import { getPublishedCourse, listPublishedCourses, listPublishedLevels } from "@/lib/services/learning/catalog";
 import { flatLessons } from "@/lib/cms/snapshot";
+import { SiteLink } from "@/components/site/SiteLink";
+import { getPageContent } from "@/lib/site/content";
+import { resourcesTestsPage } from "@/lib/site/pages/resources-tests";
 
-export const metadata = { title: "Tests and assessments", description: "What each released course assesses, how long it takes and what it takes to pass." };
+export async function generateMetadata() {
+  const c = await getPageContent(resourcesTestsPage);
+  return { title: c.seo.title, description: c.seo.description };
+}
+
 export const revalidate = 300;
-
-const KIND: Record<string, string> = { KNOWLEDGE_CHECK: "Knowledge check", MODULE_TEST: "Module test", FINAL: "Final assessment", ASSIGNMENT: "Assignment" };
 
 /** Assessment facts from released courses only. Questions and answers are never shown here. */
 export default async function TestsPage() {
-  const [levels, courses] = await Promise.all([listPublishedLevels(), listPublishedCourses()]);
+  const [levels, courses, content] = await Promise.all([listPublishedLevels(), listPublishedCourses(), getPageContent(resourcesTestsPage)]);
+  const t = content.table;
+  const KIND: Record<string, string> = { KNOWLEDGE_CHECK: content.kinds.knowledgeCheck, MODULE_TEST: content.kinds.moduleTest, FINAL: content.kinds.final, ASSIGNMENT: content.kinds.assignment };
   const detail = await Promise.all(courses.map(async (c) => ({ c, course: await getPublishedCourse(c.slug) })));
   return (
     <>
-      <PageHeader eyebrow="Resources" title="Tests and assessments" lead="Assessments are graded on the server against the released version of the course. Scenario questions use synthetic, de-identified data. A certificate needs every lesson complete and every assessment passed." />
+      <PageHeader eyebrow={content.header.eyebrow} title={content.header.title} lead={content.header.lead} />
       <Section>
         {levels.map((l) => {
           const inLevel = detail.filter((d) => d.c.levelId === l.id && d.course);
@@ -26,12 +33,12 @@ export default async function TestsPage() {
                 <table className="w-full min-w-[46rem] border-collapse text-left text-[13.5px]">
                   <thead>
                     <tr className="border-b border-border">
-                      <th scope="col" className="label-caps px-4 py-3 font-medium">Course · assessment</th>
-                      <th scope="col" className="label-caps px-4 py-3 font-medium">Type</th>
-                      <th scope="col" className="label-caps px-4 py-3 font-medium">Questions</th>
-                      <th scope="col" className="label-caps px-4 py-3 font-medium">Pass mark</th>
-                      <th scope="col" className="label-caps px-4 py-3 font-medium">Time</th>
-                      <th scope="col" className="label-caps px-4 py-3 font-medium">Attempts</th>
+                      <th scope="col" className="label-caps px-4 py-3 font-medium">{t.course}</th>
+                      <th scope="col" className="label-caps px-4 py-3 font-medium">{t.type}</th>
+                      <th scope="col" className="label-caps px-4 py-3 font-medium">{t.questions}</th>
+                      <th scope="col" className="label-caps px-4 py-3 font-medium">{t.passMark}</th>
+                      <th scope="col" className="label-caps px-4 py-3 font-medium">{t.time}</th>
+                      <th scope="col" className="label-caps px-4 py-3 font-medium">{t.attempts}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -51,8 +58,8 @@ export default async function TestsPage() {
                               <td className="px-4 py-3">{KIND[a.kind] ?? a.kind}</td>
                               <td className="px-4 py-3">{a.questions.length + a.drawCount}</td>
                               <td className="px-4 py-3">{a.passingScore}%</td>
-                              <td className="px-4 py-3">{a.timeLimitMinutes ? `${a.timeLimitMinutes} min` : "untimed"}</td>
-                              <td className="px-4 py-3">{a.maxAttempts ?? "unlimited"}</td>
+                              <td className="px-4 py-3">{a.timeLimitMinutes ? `${a.timeLimitMinutes} ${t.minutes}` : t.untimed}</td>
+                              <td className="px-4 py-3">{a.maxAttempts ?? t.unlimited}</td>
                             </tr>
                           );
                         }),
@@ -63,10 +70,13 @@ export default async function TestsPage() {
             </section>
           );
         })}
-        {detail.every((d) => !d.course || !flatLessons(d.course.snapshot).some((x) => x.assessment)) && <p className="text-[14.5px] text-muted-foreground">No released course has an assessment yet.</p>}
-        <p className="mt-6 text-[13.5px]">
-          Worked examples: <Link href="/resources/case-studies" className="underline underline-offset-4">case studies</Link>.
-        </p>
+        {detail.every((d) => !d.course || !flatLessons(d.course.snapshot).some((x) => x.assessment)) && <p className="text-[14.5px] text-muted-foreground">{t.empty}</p>}
+        {content.footer.show && (
+          <p className="mt-6 text-[13.5px]">
+            {content.footer.before} <SiteLink link={content.footer.link} className="underline underline-offset-4" />
+            {content.footer.after}
+          </p>
+        )}
       </Section>
     </>
   );

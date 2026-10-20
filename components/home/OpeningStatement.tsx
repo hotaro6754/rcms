@@ -2,11 +2,10 @@
 
 import { useRef, useState } from "react";
 import { gsap, useGSAP, ScrollTrigger, SplitText } from "@/lib/gsap/register";
-import { PROBLEM_LINES } from "@/lib/data/problem";
+import type { PageContent } from "@/lib/site/fields";
+import type { homePage } from "@/lib/site/pages/home";
 import { ProblemLine } from "./ProblemLine";
 import { cn } from "@/lib/utils";
-
-const N = PROBLEM_LINES.length;
 
 /**
  * The first break in the page's temperature: ink, full width, one claim about the field.
@@ -21,7 +20,9 @@ const N = PROBLEM_LINES.length;
  * GSAP owns the pin, the progress rule and the headline's line reveal. Motion owns the
  * line swap (ProblemLine). They never share an element.
  */
-export function OpeningStatement() {
+export function OpeningStatement({ content: c }: { content: PageContent<typeof homePage>["problem"] }) {
+  const lines = c.lines;
+  const N = lines.length;
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
@@ -87,7 +88,7 @@ export function OpeningStatement() {
         <div className="flex items-baseline justify-between gap-6">
           <p className="text-data text-[11px] tracking-[0.12em] text-subtle">
             <span className="text-foreground">01</span>
-            <span aria-hidden="true" className="mx-1.5">/</span>THE PROBLEM
+            <span aria-hidden="true" className="mx-1.5">/</span>{c.runningHead.toUpperCase()}
           </p>
           <p aria-hidden="true" className="text-data hidden text-[11px] tracking-[0.12em] text-subtle lg:motion-safe:block">
             <span className="text-foreground">{String(index + 1).padStart(2, "0")}</span> / {String(N).padStart(2, "0")}
@@ -100,19 +101,19 @@ export function OpeningStatement() {
             ref={title}
             className="mt-8 text-[clamp(2.8rem,6.4vw,6.2rem)] leading-[0.95] tracking-[-0.035em]"
           >
-            RCM isn&rsquo;t one process.
+            {c.title}
           </h2>
         </div>
 
         {/* Pinned sequence: desktop with motion only. */}
         <div className="mt-auto hidden gap-16 pt-16 lg:motion-safe:grid lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-end">
           <div aria-live="polite" className={cn("transition-opacity duration-500", resolved && "opacity-30")}>
-            <ProblemLine index={index} />
+            <ProblemLine index={index} line={lines[index]} />
           </div>
           <ol className="text-data flex flex-col gap-2.5 border-l border-border pl-5 text-[12px] tracking-[0.06em]">
-            {PROBLEM_LINES.map((l, i) => (
+            {lines.map((l, i) => (
               <li
-                key={l.noun}
+                key={i}
                 className={cn(
                   "flex items-baseline gap-3 transition-colors duration-300",
                   i === index && !resolved ? "font-semibold text-foreground" : "text-subtle",
@@ -127,8 +128,8 @@ export function OpeningStatement() {
 
         {/* Stacked: phones, tablets and reduced motion. */}
         <ol className="mt-14 flex flex-col gap-8 lg:motion-safe:hidden">
-          {PROBLEM_LINES.map((l) => (
-            <li key={l.noun} className="border-t border-border pt-5">
+          {lines.map((l, i) => (
+            <li key={i} className="border-t border-border pt-5">
               <p className="font-serif-display text-[clamp(1.9rem,5vw,2.8rem)] leading-[1.05]">
                 <span className="text-foreground/60">{l.lead} </span>
                 <em className="italic">{l.noun}</em>
@@ -148,11 +149,8 @@ export function OpeningStatement() {
               resolved ? "lg:motion-safe:translate-y-0 lg:motion-safe:opacity-100" : "lg:motion-safe:translate-y-3 lg:motion-safe:opacity-0",
             )}
           >
-            <p className="font-serif-display text-[1.9rem] leading-tight">We teach the whole picture.</p>
-            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-              Here RCM is one system, learned one level at a time, until a decision made at
-              registration is something you can see arriving as a denial six weeks later.
-            </p>
+            <p className="font-serif-display text-[1.9rem] leading-tight">{c.resolutionTitle}</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{c.resolutionBody}</p>
           </div>
         </div>
       </div>

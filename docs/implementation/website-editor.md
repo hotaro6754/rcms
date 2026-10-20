@@ -8,6 +8,18 @@ Only the Super Administrator. The editor checks the `site.edit` permission, whic
 
 There is no second-person approval: one person holds this authority. Every save, publish, reset, restore, rename and delete is written to the audit log.
 
+## What is editable
+
+- **Site-wide:** navigation and footer, and the theme (colours, fonts, corners).
+- **Pages:**
+  - homepage, about, catalogue, course pages (shared copy), learning paths, pricing and mentoring;
+  - resources, resource sections and entries (shared copy), and practice tests;
+  - community, blog and contact.
+- **Legal:** terms, privacy, refund policy, disclaimer and content governance.
+- **Custom pages:** any number, designed in the visual designer.
+
+The copy that ships with the code stays the default. Published edits replace it field by field, and "Reset to the original copy" brings it back.
+
 ## How an edit goes live
 
 1. **Edit.** Open a page from the list. Every editable part of the page has a field, grouped the way the page is laid out. Lists of items (beliefs, FAQs, footer links, legal clauses and so on) can be added to, reordered and removed. Text fields show a "Use original" link when they differ from the shipped copy.

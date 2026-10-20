@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowDown, ArrowUp, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { FIELD, TEXTAREA } from "@/components/admin/kit";
 import { defaultOf, defaultsOf, type Field, type Fields, type ImageValue, type LinkValue } from "@/lib/site/fields";
 
@@ -209,15 +210,18 @@ export function FieldEditor({ field, value, onChange, path, media, openDesigner 
           </legend>
           {help}
           {items.map((item, i) => (
-            <details key={i} className="rounded-[3px] border border-border bg-card">
-              <summary className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-[13px]">
-                <span className="min-w-0 truncate">{title(item, i)}</span>
-                <RowButtons i={i} n={items.length} label={title(item, i)} min={field.minItems} onMove={(to) => onChange(move(items, i, to))} onRemove={() => onChange(items.filter((_, j) => j !== i))} />
-              </summary>
-              <div className="border-t border-border p-3">
-                <FieldsEditor fields={field.fields} value={item} onChange={(v) => onChange(items.map((x, j) => (j === i ? v : x)))} path={`${path}.${i}`} media={media} />
-              </div>
-            </details>
+            <ListItem key={i} title={title(item, i)}>
+              {(open) => (
+                <>
+                  <RowButtons i={i} n={items.length} label={title(item, i)} min={field.minItems} onMove={(to) => onChange(move(items, i, to))} onRemove={() => onChange(items.filter((_, j) => j !== i))} />
+                  {open && (
+                    <div className="basis-full border-t border-border p-3">
+                      <FieldsEditor fields={field.fields} value={item} onChange={(v) => onChange(items.map((x, j) => (j === i ? v : x)))} path={`${path}.${i}`} media={media} />
+                    </div>
+                  )}
+                </>
+              )}
+            </ListItem>
           ))}
           <button
             type="button"
@@ -243,14 +247,24 @@ export function FieldsEditor({ fields, value, onChange, path, media, openDesigne
   );
 }
 
-function RowButtons({ i, n, label, min = 0, onMove, onRemove }: { i: number; n: number; label: string; min?: number; onMove: (to: number) => void; onRemove: () => void }) {
-  const stop = (fn: () => void) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    fn();
-  };
+/** One entry of a list: a toggle to open its fields, with its move and remove buttons beside it (not inside it). */
+function ListItem({ title, children }: { title: string; children: (open: boolean) => React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
-    <span className="flex shrink-0 gap-1">
+    <div className="flex flex-wrap items-center gap-2 rounded-[3px] border border-border bg-card">
+      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 px-3 text-left text-[13px]">
+        <ChevronRight className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} aria-hidden="true" />
+        <span className="min-w-0 truncate">{title}</span>
+      </button>
+      {children(open)}
+    </div>
+  );
+}
+
+function RowButtons({ i, n, label, min = 0, onMove, onRemove }: { i: number; n: number; label: string; min?: number; onMove: (to: number) => void; onRemove: () => void }) {
+  const stop = (fn: () => void) => () => fn();
+  return (
+    <span className="flex shrink-0 gap-1 pr-2">
       <button type="button" aria-label={`Move ${label} up`} disabled={i === 0} className={SMALL_BTN} onClick={stop(() => onMove(i - 1))}>
         <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
       </button>

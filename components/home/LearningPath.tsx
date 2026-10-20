@@ -4,6 +4,9 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap/register";
 import type { PublicLevel } from "@/lib/services/learning/public-catalog";
+import { SiteLink } from "@/components/site/SiteLink";
+import type { PageContent } from "@/lib/site/fields";
+import type { homePage } from "@/lib/site/pages/home";
 import { Chapter } from "./Chapter";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +26,9 @@ import { cn } from "@/lib/utils";
  * GSAP owns the index line (scrubbed) and each spread's one-time entrance. CSS owns the
  * index colours.
  */
-export function LearningPath({ levels }: { levels: PublicLevel[] }) {
+type Content = PageContent<typeof homePage>["path"];
+
+export function LearningPath({ levels, content: c }: { levels: PublicLevel[]; content: Content }) {
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
@@ -81,15 +86,14 @@ export function LearningPath({ levels }: { levels: PublicLevel[] }) {
   };
 
   return (
-    <Chapter id="tracks" folio="03" title="The path" surface="sheet">
+    <Chapter id="tracks" folio="03" title={c.runningHead} surface="sheet">
       <span id="programs" className="sr-only" />
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
         <h2 data-reveal className="max-w-[20ch] text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
-          You don&rsquo;t need another course. You need to know which level you are on.
+          {c.title}
         </h2>
         <p data-reveal className="text-[15px] leading-relaxed text-muted-foreground">
-          {levels.length ? `${NUMBER[levels.length] ?? levels.length} levels, each built on the one before.` : "Levels, each built on the one before."} Start where you actually work today; every
-          course ends with assessed work you can show.
+          {levels.length ? `${NUMBER[levels.length] ?? levels.length} ${c.countLine}` : c.countLine.charAt(0).toUpperCase() + c.countLine.slice(1)} {c.lead}
         </p>
       </div>
 
@@ -97,7 +101,7 @@ export function LearningPath({ levels }: { levels: PublicLevel[] }) {
         {/* The index: desktop only, stays in the margin while the spreads scroll. */}
         <nav aria-label="Levels" className="hidden lg:block">
           <div className="sticky top-28">
-            <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">THE LEVELS</p>
+            <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">{c.indexLabel}</p>
             <div className="relative mt-5">
               <span aria-hidden="true" className="absolute inset-y-1 left-0 w-px bg-border" />
               <span ref={fill} aria-hidden="true" className="absolute inset-y-1 left-0 w-px origin-top scale-y-0 bg-foreground" />
@@ -126,23 +130,22 @@ export function LearningPath({ levels }: { levels: PublicLevel[] }) {
                 ))}
               </ol>
             </div>
-            <Link
-              href="/learning-paths"
+            <SiteLink
+              link={c.compare}
               className="mt-8 inline-flex min-h-10 items-center pl-5 text-[13px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
-            >
-              Compare the levels
-            </Link>
+            />
           </div>
         </nav>
 
         <div className="flex flex-col gap-20 lg:gap-28">
           {levels.length === 0 && (
             <p className="text-[15px] text-muted-foreground">
-              The level guide is not available right now. <Link href="/catalog" className="underline underline-offset-4">Browse the catalogue</Link> instead.
+              {c.unavailable} <SiteLink link={c.unavailableLink} className="underline underline-offset-4" />
+              {c.unavailableAfter && ` ${c.unavailableAfter}`}
             </p>
           )}
           {levels.map((lv, i) => (
-            <LevelSpread key={lv.slug} level={lv} index={i} total={levels.length} />
+            <LevelSpread key={lv.slug} level={lv} index={i} total={levels.length} c={c} />
           ))}
         </div>
       </div>
@@ -154,7 +157,7 @@ const NUMBER: Record<number, string> = { 1: "One", 2: "Two", 3: "Three", 4: "Fou
 
 const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
 
-function LevelSpread({ level, index, total }: { level: PublicLevel; index: number; total: number }) {
+function LevelSpread({ level, index, total, c }: { level: PublicLevel; index: number; total: number; c: Content }) {
   const n = index + 1;
   const topics = level.coreTopics;
   return (
@@ -194,42 +197,40 @@ function LevelSpread({ level, index, total }: { level: PublicLevel; index: numbe
           </li>
         ))}
       </ol>
-      {topics.length > 4 && <p className="mt-3 text-[13px] text-subtle sm:hidden">and {topics.length - 4} more topics</p>}
+      {topics.length > 4 && <p className="mt-3 text-[13px] text-subtle sm:hidden">and {topics.length - 4} {c.moreTopics}</p>}
 
       <div data-part className="mt-7 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
         {level.courses.length ? (
           <ul className="flex flex-col gap-1 text-[14px] text-muted-foreground">
-            {level.courses.map((c) => (
-              <li key={c.slug}>
-                <Link href={`/catalog/${c.slug}`} className="text-foreground underline decoration-input underline-offset-[5px] hover:decoration-foreground">
-                  {c.name}
+            {level.courses.map((course) => (
+              <li key={course.slug}>
+                <Link href={`/catalog/${course.slug}`} className="text-foreground underline decoration-input underline-offset-[5px] hover:decoration-foreground">
+                  {course.name}
                 </Link>
                 <span className="text-data">
                   {" "}
-                  · {c.isFree ? "free" : c.price !== null ? inr(c.price) : "included in all-access"}
+                  · {course.isFree ? c.freeLabel : course.price !== null ? inr(course.price) : c.includedLabel}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[14px] text-muted-foreground">Courses for this level are in review and not yet released.</p>
+          <p className="text-[14px] text-muted-foreground">{c.notReleased}</p>
         )}
         <div className="flex items-center gap-6">
-          <Link
-            href="/mentoring"
+          <SiteLink
+            link={c.notSure}
             className="hidden min-h-11 items-center text-[13.5px] underline decoration-input underline-offset-[6px] hover:decoration-foreground sm:inline-flex"
-          >
-            Not sure it&rsquo;s your level?
-          </Link>
+          />
           <Link
             href={`/catalog?level=${level.slug}`}
             className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
           >
-            See the courses
+            {c.coursesButton}
           </Link>
         </div>
       </div>
-      {level.estimatedEffort && <p className="mt-3 text-[12.5px] text-subtle">Typical effort: {level.estimatedEffort}</p>}
+      {level.estimatedEffort && <p className="mt-3 text-[12.5px] text-subtle">{c.effortLabel} {level.estimatedEffort}</p>}
     </article>
   );
 }

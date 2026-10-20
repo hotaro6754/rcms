@@ -3,38 +3,42 @@ import { notFound } from "next/navigation";
 import { PageHeader, Section } from "@/components/site/PageHeader";
 import { publicEntries } from "@/lib/services/cms/library";
 import { sectionByPath } from "@/lib/library-sections";
+import { SiteLink } from "@/components/site/SiteLink";
+import { getPageContent } from "@/lib/site/content";
+import { resourcesPage } from "@/lib/site/pages/resources";
+import { resourcesSectionPage } from "@/lib/site/pages/resources-section";
 
 export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ section: string }> }) {
   const s = sectionByPath((await params).section);
-  return { title: s?.title ?? "Resources", description: s?.lead };
+  const copy = s ? (await getPageContent(resourcesPage)).sections[s.kind] : null;
+  return { title: copy?.title ?? "Resources", description: copy?.lead };
 }
 
 export default async function SectionPage({ params, searchParams }: { params: Promise<{ section: string }>; searchParams: Promise<{ q?: string }> }) {
   const s = sectionByPath((await params).section);
   if (!s) notFound();
   const { q } = await searchParams;
-  const items = await publicEntries(s.kind, q);
+  const [items, shared, c] = await Promise.all([publicEntries(s.kind, q), getPageContent(resourcesPage), getPageContent(resourcesSectionPage)]);
+  const { title, lead } = shared.sections[s.kind];
   const glossary = s.kind === "GLOSSARY";
   const groups = glossary ? Object.entries(Object.groupBy(items, (i) => (/[a-z]/i.test(i.title[0]) ? i.title[0].toUpperCase() : "#"))).sort(([a], [b]) => a.localeCompare(b)) : [];
 
   return (
     <>
-      <PageHeader eyebrow="Resources" title={s.title} lead={s.lead} />
+      <PageHeader eyebrow={c.header.eyebrow} title={title} lead={lead} />
       <Section>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <form role="search" className="flex max-w-md flex-1 gap-2">
-            <input name="q" defaultValue={q} placeholder={`Search ${s.title.toLowerCase()}`} aria-label={`Search ${s.title}`} className="min-h-11 flex-1 border-b border-input bg-transparent text-[15px] outline-none focus:border-foreground" />
-            <button className="min-h-11 rounded-[3px] border border-input px-4 text-[14px]">Search</button>
+            <input name="q" defaultValue={q} placeholder={`${c.search.placeholder} ${title.toLowerCase()}`} aria-label={`Search ${title}`} className="min-h-11 flex-1 border-b border-input bg-transparent text-[15px] outline-none focus:border-foreground" />
+            <button className="min-h-11 rounded-[3px] border border-input px-4 text-[14px]">{c.search.button}</button>
           </form>
-          <Link href="/resources" className="text-[13px] underline underline-offset-4">
-            All resources
-          </Link>
+          <SiteLink link={c.search.back} className="text-[13px] underline underline-offset-4" />
         </div>
 
         {items.length === 0 ? (
-          <p className="mt-10 text-[14.5px] text-muted-foreground">{q ? "Nothing matches that search." : "Entries are being written and reviewed. Check back soon."}</p>
+          <p className="mt-10 text-[14.5px] text-muted-foreground">{q ? c.empty.noMatches : c.empty.noEntries}</p>
         ) : glossary ? (
           <>
             <nav aria-label="Letters" className="mt-8 flex flex-wrap gap-2 text-[13px]">

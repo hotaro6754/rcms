@@ -1,6 +1,6 @@
 # RCMS status checklist
 
-As of 16 October 2026, branch `ccr-b00f5748-k3unfe`.
+As of 20 October 2026, branch `ccr-b00f5748-k3unfe`.
 
 Key: ✅ done and verified by tests or CI · 🟡 done with a stated gap · ⬜ not done · 👤 needs you (an account, a key, a decision or an expert)
 
@@ -115,6 +115,30 @@ Evidence for every ✅: 132 unit and integration tests, 7 end-to-end tests and 3
   - Built: checkout, payment webhooks (signature-verified and idempotent), refunds with a second approval (maker-checker) and invoices.
   - Not run against a live gateway.
 - ✅ Vendor portal (separation of duties for bank details and payments), corporate accounts and groups, subscriber administration, privacy requests.
+
+### Website editor, designer and protection (this round)
+- ✅ **Website editor** (`/admin/site`, Super Administrator only):
+  - Every public page's words, links, images and section visibility can be edited, including the homepage, navigation, footer and legal pages.
+  - Edits go through draft, preview on the real page, and publish, with version history, rollback and reset to the original copy.
+  - Legal pages ask the publisher to confirm the text has been checked.
+- ✅ **Theme:** colours, fonts and corner style for the public site. Publishing is refused when text would fall below 4.5:1 contrast.
+- ✅ **Custom pages** at `/p/<address>`, built in the visual designer; they can be deleted.
+- ✅ **Visual designer** (drag and drop) for lessons and custom pages:
+  - Sections, columns and a freeform canvas where anything can be placed anywhere.
+  - Infographics: key numbers, process steps, timeline, cards and bar chart.
+  - Interactive pieces: accordion, tabs, flip cards, reveal and self-check.
+  - Font, size, colour, alignment, spacing and corner controls. Everything is checked on the server, with no HTML.
+- ✅ **PDF and Word import** into a structured lesson design, using layout rules on the server (no AI); pictures are kept in place.
+  - 🟡 Tables in PDFs arrive as text.
+  - 🟡 Scanned PDFs cannot be imported; use a view-only document instead.
+- ✅ **Content protection for learners:**
+  - Copying, right-click, printing and save are blocked inside lessons, and lessons are hidden when the window is in the background.
+  - Watermarks with the learner's name, email and date cover the lesson and are drawn into images.
+  - PDFs are shown as watermarked page images and never sent as files.
+  - Materials are view-only unless downloading is allowed.
+  - 🟡 Nothing on the web can stop a phone camera or a system screenshot; the watermark makes leaks traceable.
+- ⬜ AI structuring of imported documents (better infographics, generated questions). 👤 Needs your approval to send document text to an AI provider, plus an API key.
+- ⬜ Restyling the learner and staff dashboards themselves. This round covered the website and lessons, as agreed.
 
 ### Quality and delivery
 - ✅ CI on GitHub Actions; accessibility scans; production build.

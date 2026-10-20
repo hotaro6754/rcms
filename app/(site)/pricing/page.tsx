@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { PageHeader, Section } from "@/components/site/PageHeader";
-import { CORPORATE, FAQ, MENTORING } from "@/lib/data/catalog";
+import { SiteLink } from "@/components/site/SiteLink";
+import { MENTORING } from "@/lib/data/catalog";
 import { publicPricing } from "@/lib/services/learning/public-catalog";
 import { paymentsConfigured } from "@/lib/payments/razorpay";
+import { getPageContent } from "@/lib/site/content";
+import { pricingPage } from "@/lib/site/pages/pricing";
 
-export const metadata = {
-  title: "Pricing",
-  description: "All-access plans, individual courses, tracks, mentoring and corporate accounts. Prices are the ones charged at checkout.",
-};
+export async function generateMetadata() {
+  const c = await getPageContent(pricingPage);
+  return { title: c.seo.title, description: c.seo.description };
+}
 
 export const revalidate = 300;
 
 const inr = (paise: number) => "₹" + (paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 });
-const PER: Record<string, string> = { MONTH: "per month", YEAR: "per year" };
 
 /**
  * Every price on this page is an active product, the same record checkout charges. Course
@@ -20,28 +22,29 @@ const PER: Record<string, string> = { MONTH: "per month", YEAR: "per year" };
  * courses are.
  */
 export default async function PricingPage() {
-  const { subscriptions, courses, tracks, mentoring } = await publicPricing();
+  const [{ subscriptions, courses, tracks, mentoring }, c] = await Promise.all([publicPricing(), getPageContent(pricingPage)]);
+  const per: Record<string, string> = { MONTH: c.allAccess.perMonth, YEAR: c.allAccess.perYear };
   const live = paymentsConfigured();
   const cta = (sku: string) => (live ? `/checkout/${sku}` : "/contact");
 
   return (
     <>
       <PageHeader
-        eyebrow="Pricing"
-        title="Subscribe to everything, or buy the course you need."
-        lead="Prices include the full course, its assessments and its certificate. What you see here is what checkout charges."
+        eyebrow={c.header.eyebrow}
+        title={c.header.title}
+        lead={c.header.lead}
       />
 
       {!live && (
         <div className="mx-auto max-w-[1320px] px-6">
           <p role="status" className="border-l-2 border-warning pl-3 text-[14px]">
-            Online payment is not open yet. Use the contact form and we will enrol you directly.
+            {c.paymentsClosed.notice}
           </p>
         </div>
       )}
 
-      {subscriptions.length > 0 && (
-        <Section title="All-access" lead="Every released course that is part of the subscription, including new ones as they are released.">
+      {c.allAccess.show && subscriptions.length > 0 && (
+        <Section title={c.allAccess.title} lead={c.allAccess.lead}>
           <div className="grid gap-4 md:grid-cols-2">
             {subscriptions.map((p) => (
               <article key={p.sku} className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-6">
@@ -49,12 +52,12 @@ export default async function PricingPage() {
                 {p.description && <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{p.description}</p>}
                 <p className="text-data mt-5 border-t border-border pt-5 text-[1.75rem] font-medium leading-none">
                   {inr(p.amount)}
-                  <span className="ml-2 font-sans text-micro font-normal text-muted-foreground">{p.interval ? PER[p.interval] : "once"}</span>
+                  <span className="ml-2 font-sans text-micro font-normal text-muted-foreground">{p.interval ? per[p.interval] : c.allAccess.once}</span>
                 </p>
-                {p.trialDays > 0 && <p className="mt-2 text-micro text-success">{p.trialDays}-day trial</p>}
-                <p className="mt-3 text-micro text-muted-foreground">Prepaid. It does not renew automatically; you choose whether to buy the next period.</p>
+                {p.trialDays > 0 && <p className="mt-2 text-micro text-success">{c.allAccess.trial.replace("{days}", String(p.trialDays))}</p>}
+                <p className="mt-3 text-micro text-muted-foreground">{c.allAccess.renewal}</p>
                 <Link href={cta(p.sku)} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover">
-                  {live ? "Subscribe" : "Ask us"}
+                  {live ? c.allAccess.button : c.allAccess.offlineButton}
                 </Link>
               </article>
             ))}
@@ -62,44 +65,46 @@ export default async function PricingPage() {
         </Section>
       )}
 
-      <Section tint title="Courses" lead="Buy a single course and keep access to it.">
-        {courses.length === 0 ? (
-          <p className="text-[14px] text-muted-foreground">No courses are on sale individually right now.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-[var(--radius)] border border-border bg-card">
-            <table className="w-full min-w-[40rem] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-border">
-                  <th scope="col" className="label-caps px-5 py-3.5 font-medium">Course</th>
-                  <th scope="col" className="label-caps px-5 py-3.5 text-right font-medium">Price</th>
-                  <th scope="col" className="px-5 py-3.5"><span className="sr-only">Actions</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((c) => (
-                  <tr key={c.sku} className="border-b border-border last:border-0">
-                    <th scope="row" className="px-5 py-4 text-left align-top">
-                      <span className="block text-[14px] font-semibold">{c.name}</span>
-                      {c.description && <span className="mt-1 block max-w-[60ch] text-micro font-normal leading-relaxed text-muted-foreground">{c.description}</span>}
-                    </th>
-                    <td className="text-data px-5 py-4 text-right align-top text-[15px] font-medium">{inr(c.amount)}</td>
-                    <td className="px-5 py-4 text-right align-top">
-                      {c.courseSlug && (
-                        <Link href={`/catalog/${c.courseSlug}`} className="text-[13px] underline underline-offset-4">
-                          Details
-                        </Link>
-                      )}
-                    </td>
+      {c.courses.show && (
+        <Section tint title={c.courses.title} lead={c.courses.lead}>
+          {courses.length === 0 ? (
+            <p className="text-[14px] text-muted-foreground">{c.courses.empty}</p>
+          ) : (
+            <div className="overflow-x-auto rounded-[var(--radius)] border border-border bg-card">
+              <table className="w-full min-w-[40rem] border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th scope="col" className="label-caps px-5 py-3.5 font-medium">{c.courses.courseColumn}</th>
+                    <th scope="col" className="label-caps px-5 py-3.5 text-right font-medium">{c.courses.priceColumn}</th>
+                    <th scope="col" className="px-5 py-3.5"><span className="sr-only">{c.courses.actionsColumn}</span></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Section>
+                </thead>
+                <tbody>
+                  {courses.map((course) => (
+                    <tr key={course.sku} className="border-b border-border last:border-0">
+                      <th scope="row" className="px-5 py-4 text-left align-top">
+                        <span className="block text-[14px] font-semibold">{course.name}</span>
+                        {course.description && <span className="mt-1 block max-w-[60ch] text-micro font-normal leading-relaxed text-muted-foreground">{course.description}</span>}
+                      </th>
+                      <td className="text-data px-5 py-4 text-right align-top text-[15px] font-medium">{inr(course.amount)}</td>
+                      <td className="px-5 py-4 text-right align-top">
+                        {course.courseSlug && (
+                          <Link href={`/catalog/${course.courseSlug}`} className="text-[13px] underline underline-offset-4">
+                            {c.courses.details}
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Section>
+      )}
 
-      {tracks.length > 0 && (
-        <Section title="Tracks" lead="Courses that build on each other, bought together.">
+      {c.tracks.show && tracks.length > 0 && (
+        <Section title={c.tracks.title} lead={c.tracks.lead}>
           <div className="grid gap-4 md:grid-cols-3">
             {tracks.map((t) => (
               <article key={t.sku} className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-6">
@@ -114,7 +119,7 @@ export default async function PricingPage() {
                   ))}
                 </ul>
                 <Link href={cta(t.sku)} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md border border-input bg-card px-5 text-sm font-medium transition-colors hover:bg-secondary">
-                  {live ? "Buy this track" : "Ask us"}
+                  {live ? c.tracks.button : c.tracks.offlineButton}
                 </Link>
               </article>
             ))}
@@ -122,15 +127,15 @@ export default async function PricingPage() {
         </Section>
       )}
 
-      {mentoring.length > 0 && (
-        <Section tint title="Mentoring" lead="Live, one to one. Requests are confirmed by email with a time that suits you.">
+      {c.mentoring.show && mentoring.length > 0 && (
+        <Section tint title={c.mentoring.title} lead={c.mentoring.lead}>
           <div className="overflow-x-auto rounded-[var(--radius)] border border-border bg-card">
             <table className="w-full min-w-[46rem] border-collapse text-left">
               <thead>
                 <tr className="border-b border-border">
-                  <th scope="col" className="label-caps px-5 py-3.5 font-medium">Session</th>
-                  <th scope="col" className="label-caps px-5 py-3.5 font-medium">Who it is for</th>
-                  <th scope="col" className="label-caps px-5 py-3.5 text-right font-medium">Price</th>
+                  <th scope="col" className="label-caps px-5 py-3.5 font-medium">{c.mentoring.sessionColumn}</th>
+                  <th scope="col" className="label-caps px-5 py-3.5 font-medium">{c.mentoring.whoColumn}</th>
+                  <th scope="col" className="label-caps px-5 py-3.5 text-right font-medium">{c.mentoring.priceColumn}</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,49 +154,55 @@ export default async function PricingPage() {
               </tbody>
             </table>
           </div>
-          <Link href="/mentoring" className="mt-6 inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover">
-            Request a session
-          </Link>
+          <SiteLink
+            link={c.mentoring.cta}
+            className="mt-6 inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+          />
         </Section>
       )}
 
-      <Section title={CORPORATE.headline} lead={CORPORATE.body}>
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {CORPORATE.includes.map((i) => (
-              <li key={i} className="rounded-[var(--radius)] border border-border bg-card px-4 py-3.5 text-[13.5px] leading-snug">
-                {i}
-              </li>
-            ))}
-          </ul>
-          <div className="rounded-[var(--radius)] border border-border bg-card p-6">
-            <p className="label-caps">Pricing</p>
-            <p className="mt-3 text-[1.4rem] leading-tight">Per engagement</p>
-            <p className="mt-3 text-micro leading-relaxed text-muted-foreground">Agreed against headcount and the courses your teams need.</p>
-            <Link href="/contact" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover">
-              Talk to us
-            </Link>
+      {c.corporate.show && (
+        <Section title={c.corporate.title} lead={c.corporate.lead}>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {c.corporate.includes.map((item, i) => (
+                <li key={i} className="rounded-[var(--radius)] border border-border bg-card px-4 py-3.5 text-[13.5px] leading-snug">
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+              <p className="label-caps">{c.corporate.cardLabel}</p>
+              <p className="mt-3 text-[1.4rem] leading-tight">{c.corporate.cardTitle}</p>
+              <p className="mt-3 text-micro leading-relaxed text-muted-foreground">{c.corporate.cardBody}</p>
+              <SiteLink
+                link={c.corporate.cta}
+                className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+              />
+            </div>
           </div>
-        </div>
-      </Section>
+        </Section>
+      )}
 
-      <Section tint title="Questions people ask">
-        <div className="grid gap-4 md:grid-cols-2">
-          {FAQ.map((f) => (
-            <details key={f.q} className="group rounded-[var(--radius)] border border-border bg-card p-5 open:bg-card">
-              <summary className="cursor-pointer list-none text-[14px] font-semibold marker:hidden">
-                <span className="flex items-start justify-between gap-4">
-                  {f.q}
-                  <span aria-hidden="true" className="mt-0.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-45">
-                    +
+      {c.faq.show && (
+        <Section tint title={c.faq.title}>
+          <div className="grid gap-4 md:grid-cols-2">
+            {c.faq.items.map((f, i) => (
+              <details key={i} className="group rounded-[var(--radius)] border border-border bg-card p-5 open:bg-card">
+                <summary className="cursor-pointer list-none text-[14px] font-semibold marker:hidden">
+                  <span className="flex items-start justify-between gap-4">
+                    {f.q}
+                    <span aria-hidden="true" className="mt-0.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-45">
+                      +
+                    </span>
                   </span>
-                </span>
-              </summary>
-              <p className="mt-3 text-[13.5px] leading-relaxed text-muted-foreground">{f.a}</p>
-            </details>
-          ))}
-        </div>
-      </Section>
+                </summary>
+                <p className="mt-3 text-[13.5px] leading-relaxed text-muted-foreground">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </Section>
+      )}
     </>
   );
 }

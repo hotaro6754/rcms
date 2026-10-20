@@ -1,5 +1,4 @@
 import path from "node:path";
-import { createRequire } from "node:module";
 
 /**
  * Reading PDFs on the server with pdf.js: page counts, text with its layout (for importing a
@@ -10,9 +9,9 @@ import { createRequire } from "node:module";
  * package folder.
  */
 
-const require = createRequire(import.meta.url);
-const pdfjsRoot = path.dirname(require.resolve("pdfjs-dist/package.json"));
-const STANDARD_FONTS = path.join(pdfjsRoot, "standard_fonts") + path.sep;
+// pdf.js is loaded from node_modules at runtime (serverExternalPackages), so its font folder is
+// there too. (require.resolve cannot be used here: the bundler rewrites it into a module id.)
+const STANDARD_FONTS = path.join(process.cwd(), "node_modules", "pdfjs-dist", "standard_fonts") + path.sep;
 
 type PdfJs = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
 let lib: Promise<PdfJs> | null = null;

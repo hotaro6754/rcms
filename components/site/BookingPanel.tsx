@@ -3,6 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { SiteLink } from "@/components/site/SiteLink";
+import type { PageContent } from "@/lib/site/fields";
+import type { mentoringPage } from "@/lib/site/pages/mentoring";
+
+export type BookingPanelCopy = PageContent<typeof mentoringPage>["booking"];
 
 export interface MentoringOptionView {
   sku: string;
@@ -19,20 +24,20 @@ const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("e
  * pretend to show free slots: the request reaches us as an enquiry and a time is confirmed by
  * email. Motion-free on purpose.
  */
-export function BookingPanel({ options }: { options: MentoringOptionView[] }) {
+export function BookingPanel({ options, copy }: { options: MentoringOptionView[]; copy: BookingPanelCopy }) {
   const [sku, setSku] = useState(options[0]?.sku ?? "");
   const chosen = options.find((o) => o.sku === sku);
   if (!options.length) {
     return (
       <div className="rounded-[var(--radius)] border border-border bg-card p-5 text-[14px] text-muted-foreground">
-        Mentoring is not open for requests right now. <Link href="/contact" className="underline underline-offset-4">Contact us</Link> instead.
+        {copy.closed} <SiteLink link={copy.closedLink} className="underline underline-offset-4" /> {copy.closedAfter}
       </div>
     );
   }
   return (
     <div className="rounded-[var(--radius)] border border-border bg-card">
       <fieldset className="border-b border-border p-5">
-        <legend className="label-caps">Choose a session</legend>
+        <legend className="label-caps">{copy.legend}</legend>
         <div className="mt-4 flex flex-col gap-2">
           {options.map((o) => (
             <label
@@ -53,13 +58,13 @@ export function BookingPanel({ options }: { options: MentoringOptionView[] }) {
       </fieldset>
       <div className="flex flex-wrap items-center justify-between gap-4 p-5">
         <p className="max-w-[36ch] text-micro text-muted-foreground">
-          Send the request with the times that suit you (IST). We reply by email to confirm a slot. Nothing is charged until a time is agreed.
+          {copy.note}
         </p>
         <Link
           href={`/contact?interest=${encodeURIComponent(chosen?.name ?? "Mentoring")}`}
           className="inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
-          Request this session
+          {copy.button}
         </Link>
       </div>
     </div>

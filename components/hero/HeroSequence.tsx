@@ -5,6 +5,9 @@ import { gsap, useGSAP, SplitText, ScrollTrigger } from "@/lib/gsap/register";
 import { EASE } from "@/lib/gsap/eases";
 import { ClaimDocument } from "@/components/illustration/ClaimDocument";
 import { introDone } from "@/lib/intro";
+import { SiteLink } from "@/components/site/SiteLink";
+import type { PageContent } from "@/lib/site/fields";
+import type { homePage } from "@/lib/site/pages/home";
 
 /**
  * The hero.
@@ -21,7 +24,7 @@ import { introDone } from "@/lib/intro";
  * No sky, no blobs, no grain behind it: a plain desk, so the one warm object on screen is
  * the claim. The hero ends on a hairline, the way a page ends, not on a decorative wave.
  */
-export function HeroSequence() {
+export function HeroSequence({ content: c }: { content: PageContent<typeof homePage>["hero"] }) {
   const root = useRef<HTMLDivElement>(null);
 
   // The scroll cue retires as soon as the reader starts scrolling.
@@ -100,51 +103,39 @@ export function HeroSequence() {
       <div className="relative mx-auto grid max-w-[1320px] items-center gap-12 px-6 pb-14 pt-24 lg:min-h-[100svh] lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-16 lg:pb-16">
         <div>
           <h1 className="text-[clamp(2.5rem,min(5vw,8.4vh),4.75rem)] leading-[1.02]">
-            <span className="hero-phrase block w-fit whitespace-nowrap">From RCM</span>
+            <span className="hero-phrase block w-fit whitespace-nowrap">{c.line1}</span>
             <span className="hero-phrase hero-accent block w-fit whitespace-nowrap pb-[0.06em] italic">
-              beginner.
+              {c.line2}
             </span>
-            <span className="hero-phrase mt-2 block w-fit whitespace-nowrap">To operations</span>
+            <span className="hero-phrase mt-2 block w-fit whitespace-nowrap">{c.line3}</span>
             <span className="hero-phrase hero-accent block w-fit whitespace-nowrap pb-[0.06em] italic">
-              leader.
+              {c.line4}
             </span>
           </h1>
 
           <p className="hero-after mt-7 max-w-[40ch] text-[16px] leading-relaxed text-secondary-foreground">
-            Training and mentoring in US healthcare revenue cycle operations. You learn it the way
-            it is worked: one claim, every stage it passes through, and every decision that can
-            stop it.
+            {c.lead}
           </p>
 
           <div className="hero-after mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <a
-              href="#tracks"
+            <SiteLink
+              link={c.primary}
               className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-            >
-              See the learning levels
-            </a>
-            <a
-              href="/mentoring"
+            />
+            <SiteLink
+              link={c.secondary}
               className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium underline decoration-input underline-offset-[6px] transition-colors hover:decoration-foreground"
-            >
-              Or talk it through, 1:1
-            </a>
+            />
           </div>
 
           {/* File metadata: the hero reads as the first page of a case file. */}
           <dl className="hero-after text-data mt-14 grid max-w-[26rem] grid-cols-3 gap-4 border-t border-border pt-4 text-[11px] leading-snug">
-            <div>
-              <dt className="text-subtle">CASE</dt>
-              <dd className="mt-1">20481</dd>
-            </div>
-            <div>
-              <dt className="text-subtle">SPECIALTY</dt>
-              <dd className="mt-1">Cardiology</dd>
-            </div>
-            <div>
-              <dt className="text-subtle">STAGES</dt>
-              <dd className="mt-1">13, one denial</dd>
-            </div>
+            {c.facts.map((f, i) => (
+              <div key={i}>
+                <dt className="text-subtle">{f.label}</dt>
+                <dd className="mt-1">{f.value}</dd>
+              </div>
+            ))}
           </dl>
         </div>
 
@@ -152,12 +143,14 @@ export function HeroSequence() {
         <ClaimDocument className="w-full" />
       </div>
 
-      <a
-        href="#problem"
-        className="scroll-cue absolute bottom-5 left-6 hidden items-center gap-2 text-data text-[11px] tracking-[0.08em] text-subtle transition-colors hover:text-foreground lg:flex xl:left-[max(1.5rem,calc((100vw-1320px)/2+1.5rem))]"
-      >
-        FOLLOW THE CLAIM <span aria-hidden="true">↓</span>
-      </a>
+      {c.scrollCue.label.trim() && (
+        <SiteLink
+          link={c.scrollCue}
+          className="scroll-cue absolute bottom-5 left-6 hidden items-center gap-2 text-data text-[11px] tracking-[0.08em] text-subtle transition-colors hover:text-foreground lg:flex xl:left-[max(1.5rem,calc((100vw-1320px)/2+1.5rem))]"
+        >
+          {c.scrollCue.label} <span aria-hidden="true">↓</span>
+        </SiteLink>
+      )}
     </div>
   );
 }

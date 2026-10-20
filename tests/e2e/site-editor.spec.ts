@@ -110,3 +110,33 @@ test("create, publish and delete a custom page", async ({ page, browser }) => {
   await page.waitForURL(/\/admin\/site$/);
   expect((await visitor.goto(`/p/${slug}`))!.status()).toBe(404);
 });
+
+test("theme: unreadable colours are refused, a change reaches the site, and resets", async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  page.on("dialog", (d) => d.accept());
+  await signIn(page, "super@rcms.test");
+  await page.goto("/admin/site/theme");
+  const colours = page.getByRole("group", { name: "Colours" });
+
+  // Light grey button text on a white button: refused.
+  await colours.locator("#f-colours-primary").fill("#ffffff");
+  await colours.locator("#f-colours-primaryText").fill("#eeeeee");
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: /Button text on Buttons has a contrast of/ })).toBeVisible();
+
+  // A readable change goes live.
+  await colours.locator("#f-colours-primary").fill("#1f2f4f");
+  await colours.locator("#f-colours-primaryText").fill("#ffffff");
+  await page.getByRole("button", { name: "Publish" }).click();
+  await expect(page.getByRole("status").filter({ hasText: /Published as version/ })).toBeVisible();
+  const visitor = await browser.newPage();
+  await visitor.goto("/about");
+  expect(await visitor.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--primary").trim())).toBe("#1f2f4f");
+
+  await page.getByRole("button", { name: "Reset to the original copy" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "original copy again" })).toBeVisible();
+  await visitor.reload();
+  expect(await visitor.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--primary").trim())).toBe("#161513");
+  await ctx.close();
+});

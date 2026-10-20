@@ -98,8 +98,9 @@ describe("reading content back", () => {
     }
   });
 
-  it("gives every built-in page a unique key and address", () => {
+  it("gives every built-in page a unique key and a site address to preview", () => {
     expect(new Set(BUILT_IN_PAGES.map((p) => p.key)).size).toBe(BUILT_IN_PAGES.length);
-    expect(new Set(BUILT_IN_PAGES.map((p) => p.path)).size).toBe(BUILT_IN_PAGES.length);
+    // Site-wide settings (navigation, theme) preview on the homepage, so addresses may repeat.
+    for (const p of BUILT_IN_PAGES) expect(p.path).toMatch(/^\/[\w\-/]*$/);
   });
 });

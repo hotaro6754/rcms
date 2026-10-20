@@ -12,6 +12,8 @@ import {
   type Metric,
   type MetricId,
 } from "@/lib/data/telemetry";
+import type { PageContent } from "@/lib/site/fields";
+import type { homePage } from "@/lib/site/pages/home";
 import { cn, money } from "@/lib/utils";
 
 const COUNT = ["No", "One", "Two", "Three", "Four", "Five"];
@@ -33,7 +35,7 @@ const STATUS: Record<Health, { label: string; className: string }> = {
  * No GSAP, no Motion: selection is React state and CSS owns the transitions. The full
  * seven-stage review lives at /governance.
  */
-export function ReviewPack() {
+export function ReviewPack({ content: c }: { content: PageContent<typeof homePage>["review"] }) {
   const [focus, setFocus] = useState<MetricId>("denial-rate");
   const m = METRICS[focus];
   const wrongWay = REVIEW_METRICS.map((id) => METRICS[id]).filter((x) => health(x) !== "on-target");
@@ -56,10 +58,8 @@ export function ReviewPack() {
         <div className="relative px-5 pb-8 pt-7 sm:px-8 sm:pb-10">
           <h3 className="font-serif-display text-[clamp(1.6rem,2.4vw,2.25rem)] leading-tight">{CLIENT.name}</h3>
           <p className="mt-3 max-w-[64ch] text-[15px] leading-relaxed text-muted-foreground">
-            Inventory is winning: worklist depth, days in A/R and first-pass resolution all beat
-            plan. {COUNT[wrongWay.length] ?? wrongWay.length}{" "}
-            {wrongWay.length === 1 ? "measure" : "measures"} moved the wrong way, and it is the same
-            cause each time.
+            {c.summary} {COUNT[wrongWay.length] ?? wrongWay.length}{" "}
+            {wrongWay.length === 1 ? "measure" : "measures"} {c.summaryTail}
           </p>
 
           <div className="mt-9 grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
@@ -113,7 +113,7 @@ export function ReviewPack() {
             <div className="flex flex-col gap-9">
               <section aria-live="polite">
                 <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">
-                  WHY IT MOVED · {m.label.toUpperCase()}
+                  {c.whyLabel} · {m.label.toUpperCase()}
                 </p>
                 <p className="font-serif-display mt-3 text-[1.35rem] leading-snug">{m.narrative.driver}.</p>
                 <dl className="mt-5 grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-2.5 text-[13.5px]">
@@ -137,7 +137,7 @@ export function ReviewPack() {
               </section>
 
               <section className="border-t border-foreground/15 pt-6">
-                <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">DECISIONS NEEDED TODAY</p>
+                <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">{c.decisionsLabel}</p>
                 <ol className="mt-4 flex flex-col gap-4">
                   {decisions.map((a) => (
                     <li key={a.id} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3">
@@ -157,7 +157,7 @@ export function ReviewPack() {
         </div>
       </div>
       <figcaption className="mt-4 text-[12.5px] text-subtle">
-        Illustrative teaching data. Point at a line to read why it moved.
+        {c.caption}
       </figcaption>
     </figure>
   );
