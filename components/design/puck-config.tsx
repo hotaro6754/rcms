@@ -41,6 +41,27 @@ const ALIGN3: [string, string][] = [
 ];
 const MD_HELP = "Use **bold**, *italic*, - bullets, 1. numbered lists and [links](https://…).";
 
+/** What a component holds when first dropped in, so there is something to see and edit. */
+const STARTERS: Partial<Record<ComponentType, Record<string, unknown>>> = {
+  Heading: { text: "Heading" },
+  Text: { text: "Write your text here. Use **bold** and *italic*, and leave a blank line between paragraphs." },
+  List: { items: [{ text: "First point" }, { text: "Second point" }, { text: "Third point" }] },
+  Quote: { text: "A sentence worth remembering.", cite: "" },
+  Callout: { title: "Note", text: "Something the reader should not miss." },
+  Button: { label: "Find out more", href: "/contact" },
+  Stats: { items: [{ value: "92%", label: "Clean claim rate", note: "" }, { value: "38", label: "Days in AR", note: "" }, { value: "4.1%", label: "Denial rate", note: "" }] },
+  Process: { steps: [{ title: "Identify", body: "Find the cause." }, { title: "Act", body: "Correct or appeal." }, { title: "Prevent", body: "Record the root cause." }] },
+  Timeline: { items: [{ when: "Week 1", title: "Start", body: "" }, { when: "Week 4", title: "Review", body: "" }, { when: "Week 8", title: "Finish", body: "" }] },
+  Cards: { items: [{ title: "First card", body: "A short description.", mediaId: "" }, { title: "Second card", body: "A short description.", mediaId: "" }, { title: "Third card", body: "A short description.", mediaId: "" }] },
+  BarChart: { title: "Chart title", items: [{ label: "First", value: 40 }, { label: "Second", value: 25 }, { label: "Third", value: 15 }] },
+  Accordion: { items: [{ title: "First question", body: "The answer." }, { title: "Second question", body: "The answer." }] },
+  Tabs: { items: [{ title: "First tab", body: "Content for the first tab." }, { title: "Second tab", body: "Content for the second tab." }] },
+  FlipCards: { items: [{ front: "Term", back: "Its definition." }, { front: "Term", back: "Its definition." }, { front: "Term", back: "Its definition." }] },
+  Reveal: { prompt: "A question for the reader.", answer: "The answer.", button: "Show the answer" },
+  KnowledgeCheck: { question: "A question to check understanding?", options: [{ text: "Right answer" }, { text: "Wrong answer" }], correct: 0, explanation: "Why the right answer is right." },
+  Table: { header: "Column one | Column two", rows: [{ cells: "Value | Value" }, { cells: "Value | Value" }] },
+};
+
 function defaults(type: ComponentType) {
   return COMPONENTS[type].parse({}) as Record<string, unknown>;
 }
@@ -72,7 +93,7 @@ export function designConfig({ media, ctx }: { media: MediaOption[]; ctx: Design
   const component = (type: ComponentType, label: string, fields: Fields, slots: string[] = []) => ({
     label,
     fields: { ...fields, ...Object.fromEntries(slots.map((s) => [s, { type: "slot" } as Field])) },
-    defaultProps: { ...defaults(type), ...Object.fromEntries(slots.map((s) => [s, []])) },
+    defaultProps: { ...defaults(type), ...(STARTERS[type] ?? {}), ...Object.fromEntries(slots.map((s) => [s, []])) },
     render: (props: Record<string, unknown>) => {
       const slotNodes: Record<string, ReactNode> = {};
       for (const s of slots) {

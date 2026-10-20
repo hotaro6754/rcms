@@ -8,7 +8,7 @@ import { defineConfig } from "@playwright/test";
  */
 export default defineConfig({
   testDir: ".",
-  testMatch: process.env.DEMO_ADMIN ? "record-admin-demo.spec.ts" : "record-demo.spec.ts",
+  testMatch: process.env.DEMO_SPEC ?? (process.env.DEMO_ADMIN ? "record-admin-demo.spec.ts" : "record-demo.spec.ts"),
   outputDir: path.join(os.tmpdir(), "rcms-demo"),
   timeout: 20 * 60_000,
   workers: 1,
