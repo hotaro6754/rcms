@@ -24,6 +24,16 @@ const MARKER = ".pgdata/.rcms-local-ready";
 
 const log = (m) => console.log(`\n[local] ${m}`);
 
+// 0. Dependencies must be installed in this folder first
+if (!existsSync("node_modules/prisma") || !existsSync("node_modules/next")) {
+  console.error(`
+[local] The project's packages are not installed in this folder (${process.cwd()}).
+        Run  npm install  here, in the folder that contains package.json, wait for it to finish,
+        then run  npm run local  again.
+`);
+  process.exit(1);
+}
+
 // 1. Settings
 if (!existsSync(".env")) {
   const base = existsSync(".env.example") ? readFileSync(".env.example", "utf8") : "";
