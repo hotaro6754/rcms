@@ -23,8 +23,8 @@ test.beforeAll(async () => {
   await db.connect();
   // Put the demo case back into review so the recording shows a reviewer approving it.
   await db.query(`UPDATE "SimCase" SET status = 'IN_REVIEW', "submittedById" = 'seed', "hasDraftChanges" = true WHERE slug = $1 AND status = 'PUBLISHED'`, [CASE_SLUG]);
-  await db.query(`DELETE FROM "AssistantConversation" WHERE "userId" IN (SELECT id FROM "User" WHERE email IN ('student@rcms.test', 'supportmgr@rcms.test'))`);
-  await db.query(`DELETE FROM "SimAttempt" WHERE "userId" = (SELECT id FROM "User" WHERE email = 'student@rcms.test') AND "caseId" = (SELECT id FROM "SimCase" WHERE slug = $1)`, [CASE_SLUG]);
+  await db.query(`DELETE FROM "AssistantConversation" WHERE "userId" IN (SELECT id FROM "User" WHERE email IN ('student@rcmexcel.com', 'supportmgr@rcmexcel.com'))`);
+  await db.query(`DELETE FROM "SimAttempt" WHERE "userId" = (SELECT id FROM "User" WHERE email = 'student@rcmexcel.com') AND "caseId" = (SELECT id FROM "SimCase" WHERE slug = $1)`, [CASE_SLUG]);
   await db.end();
   fs.mkdirSync(OUT, { recursive: true });
 });
@@ -46,7 +46,7 @@ test("record the walkthrough", async ({ browser }) => {
 
   // 2. Reviewer publishes a case
   await title(page, "1 · Authoring and review", "Instructors build cases without code; a different reviewer approves them.");
-  await signIn(page, "academic@rcms.test");
+  await signIn(page, "academic@rcmexcel.com");
   await go(page, "/admin/competencies");
   await caption(page, "The competency framework: each competency names the rubric criteria that evidence it.");
   await go(page, "/admin/cases");
@@ -69,7 +69,7 @@ test("record the walkthrough", async ({ browser }) => {
 
   // 3. Learner works the case
   await title(page, "2 · A learner works a denial", "Investigate, decide, document, submit and get scored feedback.");
-  await signIn(page, "student@rcms.test");
+  await signIn(page, "student@rcmexcel.com");
   await go(page, "/cases");
   await caption(page, "Case practice, and the learner's competency evidence so far.");
   await page.locator("li", { hasText: CASE_TITLE }).getByRole("button", { name: /Start case|Try again/ }).click();
@@ -149,7 +149,7 @@ test("record the walkthrough", async ({ browser }) => {
 
   // 5. Support lead
   await title(page, "4 · Support operations", "Routing, targets, history and resolution.");
-  await signIn(page, "supportmgr@rcms.test");
+  await signIn(page, "supportmgr@rcmexcel.com");
   await go(page, "/admin/support?view=all");
   await caption(page, "The queue: routed by topic to a team and owner, with first-response and resolution targets.", 3200);
   await go(page, `/admin/support?view=all&q=${reference}`);
@@ -176,7 +176,7 @@ test("record the walkthrough", async ({ browser }) => {
 
   // 7. Manager view
   await title(page, "5 · Readiness a manager can see", "Competency evidence from scored cases, not completion percentages.");
-  await signIn(page, "manager@rcms.test");
+  await signIn(page, "manager@rcmexcel.com");
   await go(page, "/team");
   await page.getByRole("heading", { name: "Competency evidence" }).scrollIntoViewIfNeeded();
   await caption(page, "The corporate manager sees which competencies each team member has demonstrated.", 3600);

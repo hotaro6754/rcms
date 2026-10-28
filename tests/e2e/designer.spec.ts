@@ -40,7 +40,7 @@ test("import a document, design it, place items freely, save", async ({ page }) 
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.setViewportSize({ width: 1440, height: 900 });
-  await signIn(page, "content@rcms.test");
+  await signIn(page, "content@rcmexcel.com");
   const lessonUrl = await firstLesson(page);
 
   await page.getByLabel("Add a block").selectOption("DESIGN");

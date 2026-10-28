@@ -7,7 +7,7 @@
  *
  * It creates .env if there is none (with a fresh random secret), starts the local database
  * (PGlite: real PostgreSQL, no install needed), creates the tables, adds the starter content
- * and the synthetic test accounts the first time, then starts the site at http://localhost:3000.
+ * and the synthetic test accounts, then starts the site at http://localhost:3000.
  * Ctrl-C stops the site and the database. Data is kept in .pgdata/ between runs.
  *
  * LOCAL ONLY: it creates test accounts with a published password. Never point it at a shared
@@ -20,7 +20,6 @@ import net from "node:net";
 
 const PORT = 55432;
 const URL = `postgresql://postgres:postgres@127.0.0.1:${PORT}/postgres`;
-const MARKER = ".pgdata/.rcms-local-ready";
 
 const log = (m) => console.log(`\n[local] ${m}`);
 
@@ -100,16 +99,13 @@ process.on("SIGINT", () => (stop(), process.exit(0)));
 process.on("SIGTERM", () => (stop(), process.exit(0)));
 
 try {
-  // 3. Tables and starter data (accounts only the first time)
+  // 3. Tables and starter data (accounts are created if missing)
   log("Creating the tables...");
   await run("npm", ["run", "db:deploy"]);
   log("Adding the starter courses and content...");
   await run("npm", ["run", "db:seed"]);
-  if (!existsSync(MARKER)) {
-    log("Creating the test accounts...");
-    await run("npm", ["run", "dev:accounts"]);
-    writeFileSync(MARKER, new Date().toISOString());
-  }
+  log("Creating the test accounts (existing ones are kept)...");
+  await run("npm", ["run", "dev:accounts"]);
 
   // 4. The site
   console.log(`
@@ -117,8 +113,8 @@ try {
   RCMExcel is starting at   http://localhost:3000
   Admin area                http://localhost:3000/admin
 
-  Sign in:  super@rcms.test   (Super Administrator)
-            student@rcms.test (learner)
+  Sign in:  admin@rcmexcel.com   (Super Administrator)
+            student@rcmexcel.com (learner)
   Password for every test account:  Rcms-dev-password-1
 
   The first page takes a while to open while it compiles. Ctrl-C to stop.

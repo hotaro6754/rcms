@@ -15,7 +15,7 @@ import { caption, go, hideDevOverlay, OUT, pause, saveVideo, scrollBy, signIn, t
  * from earlier runs, so the run is repeatable. Output: DEMO_OUT (default ./demo-output/rcms-admin-demo.webm).
  */
 
-const GRANTEE = "agent@rcms.test";
+const GRANTEE = "agent@rcmexcel.com";
 
 test.beforeAll(async () => {
   const url = process.env.DATABASE_URL ?? "";
@@ -47,7 +47,7 @@ test("record the admin walkthrough", async ({ browser }) => {
   await title(page, "The admin control centre", "Running the academy: people, content, learners, money and records. Every account and record here is synthetic.");
 
   // 1. Dashboard
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
   await go(page, "/admin");
   await caption(page, "Signed in as the super administrator. The dashboard shows what needs attention today.", 3400);
   await scrollBy(page, 700);
@@ -68,7 +68,7 @@ test("record the admin walkthrough", async ({ browser }) => {
   await expect(page.getByText(/Another administrator with approval authority must approve it/)).toBeVisible();
   await caption(page, "The request is recorded, but nothing changes until a different administrator approves it.", 3400);
 
-  await signIn(page, "director@rcms.test");
+  await signIn(page, "director@rcmexcel.com");
   await go(page, "/admin/approvals");
   await caption(page, "Signed in as the academy director. The request is waiting here.", 3000);
   const item = page.locator("li, article, tr").filter({ hasText: GRANTEE }).filter({ has: page.getByRole("button", { name: "Approve" }) }).first();
@@ -85,7 +85,7 @@ test("record the admin walkthrough", async ({ browser }) => {
   await caption(page, "Entries cannot be edited or deleted. The database itself refuses.", 3000);
 
   // 3. Content
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
   await title(page, "Content and review", "Courses are written as drafts and reach learners only after academic and compliance review.");
   await go(page, "/admin/content");
   await caption(page, "Levels and courses. Each course shows whether it has a released version and unreleased changes.", 3400);

@@ -21,7 +21,7 @@ npm run local
 ```
 
 It creates `.env`, starts a local database, adds the starter content and the synthetic test
-accounts (password `Rcms-dev-password-1`; sign in as `super@rcms.test`), and opens the site at
+accounts (password `Rcms-dev-password-1`; sign in as `admin@rcmexcel.com`), and opens the site at
 http://localhost:3000. Ctrl-C stops everything; your data is kept in `.pgdata/`.
 
 The same steps by hand, if you want to run each part yourself:
@@ -41,9 +41,9 @@ npm run dev:accounts      # LOCAL ONLY: one synthetic account per role, see belo
 npm run dev
 ```
 
-`npm run dev:accounts` creates `student@`, `super@`, `director@`, `content@`, `academic@`,
+`npm run dev:accounts` creates `student@`, `admin@`, `director@`, `content@`, `academic@`,
 `compliance@`, `subscribers@`, `agent@`, `supportmgr@`, `finance@`, `vendormgr@`, `analyst@`,
-`auditor@` and `vendor@rcms.test`, all with the password printed by the script. Never run it
+`auditor@` and `vendor@rcmexcel.com`, all with the password printed by the script. Never run it
 against a shared or production database.
 
 First administrator in a real deployment: the person signs up and verifies their email, then

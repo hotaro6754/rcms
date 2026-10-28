@@ -28,7 +28,7 @@ test.beforeAll(async () => {
   if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error("E2E data reset runs only against a local database.");
   const db = new Client({ connectionString: url });
   await db.connect();
-  await db.query(`DELETE FROM "SimAttempt" WHERE "userId" = (SELECT id FROM "User" WHERE email = 'student@rcms.test') AND "caseId" = (SELECT id FROM "SimCase" WHERE slug = 'duplicate-denial-already-paid')`);
+  await db.query(`DELETE FROM "SimAttempt" WHERE "userId" = (SELECT id FROM "User" WHERE email = 'student@rcmexcel.com') AND "caseId" = (SELECT id FROM "SimCase" WHERE slug = 'duplicate-denial-already-paid')`);
   await db.end();
 });
 
@@ -36,7 +36,7 @@ test("denial case: approve, investigate, save and return, submit, feedback, inst
   // 1. A reviewer activates draft competencies and approves the case if still in review.
   const rCtx = await browser.newContext();
   const reviewer = await rCtx.newPage();
-  await signIn(reviewer, "academic@rcms.test");
+  await signIn(reviewer, "academic@rcmexcel.com");
   await reviewer.goto("/admin/competencies");
   // Buttons inside closed <details> are hidden from role queries: open every competency first.
   const summaries = reviewer.locator("details > summary");
@@ -62,7 +62,7 @@ test("denial case: approve, investigate, save and return, submit, feedback, inst
   const lCtx = await browser.newContext();
   const learner = await lCtx.newPage();
   learner.on("dialog", (d) => d.accept());
-  await signIn(learner, "student@rcms.test");
+  await signIn(learner, "student@rcmexcel.com");
   await learner.goto("/cases");
   const card = learner.locator("li", { hasText: CASE_TITLE });
   await card.getByRole("button", { name: /Start case|Try again/ }).click();
@@ -107,7 +107,7 @@ test("denial case: approve, investigate, save and return, submit, feedback, inst
   // 4. The corporate manager sees the competency evidence for their team, and only their team.
   const mCtx = await browser.newContext();
   const manager = await mCtx.newPage();
-  await signIn(manager, "manager@rcms.test");
+  await signIn(manager, "manager@rcmexcel.com");
   await manager.goto("/team");
   const row = manager.locator("tr", { hasText: "Test Learner" }).last();
   await expect(row.getByText("Demonstrated").first()).toBeVisible();

@@ -43,7 +43,7 @@ test("a PDF from the library, or a PDF or Word file uploaded in the form, become
   const stamp = Date.now().toString(36);
   const libraryTitle = `Library PDF ${stamp}`;
   const formTitle = `Form PDF ${stamp}`;
-  await signIn(page, "content@rcms.test");
+  await signIn(page, "content@rcmexcel.com");
 
   // A PDF uploaded to the media library...
   await page.goto("/admin/content/media");

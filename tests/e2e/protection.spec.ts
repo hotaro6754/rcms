@@ -18,7 +18,7 @@ async function signIn(page: Page, email: string) {
 }
 
 test("lessons carry no watermark and resist copying and printing", async ({ page }) => {
-  await signIn(page, "student@rcms.test");
+  await signIn(page, "student@rcmexcel.com");
   await page.goto("/academy/foundation");
   await page.locator('a[href^="/academy/foundation/"]').first().click();
   await page.waitForURL(/\/academy\/foundation\/[^/#?]+$/);
@@ -26,7 +26,7 @@ test("lessons carry no watermark and resist copying and printing", async ({ page
   const protectedArea = page.locator(".protected-content");
   await expect(protectedArea).toHaveCount(1);
   // No watermark: nothing in the protected area carries the learner's details.
-  expect(await protectedArea.evaluate((el) => el.outerHTML.includes("student@rcms.test"))).toBe(false);
+  expect(await protectedArea.evaluate((el) => el.outerHTML.includes("student@rcmexcel.com"))).toBe(false);
   await expect(protectedArea.locator("[style*='svg']")).toHaveCount(0);
 
   // Right-click, copy and the print shortcut are cancelled inside the lesson.

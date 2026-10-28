@@ -38,14 +38,14 @@ test("public pages", async ({ page }) => {
 });
 
 test("learner pages", async ({ page }) => {
-  await signIn(page, "student@rcms.test");
+  await signIn(page, "student@rcmexcel.com");
   const bad: string[] = [];
   for (const p of ["/academy", "/cases", "/support", "/support/new", "/assistant", "/account", "/certificates"]) bad.push(...(await scan(page, p)));
   expect(bad).toEqual([]);
 });
 
 test("staff pages", async ({ page }) => {
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
   const bad: string[] = [];
   for (const p of ["/admin", "/admin/support", "/admin/support/settings", "/admin/cases", "/admin/competencies", "/admin/grading/cases", "/admin/copilot", "/admin/content", "/admin/site", "/admin/site/about"]) bad.push(...(await scan(page, p)));
   expect(bad).toEqual([]);

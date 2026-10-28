@@ -27,7 +27,7 @@ async function ask(page: Page, q: string) {
 test("assistant: records, sources, hand-off with a real case number, copilot action with confirmation", async ({ browser }) => {
   const lCtx = await browser.newContext();
   const learner = await lCtx.newPage();
-  await signIn(learner, "student@rcms.test");
+  await signIn(learner, "student@rcmexcel.com");
   await learner.goto("/assistant");
 
   const progress = await ask(learner, "What do I need to complete before my certificate?");
@@ -47,7 +47,7 @@ test("assistant: records, sources, hand-off with a real case number, copilot act
   // Staff: the copilot proposes, the person confirms, the normal service assigns.
   const sCtx = await browser.newContext();
   const staff = await sCtx.newPage();
-  await signIn(staff, "supportmgr@rcms.test");
+  await signIn(staff, "supportmgr@rcmexcel.com");
   await staff.goto("/admin/copilot");
   const summary = await ask(staff, `Summarize ${reference}`);
   await expect(summary).toContainText("Certificate name spelling");

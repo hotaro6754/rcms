@@ -26,7 +26,7 @@ async function signIn(page: Page, email: string) {
 }
 
 test("only the Super Administrator can edit the website", async ({ page }) => {
-  await signIn(page, "content@rcms.test");
+  await signIn(page, "content@rcmexcel.com");
   await page.goto("/admin/site");
   await expect(page).toHaveURL(/\/admin\?denied=1/);
   await expect(page.getByRole("link", { name: "Website", exact: true })).toHaveCount(0);
@@ -37,7 +37,7 @@ test("edit, preview, publish and reset a page's copy", async ({ browser }) => {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   page.on("dialog", (d) => d.accept());
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
 
   // What visitors see now (an earlier interrupted run may have left an edit published).
   const visitor = await browser.newPage();
@@ -85,7 +85,7 @@ test("edit, preview, publish and reset a page's copy", async ({ browser }) => {
 test("create, publish and delete a custom page", async ({ page, browser }) => {
   const slug = `e2e-${Date.now().toString(36)}`;
   page.on("dialog", (d) => d.accept());
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
   await page.goto("/admin/site");
   await page.getByLabel("Title").fill("Corporate training");
   await page.getByLabel("Address").fill(slug);
@@ -124,7 +124,7 @@ test("theme: unreadable colours are refused, a change reaches the site, and rese
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   page.on("dialog", (d) => d.accept());
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
   await openEditor(page, "/admin/site/theme");
   const colours = page.getByRole("group", { name: "Colours" });
 

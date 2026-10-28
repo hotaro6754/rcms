@@ -19,8 +19,8 @@ test("learner journey: access granted by a subscriber admin, lesson completed, p
   // 1. A subscriber admin grants the learner complimentary access to the Foundation course.
   const adminCtx = await browser.newContext();
   const admin = await adminCtx.newPage();
-  await signIn(admin, "subscribers@rcms.test");
-  await admin.goto("/admin/subscribers?q=student%40rcms.test");
+  await signIn(admin, "subscribers@rcmexcel.com");
+  await admin.goto("/admin/subscribers?q=student%40rcmexcel.com");
   await admin.locator('a[href^="/admin/subscribers/"]').first().click();
   await admin.waitForURL(/\/admin\/subscribers\/.+/);
   const grant = admin.locator("form", { has: admin.getByRole("button", { name: "Grant access" }) });
@@ -34,7 +34,7 @@ test("learner journey: access granted by a subscriber admin, lesson completed, p
   // 2. The learner sees the course, opens the first lesson and completes it.
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
-  await signIn(page, "student@rcms.test");
+  await signIn(page, "student@rcmexcel.com");
   await page.goto("/academy");
   await expect(page.locator('a[href^="/academy/foundation"]').first()).toBeVisible();
   await page.goto("/academy/foundation");
@@ -59,7 +59,7 @@ test("learner journey: access granted by a subscriber admin, lesson completed, p
 
 test("role boundaries hold in the browser", async ({ browser }) => {
   const learner = await (await browser.newContext()).newPage();
-  await signIn(learner, "student@rcms.test");
+  await signIn(learner, "student@rcmexcel.com");
   await learner.goto("/admin");
   await expect(learner).toHaveURL(/\/account$/);
   await learner.goto("/vendor");
@@ -67,14 +67,14 @@ test("role boundaries hold in the browser", async ({ browser }) => {
   expect((await learner.request.get("/api/exports/subscribers")).status()).toBe(403);
 
   const vendor = await (await browser.newContext()).newPage();
-  await signIn(vendor, "vendor@rcms.test");
+  await signIn(vendor, "vendor@rcmexcel.com");
   await vendor.goto("/academy");
   await expect(vendor).toHaveURL(/\/vendor$/);
   await vendor.goto("/admin/subscribers");
   await expect(vendor).not.toHaveURL(/\/admin/);
 
   const agent = await (await browser.newContext()).newPage();
-  await signIn(agent, "agent@rcms.test");
+  await signIn(agent, "agent@rcmexcel.com");
   // A support agent is staff but holds no finance permission: refused and sent to the dashboard.
   await agent.goto("/admin/finance");
   await expect(agent).toHaveURL(/\/admin\?denied=1$/);

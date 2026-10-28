@@ -93,7 +93,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await title(page, "Edit everything, without code", "The website, its theme, new pages and lesson content: changed by the Super Administrator from the admin. All data here is synthetic.");
 
   // 1. The website editor
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
   await go(page, "/admin/site");
   await caption(page, "Website pages: every public page, the navigation, footer, theme and legal pages. Only the Super Administrator has this.", 3800);
   await scrollBy(page, 900);
@@ -249,7 +249,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
 
   // 5. What a learner sees
   await title(page, "What learners can't take away", "No copying or printing, and documents that are read, never downloaded.");
-  await signIn(page, "student@rcms.test");
+  await signIn(page, "student@rcmexcel.com");
   await go(page, "/academy/foundation");
   await page.locator('a[href^="/academy/foundation/"]').first().click();
   await page.waitForURL(/\/academy\/foundation\/[^/#?]+$/);
@@ -268,7 +268,7 @@ test("record the website editor and designer walkthrough", async ({ browser }) =
   await caption(page, "No website can stop a phone camera or a system screenshot; these measures are deterrents.", 3600);
 
   // Put everything back.
-  await signIn(page, "super@rcms.test");
+  await signIn(page, "admin@rcmexcel.com");
   await go(page, lessonUrl);
   const rows = page.locator("ol > li").filter({ hasText: /VISUAL DESIGN/ });
   for (let n = await rows.count(); n > 0; n--) {

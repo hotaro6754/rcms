@@ -127,16 +127,32 @@ deploy/deploy.sh seed      # load the reference content once (safe to repeat; ne
 Open `https://yourdomain`. The certificate is issued on the first visit after DNS has
 propagated; if it is not ready, `docker compose -f deploy/docker-compose.yml logs caddy` says why.
 
-**The first administrator:** sign up on the site with your own email and password, and click the
-verification link. Then run:
+**The first administrator:** go to `https://rcmexcel.com/sign-up` and sign up as
+`admin@rcmexcel.com` with a password you choose (a password manager is best), then click the
+verification link that arrives in that mailbox, so the mailbox from §5 must work first. Then run:
 
 ```bash
-deploy/deploy.sh admin you@yourdomain
+deploy/deploy.sh admin admin@rcmexcel.com
 ```
 
 Sign in again: you will be asked to set up two-step verification before the admin area opens.
 Grant other staff roles from **Administration → Users and roles**. Each grant needs a second
 administrator to approve it.
+
+**Staff accounts on the live site.** The `@rcmexcel.com` addresses in the README
+(`admin@`, `director@`, `content@` and so on) are *local test accounts* with a public password.
+They exist only on a developer's own computer: `dev:accounts` refuses to run on a live server,
+and nothing seeds passwords there. On the live site every person signs up with their own
+password and is given a role from the admin area. Suggested addresses:
+
+| Address | Purpose |
+|---|---|
+| `admin@rcmexcel.com` | You, the Super Administrator. A real mailbox. |
+| `support@rcmexcel.com` | Shown on the contact page; forward it to your inbox (an alias, not a login). |
+| `no-reply@rcmexcel.com` | What the site sends email as. It never receives. |
+| each team member's own address | Their personal login with the role they need. Do not share logins: the audit trail and the two-person approvals depend on each person having their own. |
+
+A free Zoho plan has 5 mailboxes, so give mailboxes to people and use aliases for roles.
 
 ## 7. Backups
 

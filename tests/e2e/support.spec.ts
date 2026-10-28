@@ -22,7 +22,7 @@ test("support case: raise, route, reply, resolve, reopen, history", async ({ bro
   const lCtx = await browser.newContext();
   const learner = await lCtx.newPage();
   learner.on("dialog", (d) => d.accept());
-  await signIn(learner, "student@rcms.test");
+  await signIn(learner, "student@rcmexcel.com");
   await learner.goto("/support/new?category=TECHNICAL&from=%2Facademy");
   await learner.getByLabel("Subject").fill(subject);
   await learner.getByRole("textbox", { name: "Message" }).fill("The lesson video shows a spinner and never starts, on two browsers.");
@@ -38,7 +38,7 @@ test("support case: raise, route, reply, resolve, reopen, history", async ({ bro
   // The support manager sees it in the technical team's queue and asks for more information.
   const sCtx = await browser.newContext();
   const staff = await sCtx.newPage();
-  await signIn(staff, "supportmgr@rcms.test");
+  await signIn(staff, "supportmgr@rcmexcel.com");
   await staff.goto(`/admin/support?view=all&q=${encodeURIComponent(reference)}`);
   await staff.getByRole("link", { name: subject }).click();
   await staff.waitForURL(/\/admin\/support\/[^/]+$/);

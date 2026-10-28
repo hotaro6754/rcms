@@ -31,7 +31,7 @@ npm run test:e2e
 
 `TEST_DATABASE_URL` is used instead of `DATABASE_URL` so a test run can never truncate a
 development or production database by accident. Never point the E2E tests at production: they
-sign in with the synthetic `@rcms.test` accounts and change data.
+sign in with the synthetic `@rcmexcel.com` accounts and change data.
 
 ## 3. Results at the time of writing
 
