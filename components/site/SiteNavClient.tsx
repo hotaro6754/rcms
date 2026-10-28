@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth-client";
 import type { SiteContent } from "@/lib/site/pages/site";
+import { Wordmark } from "@/components/brand/Wordmark";
 import { SiteLink } from "./SiteLink";
 
 /**
@@ -89,10 +90,8 @@ export function SiteNavClient({ content: c }: { content: SiteContent["nav"] }) {
       )}
     >
       <nav aria-label="Primary" className="mx-auto flex h-14 max-w-[1320px] items-center gap-6 px-6">
-        {/* Masthead wordmark: set like the header of the claim it teaches from. */}
-        <Link href="/" className="flex shrink-0 items-baseline gap-2.5">
-          <span className="text-data text-[13px] font-semibold tracking-[0.18em]">{c.brandShort}</span>
-          <span className="font-serif-display hidden text-[17px] leading-none sm:inline">{c.brandName}</span>
+        <Link href="/" className="flex shrink-0 items-center">
+          <Wordmark />
         </Link>
 
         <ul className="mx-auto hidden items-center gap-1 lg:flex">

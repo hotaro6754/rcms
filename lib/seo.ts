@@ -56,6 +56,6 @@ export function organisationLd() {
     name: BRAND.name,
     url,
     description: BRAND.tagline,
-    logo: `${url}/icon.svg`,
+    logo: `${url}/brand/rcmexcel-logo.png`,
   };
 }
