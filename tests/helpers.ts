@@ -3,12 +3,23 @@ import type { AccountStatus, Role, StaffRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { loadActor, type Actor } from "@/lib/actor";
 
-/** Empties every table (the audit trigger is row-level, so TRUNCATE is allowed). */
+/**
+ * Empties every table. Foreign-key checks are switched off for the duration, on one connection
+ * (an interactive transaction holds it). AuditLog is truncated because its triggers refuse
+ * DELETE; TRUNCATE does not fire them.
+ */
 export async function resetDb() {
-  const rows = await prisma.$queryRaw<{ tablename: string }[]>`
-    SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
-  const list = rows.map((r) => `"public"."${r.tablename}"`).join(", ");
-  await prisma.$executeRawUnsafe(`TRUNCATE ${list} RESTART IDENTITY CASCADE`);
+  const rows = await prisma.$queryRaw<{ t: string }[]>`
+    SELECT TABLE_NAME AS t FROM information_schema.TABLES
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME <> '_prisma_migrations'`;
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 0");
+      for (const { t } of rows) await tx.$executeRawUnsafe(t === "AuditLog" ? "TRUNCATE TABLE `AuditLog`" : `DELETE FROM \`${t}\``);
+      await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 1");
+    },
+    { timeout: 60_000 },
+  );
 }
 
 export async function makeUser(opts: { role?: Role; staff?: StaffRole[]; status?: AccountStatus; name?: string; email?: string; verified?: boolean } = {}): Promise<Actor> {

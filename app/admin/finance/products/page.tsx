@@ -4,6 +4,7 @@ import { PageHead } from "@/components/platform/PlatformShell";
 import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
 import { BTN, Field, FIELD, inr, Pill, Table, Td } from "@/components/admin/kit";
 import { createProductAction, productActiveAction, requestPriceChangeAction } from "@/lib/actions/commerce";
+import { strings } from "@/lib/json-list";
 
 export const metadata = { title: "Plans and pricing" };
 
@@ -31,7 +32,7 @@ export default async function ProductsPage() {
                   {p.name}
                   <span className="text-data block text-[11px] text-subtle">{p.sku}</span>
                   {p.program && <span className="block text-[12px] text-muted-foreground">{p.program.name}</span>}
-                  {p.includes.length > 0 && <span className="block text-[12px] text-muted-foreground">Includes: {p.includes.join(", ")}</span>}
+                  {strings(p.includes).length > 0 && <span className="block text-[12px] text-muted-foreground">Includes: {strings(p.includes).join(", ")}</span>}
                 </Td>
                 <Td>{p.kind.toLowerCase()}</Td>
                 <Td>

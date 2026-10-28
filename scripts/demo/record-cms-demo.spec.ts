@@ -2,7 +2,7 @@ import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import PDFDocument from "pdfkit";
-import { Client } from "pg";
+import { localDb } from "../../tests/e2e/db";
 import { expect, test, type Page } from "@playwright/test";
 import { caption, go, hideDevOverlay, OUT, pause, saveVideo, scrollBy, signIn, title } from "./helpers";
 
@@ -44,13 +44,10 @@ function onePager(): Promise<Buffer> {
 }
 
 test.beforeAll(async () => {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error("The demo prepares data only on a local database.");
-  const db = new Client({ connectionString: url });
-  await db.connect();
-  const { rows } = await db.query(`SELECT "fileKey" FROM "Resource" WHERE "mimeType" = 'application/pdf' AND "fileKey" NOT LIKE 'https://%' ORDER BY "createdAt" LIMIT 1`);
+  const db = await localDb();
+  const rows: { fileKey: string }[] = await db.query("SELECT `fileKey` FROM `Resource` WHERE `mimeType` = 'application/pdf' AND `fileKey` NOT LIKE 'https://%' ORDER BY `createdAt` LIMIT 1");
   // Custom pages left by an interrupted recording are taken offline, as "Delete this page" does.
-  await db.query(`UPDATE "SitePage" SET "archivedAt" = now(), "published" = NULL, "draft" = NULL WHERE custom AND title = 'Corporate training' AND "archivedAt" IS NULL`);
+  await db.query("UPDATE `SitePage` SET `archivedAt` = now(), `published` = NULL, `draft` = NULL WHERE custom AND title = 'Corporate training' AND `archivedAt` IS NULL");
   await db.end();
   if (rows[0]) {
     const file = path.resolve("storage", rows[0].fileKey.includes("/") ? rows[0].fileKey : `materials/${rows[0].fileKey}`);

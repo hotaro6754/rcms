@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaClient, PublishState, ProductKind } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { mysqlPoolConfig } from "../lib/db-config";
 import { LEVELS, PROGRAMS, BUNDLES, MENTORING } from "../lib/data/catalog";
 import { FOUNDATION_LESSONS } from "../lib/data/curriculum";
 import { CLIENT, METRICS, DENIALS, PODS } from "../lib/data/telemetry";
@@ -10,6 +11,7 @@ import { backfillReleases, seedBlocksFromBodies, seedFoundationAssessment, seedL
 import { seedLibrary } from "./seed-library";
 import { seedCases } from "./seed-cases";
 import { seedSupport } from "./seed-support";
+import { strings } from "../lib/json-list";
 
 /**
  * Seeds a fresh database from the modules that drive the marketing site. Idempotent and
@@ -23,7 +25,7 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error("DATABASE_URL is not set. Copy .env.example to .env before seeding.");
 }
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+const prisma = new PrismaClient({ adapter: new PrismaMariaDb(mysqlPoolConfig(connectionString, 2)) });
 
 const toPaise = (rupees: number) => Math.round(rupees * 100);
 
@@ -90,7 +92,7 @@ async function seedTracksAndMentoring() {
     const found = await prisma.product.findUnique({ where: { sku: `track-${b.id}` } });
     if (!found) {
       await prisma.product.create({ data: { sku: `track-${b.id}`, kind: ProductKind.TRACK, name: b.name, amount: toPaise(b.price), includes: b.includes, description: b.who } });
-    } else if (!found.includes.length) {
+    } else if (!strings(found.includes).length) {
       await prisma.product.update({ where: { id: found.id }, data: { includes: b.includes } });
     }
   }
@@ -185,6 +187,12 @@ async function seedPlatform() {
 }
 
 async function main() {
+  // --if-empty (used by the deploy build): seed only a brand-new database, so a later deploy
+  // never re-adds starter content the team has since changed or removed.
+  if (process.argv.includes("--if-empty") && (await prisma.program.count()) > 0) {
+    console.log("Starter content already present; nothing to seed.");
+    return;
+  }
   console.log("Seeding RCMExcel…");
   await seedPrograms();
   await seedLevels(prisma);

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { listPublishedCourses, listPublishedLevels } from "./catalog";
+import { strings } from "@/lib/json-list";
 
 /**
  * What the public site shows about levels, courses and prices. Everything comes from published
@@ -44,8 +45,8 @@ export async function publicPaths(): Promise<PublicLevel[]> {
     displayTitle: l.displayTitle,
     shortDescription: l.shortDescription,
     audience: l.audience,
-    outcomes: l.outcomes,
-    coreTopics: l.coreTopics,
+    outcomes: strings(l.outcomes),
+    coreTopics: strings(l.coreTopics),
     estimatedEffort: l.estimatedEffort,
     accent: l.accent,
     courses: courses
@@ -86,9 +87,9 @@ export async function publicPricing() {
         amount,
         interval,
         trialDays,
-        includes,
+        includes: strings(includes),
         courseSlug: programId ? (slugOf.get(programId) ?? null) : null,
-        includedCourses: includes.map((slug) => nameOf.get(slug)).filter(Boolean) as string[],
+        includedCourses: strings(includes).map((slug) => nameOf.get(slug)).filter(Boolean) as string[],
       }));
   // A track is shown only while every course it includes is released.
   const tracks = pick("TRACK").filter((t) => t.includedCourses.length === t.includes.length && t.includes.length > 0);

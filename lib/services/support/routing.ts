@@ -7,6 +7,7 @@ import { ServiceError } from "@/lib/errors";
 import { addBusinessMinutes, businessMinutesBetween, DEFAULT_CALENDAR, DEFAULT_SLA, type Calendar } from "@/lib/support/sla";
 import { DONE_STATUSES, OPEN_STATUSES } from "@/lib/support/states";
 import { usersWithPermission } from "@/lib/services/people/staff-lookup";
+import { numbers } from "@/lib/json-list";
 
 /**
  * Support routing, assignment and SLA configuration.
@@ -30,7 +31,7 @@ export async function recordEvent(tx: Tx, ticketId: string, kind: TicketEventKin
 
 export async function supportCalendar(tx: Tx = prisma): Promise<Calendar> {
   const c = await tx.supportCalendar.findUnique({ where: { id: "default" } });
-  return c ? { utcOffsetMinutes: c.utcOffsetMinutes, workDays: c.workDays, startMinute: c.startMinute, endMinute: c.endMinute } : DEFAULT_CALENDAR;
+  return c ? { utcOffsetMinutes: c.utcOffsetMinutes, workDays: numbers(c.workDays), startMinute: c.startMinute, endMinute: c.endMinute } : DEFAULT_CALENDAR;
 }
 
 export async function slaFor(priority: SupportPriority, tx: Tx = prisma) {

@@ -47,7 +47,7 @@ const rateLimitEnabled =
 
 export const auth = betterAuth({
   appName: BRAND.name,
-  database: prismaAdapter(prisma, { provider: "postgresql" }),
+  database: prismaAdapter(prisma, { provider: "mysql" }),
 
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,

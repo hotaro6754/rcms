@@ -20,6 +20,7 @@ import {
   uniqueSlug,
   type Tx,
 } from "./core";
+import { strings } from "@/lib/json-list";
 
 /**
  * The curriculum tree: levels, courses, modules and lessons. Create, edit, reorder, move,
@@ -162,7 +163,7 @@ export async function duplicateLevel(actor: Actor, levelId: string) {
     // Courses are not copied: a course belongs to one level. Duplicate courses separately.
     const { id: _id, slug: _slug, createdAt: _c, updatedAt: _u, archivedAt: _a, status: _s, sequence: _q, ...rest } = src;
     return tx.learningLevel.create({
-      data: { ...rest, name: `${src.name} (copy)`, slug: await uniqueSlug(tx, `${src.name}-copy`, "learningLevel"), status: "DRAFT", sequence: (last?.sequence ?? 0) + 1 },
+      data: { ...rest, prerequisites: strings(rest.prerequisites), outcomes: strings(rest.outcomes), coreTopics: strings(rest.coreTopics), name: `${src.name} (copy)`, slug: await uniqueSlug(tx, `${src.name}-copy`, "learningLevel"), status: "DRAFT", sequence: (last?.sequence ?? 0) + 1 },
     });
   });
   await log(actor, "duplicate", "LearningLevel", copy.id, { from: levelId });
@@ -310,9 +311,9 @@ export async function duplicateCourse(actor: Actor, courseId: string) {
         who: src.who,
         artefact: src.artefact,
         weeks: src.weeks,
-        outcomes: src.outcomes,
+        outcomes: strings(src.outcomes),
         description: src.description,
-        prerequisites: src.prerequisites,
+        prerequisites: strings(src.prerequisites),
         durationMinutes: src.durationMinutes,
         difficulty: src.difficulty,
         isFree: src.isFree,
@@ -784,7 +785,7 @@ async function copyModule(tx: Tx, moduleId: string, programId: string, sortOrder
       programId,
       title: markCopy ? `${src.title} (copy)` : src.title,
       summary: src.summary,
-      objectives: src.objectives,
+      objectives: strings(src.objectives),
       estimatedMinutes: src.estimatedMinutes,
       sortOrder,
       state: "DRAFT",
@@ -807,7 +808,7 @@ async function copyLesson(tx: Tx, lessonId: string, moduleId: string, sortOrder:
     data: {
       moduleId,
       title: markCopy ? `${src.title} (copy)` : src.title,
-      objectives: src.objectives,
+      objectives: strings(src.objectives),
       durationSec: src.durationSec,
       freePreview: src.freePreview,
       completionRule: src.completionRule,
@@ -849,8 +850,8 @@ async function copyLesson(tx: Tx, lessonId: string, moduleId: string, sortOrder:
           type: x.type,
           scenario: x.scenario,
           prompt: x.prompt,
-          options: x.options,
-          targets: x.targets,
+          options: strings(x.options),
+          targets: strings(x.targets),
           correct: x.correct,
           answerKey: (x.answerKey ?? undefined) as never,
           rationale: x.rationale,

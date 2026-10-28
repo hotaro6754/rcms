@@ -22,6 +22,7 @@ export function checkEnv(env: Record<string, string | undefined> = process.env):
   const missing = (k: string) => !env[k]?.trim();
 
   if (missing("DATABASE_URL")) errors.push("DATABASE_URL is not set.");
+  else if (!/^(mysql|mariadb):\/\//.test(env.DATABASE_URL ?? "")) errors.push("DATABASE_URL must be a mysql:// address: this app uses MySQL or MariaDB.");
   if (missing("BETTER_AUTH_SECRET")) errors.push("BETTER_AUTH_SECRET is not set. Generate one with `openssl rand -base64 32`.");
   else if ((env.BETTER_AUTH_SECRET ?? "").length < 32) errors.push("BETTER_AUTH_SECRET is shorter than 32 characters.");
 
@@ -37,7 +38,11 @@ export function checkEnv(env: Record<string, string | undefined> = process.env):
   if (missing("CRON_SECRET")) errors.push("CRON_SECRET is not set. Scheduled releases, subscription renewals and retention purges would never run.");
   else if ((env.CRON_SECRET ?? "").length < 24) errors.push("CRON_SECRET is shorter than 24 characters.");
 
-  if (missing("RESEND_API_KEY")) warnings.push("RESEND_API_KEY is not set: no email (verification, password reset, receipts) will be sent.");
+  if (missing("SMTP_HOST") && missing("RESEND_API_KEY")) warnings.push("Neither SMTP_HOST nor RESEND_API_KEY is set: no email (verification, password reset, receipts) will be sent.");
+  if (!missing("SMTP_HOST") && (missing("SMTP_USER") || missing("SMTP_PASSWORD"))) errors.push("SMTP_HOST is set but SMTP_USER or SMTP_PASSWORD is missing.");
+  if (!missing("SMTP_USER") && !missing("EMAIL_FROM") && !(env.EMAIL_FROM ?? "").toLowerCase().includes((env.SMTP_USER ?? "").toLowerCase())) {
+    warnings.push("EMAIL_FROM is not the SMTP_USER mailbox; most mail servers refuse to send as another address.");
+  }
   if (missing("EMAIL_FROM")) warnings.push("EMAIL_FROM is not set.");
   const rzp = ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"].filter((k) => !missing(k));
   if (rzp.length > 0 && rzp.length < 3) warnings.push("Razorpay is partly configured; set all three Razorpay variables or none.");

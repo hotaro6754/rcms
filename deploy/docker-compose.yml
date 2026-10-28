@@ -1,5 +1,5 @@
 # One server running everything: the app, Caddy (HTTPS certificates), the 15-minute scheduler,
-# and, if COMPOSE_PROFILES=localdb, PostgreSQL. Run it through deploy.sh, which does the steps
+# and, if COMPOSE_PROFILES=localdb, MariaDB. Run it through deploy.sh, which does the steps
 # in the right order. Settings come from deploy/.env (copy deploy/.env.example).
 #
 # Host networking keeps it simple on a single server: the app and database listen on
@@ -9,24 +9,25 @@ name: rcmexcel
 
 services:
   db:
-    image: postgres:16-alpine
+    image: mariadb:10.11
     profiles: ["localdb"]
     network_mode: host
-    command: ["postgres", "-c", "listen_addresses=127.0.0.1", "-c", "port=5432"]
+    command: ["--bind-address=127.0.0.1", "--port=3306", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     environment:
-      POSTGRES_DB: rcmexcel
-      POSTGRES_USER: rcmexcel
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      MARIADB_DATABASE: rcmexcel
+      MARIADB_USER: rcmexcel
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?set MARIADB_PASSWORD in deploy/.env}
+      MARIADB_RANDOM_ROOT_PASSWORD: "yes"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - dbdata:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "rcmexcel"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
       retries: 20
     restart: unless-stopped
 
-  # Applies database migrations: `docker compose run --rm migrate`.
+  # Applies database migrations and the audit-log triggers: `docker compose run --rm migrate`.
   migrate:
     profiles: ["tools"]
     build:
@@ -39,7 +40,7 @@ services:
     network_mode: host
     environment:
       DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in deploy/.env}
-    command: ["npx", "prisma", "migrate", "deploy"]
+    command: ["sh", "-c", "npx prisma migrate deploy && node scripts/db-harden.mjs"]
 
   app:
     build:
@@ -97,7 +98,7 @@ secrets:
     environment: BETTER_AUTH_SECRET
 
 volumes:
-  pgdata:
+  dbdata:
   storage:
   caddy_data:
   caddy_config:

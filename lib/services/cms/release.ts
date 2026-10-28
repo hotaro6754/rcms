@@ -8,6 +8,7 @@ import type { AnswerKey, QuestionDef } from "@/lib/assessment/questions";
 import type { CourseSnapshot, SnapshotAssessment, SnapshotLesson, SnapshotModule } from "@/lib/cms/snapshot";
 import { notifyPermission, notifyUsers } from "@/lib/services/people/staff-lookup";
 import { REVIEW_LOCKED, transaction, type Tx } from "./core";
+import { strings } from "@/lib/json-list";
 
 /**
  * Review and release (blueprint §4.3, §3.4, §13).
@@ -49,8 +50,8 @@ function toDef(q: {
   type: QuestionDef["type"];
   scenario: string | null;
   prompt: string;
-  options: string[];
-  targets: string[];
+  options: Prisma.JsonValue;
+  targets: Prisma.JsonValue;
   answerKey: Prisma.JsonValue;
   correct: number;
   rationale: string | null;
@@ -65,8 +66,8 @@ function toDef(q: {
     type: q.type,
     scenario: q.scenario,
     prompt: q.prompt,
-    options: q.options,
-    targets: q.targets,
+    options: strings(q.options),
+    targets: strings(q.targets),
     answerKey: key,
     rationale: q.rationale,
     points: q.points,
@@ -164,20 +165,20 @@ export async function buildSnapshot(tx: Tx, courseId: string): Promise<{ snapsho
       return {
         id: l.id,
         title: l.title,
-        objectives: l.objectives,
+        objectives: strings(l.objectives),
         minutes: Math.round((l.durationSec ?? 0) / 60),
         freePreview: l.freePreview,
         completionRule: l.completionRule,
         effectiveDate: l.effectiveDate?.toISOString() ?? null,
         lastReviewedAt: l.lastReviewedAt?.toISOString() ?? null,
         nextReviewAt: l.nextReviewAt?.toISOString() ?? null,
-        sources: l.sources,
+        sources: strings(l.sources),
         blocks: l.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown> })),
         resources: l.resources.map((r) => ({ id: r.id, title: r.title, mimeType: r.mimeType, sizeBytes: r.sizeBytes })),
         assessment,
       };
     });
-    return { id: m.id, title: m.title, summary: m.summary, objectives: m.objectives, estimatedMinutes: m.estimatedMinutes, prerequisiteModuleId: m.prerequisiteModuleId, lessons };
+    return { id: m.id, title: m.title, summary: m.summary, objectives: strings(m.objectives), estimatedMinutes: m.estimatedMinutes, prerequisiteModuleId: m.prerequisiteModuleId, lessons };
   });
 
   if (!modules.some((m) => m.lessons.length)) problems.push("Mark at least one module and one lesson ready for release.");
@@ -209,8 +210,8 @@ export async function buildSnapshot(tx: Tx, courseId: string): Promise<{ snapsho
       artefact: course.artefact,
       weeks: course.weeks,
       description: course.description,
-      outcomes: course.outcomes,
-      prerequisites: course.prerequisites,
+      outcomes: strings(course.outcomes),
+      prerequisites: strings(course.prerequisites),
       durationMinutes: course.durationMinutes,
       difficulty: course.difficulty,
       isFree: course.isFree,
@@ -457,7 +458,7 @@ export async function rollbackToVersion(actor: Actor, courseId: string, versionI
         courseId,
         version: (last?.version ?? 0) + 1,
         snapshot: target.snapshot as never,
-        mediaIds: target.mediaIds,
+        mediaIds: strings(target.mediaIds),
         changeSummary: `Rollback to version ${target.version}: ${reason.trim()}`,
         submittedById: target.submittedById,
         academicApproverId: target.academicApproverId,

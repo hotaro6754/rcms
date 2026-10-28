@@ -7,6 +7,7 @@ import { ActionButton, ActionForm } from "@/components/admin/ActionForm";
 import { BTN, dateInput, Field, FIELD, Panel, StatusPill, TEXTAREA, when } from "@/components/admin/kit";
 import { deleteLevelAction, duplicateLevelAction, rollbackRevisionAction, setLevelStatusAction, updateLevelAction } from "@/lib/actions/cms";
 import { STATUS_LABEL } from "@/lib/services/cms/core";
+import { strings } from "@/lib/json-list";
 
 export const metadata = { title: "Learning level" };
 
@@ -50,13 +51,13 @@ export default async function LevelPage({ params }: { params: Promise<{ id: stri
                 <input id="audience" name="audience" defaultValue={level.audience ?? ""} className={FIELD} />
               </Field>
               <Field label="Entry prerequisites" htmlFor="prerequisites" hint="One per line.">
-                <textarea id="prerequisites" name="prerequisites" rows={3} defaultValue={level.prerequisites.join("\n")} className={TEXTAREA} />
+                <textarea id="prerequisites" name="prerequisites" rows={3} defaultValue={strings(level.prerequisites).join("\n")} className={TEXTAREA} />
               </Field>
               <Field label="Learning outcomes" htmlFor="outcomes" hint="One per line.">
-                <textarea id="outcomes" name="outcomes" rows={3} defaultValue={level.outcomes.join("\n")} className={TEXTAREA} />
+                <textarea id="outcomes" name="outcomes" rows={3} defaultValue={strings(level.outcomes).join("\n")} className={TEXTAREA} />
               </Field>
               <Field label="Core topics" htmlFor="coreTopics" hint="One per line." className="sm:col-span-2">
-                <textarea id="coreTopics" name="coreTopics" rows={4} defaultValue={level.coreTopics.join("\n")} className={TEXTAREA} />
+                <textarea id="coreTopics" name="coreTopics" rows={4} defaultValue={strings(level.coreTopics).join("\n")} className={TEXTAREA} />
               </Field>
               <Field label="Estimated effort" htmlFor="estimatedEffort">
                 <input id="estimatedEffort" name="estimatedEffort" defaultValue={level.estimatedEffort ?? ""} className={FIELD} />

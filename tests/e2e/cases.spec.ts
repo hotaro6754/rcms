@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Client } from "pg";
+import { localDb } from "./db";
 import { expect, test, type Page } from "@playwright/test";
 
 /**
@@ -24,11 +24,8 @@ async function signIn(page: Page, email: string) {
 }
 
 test.beforeAll(async () => {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error("E2E data reset runs only against a local database.");
-  const db = new Client({ connectionString: url });
-  await db.connect();
-  await db.query(`DELETE FROM "SimAttempt" WHERE "userId" = (SELECT id FROM "User" WHERE email = 'student@rcmexcel.com') AND "caseId" = (SELECT id FROM "SimCase" WHERE slug = 'duplicate-denial-already-paid')`);
+  const db = await localDb();
+  await db.query("DELETE FROM `SimAttempt` WHERE `userId` = (SELECT id FROM `User` WHERE email = 'student@rcmexcel.com') AND `caseId` = (SELECT id FROM `SimCase` WHERE slug = 'duplicate-denial-already-paid')");
   await db.end();
 });
 

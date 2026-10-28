@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { can, type Actor } from "@/lib/actor";
 import { enrolmentLive } from "@/lib/services/learning/catalog";
 import { designMediaIds, type Design } from "@/lib/design/schema";
+import { strings } from "@/lib/json-list";
 
 /**
  * May this person see a media-library file inside course `courseId`? Staff who can view
@@ -13,7 +14,7 @@ export async function canSeeCourseMedia(actor: Actor, mediaId: string, courseId:
   if (can(actor, "content.view")) return true;
   if (!courseId) return false;
   const course = await prisma.program.findUnique({ where: { id: courseId }, select: { id: true, state: true, publishedVersion: { select: { mediaIds: true, snapshot: true } } } });
-  if (!course || course.state !== "PUBLISHED" || !course.publishedVersion?.mediaIds.includes(mediaId)) return false;
+  if (!course || course.state !== "PUBLISHED" || !course.publishedVersion || !strings(course.publishedVersion.mediaIds).includes(mediaId)) return false;
   const enrolment = await prisma.enrolment.findUnique({ where: { userId_programId: { userId: actor.id, programId: course.id } } });
   if (enrolmentLive(enrolment)) return true;
   // Free-preview lessons may show their media to signed-in visitors who are not enrolled.

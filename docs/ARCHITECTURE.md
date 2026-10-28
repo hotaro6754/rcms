@@ -5,7 +5,7 @@ How the RCM Operations Excellence Academy platform is put together, and why. Rea
 
 ## 1. One application, four environments
 
-One Next.js 15 application, one PostgreSQL database, one user table, one session cookie.
+One Next.js 15 application, one MySQL/MariaDB database, one user table, one session cookie.
 The environments are route groups with their own layout guard:
 
 | Environment | Routes | Who | Guard |
@@ -21,7 +21,7 @@ write goes through a service that checks permission itself (§3).
 ## 2. Request path
 
 ```
-page (server component) ──read──▶ service ──▶ Prisma ──▶ PostgreSQL
+page (server component) ──read──▶ service ──▶ Prisma ──▶ MariaDB / MySQL
 form ──▶ server action ──▶ requireActor() ──▶ service (assertCan, validation, transaction, audit)
 API route (files, exports, webhooks, cron) ──▶ getActor() / signature / bearer ──▶ service
 ```

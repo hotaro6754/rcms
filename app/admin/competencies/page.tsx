@@ -7,6 +7,7 @@ import { BTN, Empty, FIELD, Panel, StatusPill, TEXTAREA, when } from "@/componen
 import { competencyWorkflowAction, createCompetencyAction, updateCompetencyAction } from "@/lib/actions/sims";
 import { PROFICIENCY } from "@/lib/services/sims/competencies";
 import { CRITERIA, CRITERION_LABEL } from "@/lib/sim/labels";
+import { strings } from "@/lib/json-list";
 
 export const metadata = { title: "Competencies" };
 
@@ -50,7 +51,7 @@ function CompetencyFields({ c, disabled }: { c?: Row; disabled?: boolean }) {
         <div className="grid gap-1.5 sm:grid-cols-3">
           {CRITERIA.map((k) => (
             <label key={k} className="flex items-center gap-2 text-[13px]">
-              <input type="checkbox" name="criteria" value={k} defaultChecked={c?.criteria.includes(k)} id={`${p}-${k}`} className="h-4 w-4 accent-[var(--primary)]" />
+              <input type="checkbox" name="criteria" value={k} defaultChecked={strings(c?.criteria).includes(k)} id={`${p}-${k}`} className="h-4 w-4 accent-[var(--primary)]" />
               {CRITERION_LABEL[k]}
             </label>
           ))}
@@ -108,7 +109,7 @@ export default async function CompetenciesAdmin() {
               <span className="text-[14.5px] font-medium">{c.name}</span>
               <StatusPill status={c.status} />
               <span className="text-micro text-muted-foreground">
-                Level {c.proficiencyLevel} {PROFICIENCY[c.proficiencyLevel - 1]} · {c.criteria.map((k) => CRITERION_LABEL[k as keyof typeof CRITERION_LABEL] ?? k).join(", ")} ≥ {c.threshold} · {c._count.outcomes} learners demonstrated
+                Level {c.proficiencyLevel} {PROFICIENCY[c.proficiencyLevel - 1]} · {strings(c.criteria).map((k) => CRITERION_LABEL[k as keyof typeof CRITERION_LABEL] ?? k).join(", ")} ≥ {c.threshold} · {c._count.outcomes} learners demonstrated
               </span>
             </summary>
             <div className="border-t border-border px-5 py-4">

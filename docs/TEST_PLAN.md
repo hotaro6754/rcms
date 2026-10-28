@@ -5,7 +5,7 @@
 | Layer | Tool | Where | Database | What it proves |
 |---|---|---|---|---|
 | Unit | Vitest | `tests/unit` | none | Pure rules: permission matrix, question validation and grading, PHI screening, audit redaction, Markdown, block schemas, file sniffing |
-| Integration | Vitest | `tests/integration` | real PostgreSQL (`TEST_DATABASE_URL`), truncated before each test | Services end to end: authorisation, workflow, separation of duties, idempotency, money paths |
+| Integration | Vitest | `tests/integration` | real MariaDB/MySQL (`TEST_DATABASE_URL`), emptied before each test | Services end to end: authorisation, workflow, separation of duties, idempotency, money paths |
 | End to end | Playwright | `tests/e2e` | the running dev database | Real pages, real server actions, real sessions in a browser |
 
 Integration tests replace exactly one thing: the Razorpay HTTP client (`createOrder`,
@@ -14,14 +14,13 @@ Integration tests replace exactly one thing: the Razorpay HTTP client (`createOr
 ## 2. Running
 
 ```bash
-# once: a local PostgreSQL with two databases (port and names are examples)
-createdb -h 127.0.0.1 -p 5433 -U postgres rcms_dev
-createdb -h 127.0.0.1 -p 5433 -U postgres rcms_test
+# once: a local MariaDB (or MySQL 8) with two databases (names are examples)
+mariadb -uroot -p -e "CREATE DATABASE rcms_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE rcms_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 
 npm run typecheck
 npm run lint
 npm test                      # unit + integration; migrates rcms_test first (tests/global-setup.ts)
-TEST_DATABASE_URL=postgresql://... npm test   # to use another test database
+TEST_DATABASE_URL=mysql://root:...@127.0.0.1:3306/rcms_test npm test   # the default is mysql://rcms:rcms@127.0.0.1:3306/rcms_test
 
 # end to end, against a seeded dev server
 npm run db:deploy && npm run db:seed && npm run dev:accounts

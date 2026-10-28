@@ -35,9 +35,9 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
     ...(q
       ? {
           OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { description: { contains: q, mode: "insensitive" } },
-            { modules: { some: { OR: [{ title: { contains: q, mode: "insensitive" } }, { lessons: { some: { title: { contains: q, mode: "insensitive" } } } }] } } },
+            { name: { contains: q } },
+            { description: { contains: q } },
+            { modules: { some: { OR: [{ title: { contains: q } }, { lessons: { some: { title: { contains: q } } } }] } } },
           ],
         }
       : {}),

@@ -45,8 +45,12 @@ Evidence for every ✅: 132 unit and integration tests, 7 end-to-end tests and 3
 - ✅ Unauthorized access and regression cases are tested: role boundaries, permission refusals, visibility, answer-key leakage.
 
 ### Production readiness
+- ✅ **Database: MySQL / MariaDB** (what Hostinger's web hosting provides), moved from PostgreSQL before any live data existed.
+  - One baseline migration; list fields are JSON; value-range checks kept; "one open case attempt" is a unique key the app maintains; the audit log's append-only triggers come from `scripts/db-harden.mjs`, which warns instead of failing where a host refuses triggers.
+  - Verified on MariaDB 10.11: all unit, integration and browser tests, the production build, a first deploy into an empty database, and a backup and restore.
+  - Email can be sent through an SMTP mailbox (Hostinger) or Resend.
 - ✅ **Production build succeeds from a clean checkout** (CI).
-- ✅ **Deployment package:** Dockerfile, `deploy/` (Caddy HTTPS, scheduler, optional on-server PostgreSQL, deploy and backup scripts) and `docs/DEPLOYMENT.md`.
+- ✅ **Deployment package:** Dockerfile, `deploy/` (Caddy HTTPS, scheduler, optional on-server MariaDB, deploy and backup scripts) and `docs/DEPLOYMENT.md`.
   - Built and run end to end on a test machine with `localhost`: migrations, seed, health check, scheduler, backup and a restore drill.
   - The app refuses to start in production when a required setting is missing or unsafe, and names it (`lib/env.ts`).
   - 🟡 Not yet tried with a real domain, certificate, managed database or email. 👤 Needs your accounts.

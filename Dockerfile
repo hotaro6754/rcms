@@ -19,6 +19,7 @@ RUN apt-get update \
 FROM base AS deps
 COPY package.json package-lock.json .npmrc prisma.config.ts ./
 COPY prisma ./prisma
+COPY scripts/db-harden.mjs ./scripts/db-harden.mjs
 RUN npm ci --no-audit --no-fund
 
 FROM deps AS build

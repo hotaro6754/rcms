@@ -90,8 +90,8 @@ export async function updateMedia(actor: Actor, id: string, input: unknown) {
 /** Where an asset is used: draft blocks, released versions, course thumbnails. */
 export async function mediaUsage(id: string) {
   const [blocks, versions, thumbnails] = await Promise.all([
-    prisma.contentBlock.findMany({ where: { data: { path: ["mediaId"], equals: id } }, select: { lessonId: true, lesson: { select: { title: true } } } }),
-    prisma.courseVersion.count({ where: { mediaIds: { has: id } } }),
+    prisma.contentBlock.findMany({ where: { data: { path: "$.mediaId", equals: id } }, select: { lessonId: true, lesson: { select: { title: true } } } }),
+    prisma.courseVersion.count({ where: { mediaIds: { array_contains: [id] } } }),
     prisma.program.findMany({ where: { thumbnailId: id }, select: { id: true, name: true } }),
   ]);
   return { blocks, releasedVersions: versions, thumbnails };

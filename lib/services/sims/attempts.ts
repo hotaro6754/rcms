@@ -8,6 +8,7 @@ import { activeSubscriptionCovering, enrolmentLive } from "@/lib/services/learni
 import { Answers, CaseDefinition, learnerView } from "@/lib/sim/definition";
 import { evidenceFor, scoreAttempt, type ScoreOverrides, type SimResult } from "@/lib/sim/score";
 import { currentVersion } from "./cases";
+import { strings } from "@/lib/json-list";
 
 /**
  * Learner attempts at published cases. The answer key stays on the server: learners get
@@ -77,11 +78,11 @@ export async function startAttempt(actor: Actor, caseId: string) {
   const used = await prisma.simAttempt.count({ where: { userId: actor.id, caseId } });
   if (d.rubric.maxAttempts > 0 && used >= d.rubric.maxAttempts) throw new ServiceError(`You have used all ${d.rubric.maxAttempts} attempts at this case.`);
   try {
-    const a = await prisma.simAttempt.create({ data: { userId: actor.id, caseId, versionId: v.id, attemptNo: used + 1 } });
+    const a = await prisma.simAttempt.create({ data: { userId: actor.id, caseId, versionId: v.id, attemptNo: used + 1, openKey: `${actor.id}:${caseId}` } });
     await log(actor, "create", a.id, { caseId, version: v.version, attemptNo: a.attemptNo });
     return a;
   } catch (e) {
-    // Two tabs starting at once: the partial unique index lets only one open attempt exist.
+    // Two tabs starting at once: the unique openKey lets only one open attempt exist.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       const existing = await prisma.simAttempt.findFirst({ where: { userId: actor.id, caseId, state: "IN_PROGRESS" } });
       if (existing) return existing;
@@ -107,7 +108,7 @@ export async function saveAnswers(actor: Actor, id: string, answers: unknown) {
 async function recordOutcomes(tx: Prisma.TransactionClient, attempt: Pick<SimAttempt, "id" | "userId">, d: CaseDefinition, result: SimResult, now: Date) {
   const comps = await tx.competency.findMany({ where: { code: { in: d.competencyCodes }, status: "ACTIVE" } });
   for (const comp of comps) {
-    const ev = evidenceFor(result, comp.criteria);
+    const ev = evidenceFor(result, strings(comp.criteria));
     if (ev === null) continue;
     const expiresAt = comp.reassessMonths ? new Date(new Date(now).setMonth(now.getMonth() + comp.reassessMonths)) : null;
     await tx.competencyOutcome.create({
@@ -128,7 +129,7 @@ export async function submitAttempt(actor: Actor, id: string, answers: unknown) 
   const now = new Date();
   await prisma.$transaction(async (tx) => {
     // Conditional on still being open, so a double submit scores once.
-    const res = await tx.simAttempt.updateMany({ where: { id, state: "IN_PROGRESS" }, data: { state: "SCORED", answers: json(parsed), result: json(result), score: result.score, passed: result.passed, submittedAt: now } });
+    const res = await tx.simAttempt.updateMany({ where: { id, state: "IN_PROGRESS" }, data: { state: "SCORED", openKey: null, answers: json(parsed), result: json(result), score: result.score, passed: result.passed, submittedAt: now } });
     if (!res.count) throw new ServiceError("This attempt has already been submitted.");
     await recordOutcomes(tx, a, d, result, now);
   });
@@ -184,7 +185,7 @@ export async function reviewAttempt(actor: Actor, id: string, input: ScoreOverri
   const now = new Date();
   await prisma.$transaction(async (tx) => {
     await tx.competencyOutcome.updateMany({ where: { attemptId: id, supersededAt: null }, data: { supersededAt: now } });
-    await tx.simAttempt.update({ where: { id }, data: { state: "REVIEWED", result: json(result), score: result.score, passed: result.passed, instructorNote: note, reviewedById: actor.id, reviewedAt: now } });
+    await tx.simAttempt.update({ where: { id }, data: { state: "REVIEWED", openKey: null, result: json(result), score: result.score, passed: result.passed, instructorNote: note, reviewedById: actor.id, reviewedAt: now } });
     await recordOutcomes(tx, a, d, result, now);
   });
   await log(actor, "update", id, { reviewed: true, overrides, score: result.score, passed: result.passed }, { score: a.score, passed: a.passed });
