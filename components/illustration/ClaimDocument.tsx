@@ -313,9 +313,9 @@ function Field({
       <dt className={cn("text-data text-[10px] uppercase tracking-[0.1em]", danger ? "text-muted-foreground" : "text-subtle")}>{label}</dt>
       <dd className="text-data relative truncate text-[13.5px] text-foreground">{children}</dd>
       {notes && (
-        <div className="relative col-span-2 min-h-[2.5em] sm:absolute sm:left-[calc(100%+1.25rem)] sm:top-[0.45rem] sm:min-h-0 sm:w-[9.25rem]">
+        <dd className="relative col-span-2 min-h-[2.5em] sm:absolute sm:left-[calc(100%+1.25rem)] sm:top-[0.45rem] sm:min-h-0 sm:w-[9.25rem]">
           {notes}
-        </div>
+        </dd>
       )}
     </div>
   );

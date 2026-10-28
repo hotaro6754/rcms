@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { grantEnrolment } from "@/lib/actions/academy";
+import { grantEnrolmentAction } from "@/lib/actions/subscribers";
 import { Button } from "@/components/ui/button";
 
 export function EnrolControl({
@@ -38,7 +38,10 @@ export function EnrolControl({
         className="min-h-9 rounded-[3px]"
         onClick={() =>
           start(async () => {
-            const res = await grantEnrolment(userId, programId);
+            const fd = new FormData();
+            fd.set("userId", userId);
+            fd.set("programId", programId);
+            const res = await grantEnrolmentAction(fd);
             setMsg(res.ok ? { ok: true, text: "Granted" } : { ok: false, text: res.error });
           })
         }

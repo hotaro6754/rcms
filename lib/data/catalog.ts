@@ -1,5 +1,7 @@
 /**
- * Programs, pricing and mentoring. One module so a price is never written twice.
+ * Seed data and marketing copy. LEVELS, PROGRAMS, BUNDLES and the mentoring prices are read by
+ * prisma/seed.ts only, to create the first courses and products. Pages must not show prices from
+ * this file: live prices come from active products (lib/services/learning/public-catalog.ts).
  *
  * Currency note: programs and mentoring are priced in INR because the learners are in
  * India. Client telemetry stays in USD because the payers and collections are US. Both
@@ -289,24 +291,24 @@ export const MENTORING: MentoringOption[] = [
 
 export const CORPORATE = {
   headline: "Corporate and cohort training",
-  body: "Teams of ten and above run as a private cohort against your own denial mix, your own aging report and your own SLA. Pricing is per engagement, not per seat.",
+  body: "Teams of ten and above get seats in a corporate account: courses assigned by group, progress visible to your managers, and synthetic scenarios chosen to match your specialty and payer mix. Pricing is agreed per engagement.",
   includes: [
-    "Curriculum mapped to your payer mix and specialty",
-    "Your anonymised extracts used as the working data",
-    "Manager dashboard on cohort progress",
-    "SOP and benchmark library licensed to your team",
-    "Quarterly refresh as payer policy changes",
+    "Seats, groups and course assignment managed for you",
+    "Manager view of your team's progress and certificates",
+    "Synthetic practice scenarios matched to your specialty (never your own patient data)",
+    "Invoices raised to the company with GST details",
+    "Content reviewed and dated on a published schedule",
   ],
 };
 
 export const FAQ = [
   {
     q: "Do I need a healthcare background to start?",
-    a: "No. Tier 01 assumes nothing and starts at what a payer is and why a claim exists. Around a third of the people who take it come from a non-healthcare BPO or from college.",
+    a: "No. The Trainee level assumes nothing and starts at what a payer is and why a claim exists.",
   },
   {
     q: "Is there a certificate?",
-    a: "Every tier ends with a portfolio artefact instead: a worked claim file, a denial root cause memo, a capacity model, a review deck. A hiring manager can read those. A certificate mostly proves you paid.",
+    a: "Yes, when every lesson is complete and every assessment is passed. Each certificate has a serial anyone can verify on this site. It is an Academy certificate, not a professional credential: it does not replace AAPC, HFMA or AAHAM certification.",
   },
   {
     q: "How is this different from a coding course?",
@@ -314,15 +316,15 @@ export const FAQ = [
   },
   {
     q: "Are sessions live or recorded?",
-    a: "Programs are self-paced with structured checkpoints. Mentoring is live, one to one, and is the only place where your own data is on the screen.",
+    a: "Courses are self-paced, with assessments at the end of lessons and modules. Mentoring is live and one to one. Never share patient information, credentials or real claim data in a session or anywhere on the platform.",
   },
   {
     q: "Can my employer pay?",
-    a: "Yes. Invoices are raised against the company and GST details are captured at checkout. For ten or more people the corporate cohort is cheaper than individual seats.",
+    a: "Yes. For ten or more people, ask about a corporate account. Invoices can be raised to the company.",
   },
   {
     q: "What is the refund policy?",
-    a: "Seven days from purchase, provided less than 20 percent of the program has been accessed. Mentoring is refundable up to 24 hours before the session. The full terms are on the refund page.",
+    a: "See the refund policy for the current window and conditions. Refunds are reviewed by a second person on our side and paid back to the original payment method.",
   },
 ];
 
@@ -332,4 +334,4 @@ export const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
  * The next cohort start. PLACEHOLDER until the founder confirms the calendar; every
  * surface that mentions it reads it from here.
  */
-export const NEXT_COHORT = { iso: "2026-10-06", label: "6 October 2026" } as const;
+

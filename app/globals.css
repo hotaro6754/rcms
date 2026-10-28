@@ -14,7 +14,7 @@
 @font-face { font-family: "Satoshi"; src: url("/fonts/satoshi-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 
 /* ===========================================================================
-   RCMS Operations Academy — token contract.
+   RCMExcel — token contract.
 
    The full shadcn/ui variable set, so every shadcn component drops in and
    inherits this identity instead of the stock neutral theme.
@@ -45,6 +45,10 @@
   --primary-foreground: #f7f3ec;    /* 16.5:1 */
   --brand: #3f6e5e;                 /* eucalyptus. 5.8:1 on card, 5.1:1 on stone */
   --signal: #5b8b79;                /* marks and strokes only, never text */
+  /* Learning levels: one hue each, used for rules, markers and labels (AA on card as text). */
+  --level-trainee: #2f7d74;         /* teal: foundation */
+  --level-professional: #2f5d9a;    /* blue: execution */
+  --level-leadership: #1f2f4f;      /* navy: governance */
 
   --secondary: #e8e6e0;
   --secondary-foreground: #2e2b27;
@@ -63,7 +67,7 @@
   --chart-4: #4f7187;
   --chart-5: #b0243a;
 
-  --success: #2f7d4f;
+  --success: #256b42;                /* 5.4:1 on success-bg, AA for small text */
   --success-bg: #e3efe6;
   --warning: #8a6508;
   --warning-bg: #f5eed8;
@@ -124,6 +128,9 @@
   --primary-foreground: #161513;
   --brand: #9cc3b2;                 /* 9.4:1 */
   --signal: #9cc3b2;
+  --level-trainee: #7cc4b8;
+  --level-professional: #93b6ea;
+  --level-leadership: #d6bd72;      /* gold on ink: navy would disappear */
   --secondary: #2a2723;
   --secondary-foreground: #e6dfd3;
   --accent: rgb(156 195 178 / 0.14);
@@ -161,6 +168,9 @@
   --primary-hover: #ffffff;
   --primary-foreground: #161513;
   --brand: #9cc3b2;
+  --level-trainee: #7cc4b8;
+  --level-professional: #93b6ea;
+  --level-leadership: #d6bd72;
   --secondary: #2d2b27;
   --secondary-foreground: #e4ddd1;
   --accent: rgb(156 195 178 / 0.14);
@@ -190,6 +200,9 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-signal: var(--signal);
   --color-brand: var(--brand);
+  --color-level-trainee: var(--level-trainee);
+  --color-level-professional: var(--level-professional);
+  --color-level-leadership: var(--level-leadership);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
@@ -472,4 +485,10 @@
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+}
+
+/* Course content cannot be printed (components/learning/Protected.tsx). */
+@media print {
+  .protected-content > *:not(.protected-print-note) { display: none !important; }
+  .protected-content .protected-print-note { display: block !important; visibility: visible !important; position: fixed; inset: 0; padding: 2rem; font-size: 14pt; }
 }

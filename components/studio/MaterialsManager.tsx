@@ -1,13 +1,14 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { addMaterial, deleteMaterial } from "@/lib/actions/materials";
+import { addMaterial, deleteMaterial, setMaterialDownloadable } from "@/lib/actions/materials";
 
 export interface MaterialRow {
   id: string;
   title: string;
   type: string;
   size: string;
+  downloadable: boolean;
 }
 
 /**
@@ -39,6 +40,21 @@ export function MaterialsManager({ lessonId, rows }: { lessonId: string; rows: M
                   {r.type}
                   {r.size && ` · ${r.size}`}
                 </span>
+                <button
+                  type="button"
+                  disabled={pending}
+                  aria-pressed={r.downloadable}
+                  title={r.downloadable ? "Learners can download this file. Click to make it view-only." : "View-only: learners cannot download it. Click to allow downloading."}
+                  onClick={() =>
+                    start(async () => {
+                      const res = await setMaterialDownloadable(r.id, !r.downloadable);
+                      if (!res.ok) setError(res.error);
+                    })
+                  }
+                  className="text-data text-[10.5px] tracking-[0.08em] hover:underline disabled:opacity-40"
+                >
+                  {r.downloadable ? "DOWNLOADABLE" : "VIEW ONLY"}
+                </button>
                 <button
                   type="button"
                   disabled={pending}
@@ -100,6 +116,10 @@ export function MaterialsManager({ lessonId, rows }: { lessonId: string; rows: M
             <input name="url" type="url" required className="min-h-10 border-b border-input bg-transparent text-[14px] outline-none focus:border-foreground" placeholder="https://" />
           </label>
         )}
+        <label className="flex items-start gap-2 text-[12.5px] text-muted-foreground">
+          <input type="checkbox" name="downloadable" value="true" className="mt-0.5" />
+          Learners may download this file. Leave unticked to keep it view-only: PDFs are read in the lesson, page by page.
+        </label>
         <button
           type="submit"
           disabled={pending}

@@ -7,9 +7,21 @@ import { submitContact } from "@/lib/actions/leads";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { MENTORING, PROGRAMS, inr } from "@/lib/data/catalog";
+import type { PageContent } from "@/lib/site/fields";
+import type { contactPage } from "@/lib/site/pages/contact";
 
-export function ContactForm() {
+export type ContactFormCopy = PageContent<typeof contactPage>["form"];
+
+const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
+
+interface Options {
+  courses: { name: string; amount: number }[];
+  mentoring: { name: string; amount: number }[];
+}
+
+/** Interest options come from active products, so the prices shown match checkout. */
+export function ContactForm({ options, defaultInterest = "", copy }: { options: Options; defaultInterest?: string; copy: ContactFormCopy }) {
+  const known = [...options.courses, ...options.mentoring].some((o) => o.name === defaultInterest) || defaultInterest === "Corporate account";
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, start] = useTransition();
   const [sent, setSent] = useState(false);
@@ -27,17 +39,16 @@ export function ContactForm() {
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-[3px] bg-success-bg text-success">
           <Check className="h-5 w-5" aria-hidden />
         </span>
-        <h2 className="mt-5 text-[1.4rem] leading-tight">That is with me</h2>
+        <h2 className="mt-5 text-[1.4rem] leading-tight">{copy.successTitle}</h2>
         <p className="mt-3 max-w-[52ch] text-[13.5px] leading-relaxed text-muted-foreground">
-          You will get a reply within one working day, IST. If it is urgent, WhatsApp is
-          faster than email.
+          {copy.successBody}
         </p>
         <button
           type="button"
           onClick={() => setSent(false)}
           className="mt-5 text-micro font-medium text-primary hover:underline"
         >
-          Send another
+          {copy.again}
         </button>
       </motion.div>
     );
@@ -64,47 +75,52 @@ export function ContactForm() {
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <label htmlFor="name" className="text-[13px] font-medium">Name</label>
+          <label htmlFor="name" className="text-[13px] font-medium">{copy.nameLabel}</label>
           <Input id="name" name="name" autoComplete="name" required className="min-h-11"
             aria-invalid={field === "name"} />
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="email" className="text-[13px] font-medium">Email</label>
+          <label htmlFor="email" className="text-[13px] font-medium">{copy.emailLabel}</label>
           <Input id="email" name="email" type="email" autoComplete="email" required
             className="min-h-11" aria-invalid={field === "email"} />
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="role" className="text-[13px] font-medium">Current role</label>
-          <Input id="role" name="role" placeholder="AR analyst, team lead, manager…"
+          <label htmlFor="role" className="text-[13px] font-medium">{copy.roleLabel}</label>
+          <Input id="role" name="role" placeholder={copy.rolePlaceholder || undefined}
             className="min-h-11 placeholder:text-subtle" />
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="interest" className="text-[13px] font-medium">Interested in</label>
+          <label htmlFor="interest" className="text-[13px] font-medium">{copy.interestLabel}</label>
           <select
             id="interest"
             name="interest"
-            defaultValue=""
+            defaultValue={known ? defaultInterest : ""}
             className="min-h-11 rounded-md border border-input bg-background px-3 text-[14px] outline-none transition-colors focus:border-primary"
           >
-            <option value="" disabled>Choose one</option>
-            <optgroup label="Programs">
-              {PROGRAMS.map((p) => (
-                <option key={p.id} value={p.name}>{p.name} · {inr(p.price)}</option>
-              ))}
-            </optgroup>
-            <optgroup label="Mentoring">
-              {MENTORING.map((m) => (
-                <option key={m.id} value={m.name}>{m.name} · {inr(m.price)}</option>
-              ))}
-            </optgroup>
-            <option value="Corporate cohort">Corporate cohort</option>
+            <option value="" disabled>{copy.interestPrompt}</option>
+            {options.courses.length > 0 && (
+              <optgroup label={copy.coursesGroup}>
+                {options.courses.map((p) => (
+                  <option key={p.name} value={p.name}>{p.name} · {inr(p.amount)}</option>
+                ))}
+              </optgroup>
+            )}
+            {options.mentoring.length > 0 && (
+              <optgroup label={copy.mentoringGroup}>
+                {options.mentoring.map((m) => (
+                  <option key={m.name} value={m.name}>{m.name} · {inr(m.amount)}</option>
+                ))}
+              </optgroup>
+            )}
+            <option value="Corporate account">{copy.corporateOption}</option>
+            <option value="Something else">{copy.otherOption}</option>
           </select>
         </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-2">
         <label htmlFor="message" className="text-[13px] font-medium">
-          What are you trying to move?
+          {copy.messageLabel}
         </label>
         <Textarea
           id="message"
@@ -112,14 +128,13 @@ export function ContactForm() {
           rows={5}
           required
           aria-invalid={field === "message"}
-          placeholder="The metric, the role, or the problem on your floor."
+          placeholder={copy.messagePlaceholder || undefined}
           className="placeholder:text-subtle"
         />
       </div>
 
       <p className="mt-4 text-micro leading-relaxed text-muted-foreground">
-        Never send PHI, real patient identifiers or client documents you are not authorised
-        to share. Anonymise anything operational before it leaves your building.
+        {copy.privacy}
       </p>
 
       {error && (
@@ -136,7 +151,7 @@ export function ContactForm() {
 
       <Button type="submit" disabled={pending} className="mt-6 min-h-11 rounded-[3px]">
         {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-        Send
+        {copy.submit}
       </Button>
     </form>
   );

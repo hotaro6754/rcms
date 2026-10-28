@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { requireAdmin } from "@/lib/rbac";
+import { requirePermission } from "@/lib/actor";
 import type { LeadStage } from "@prisma/client";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 /**
  * Every enquiry becomes a scored lead. The scoring rules live here rather than in the CRM
@@ -42,7 +43,8 @@ export type ContactResult =
   | { ok: false; error: string; field?: string };
 
 /**
- * Public. Rate-limited by the platform edge rather than here; this only guards content.
+ * Public. Limited to 5 submissions per address per hour (database-backed), and screened for
+ * identifiers.
  *
  * Deliberately never reveals whether an address is already known — the response is the same
  * for a new lead and a returning one.
@@ -62,6 +64,11 @@ export async function submitContact(formData: FormData): Promise<ContactResult> 
   }
 
   const input = parsed.data;
+
+  const ip = clientIp(await headers());
+  if (!(await allow(`contact:${ip}`, 5, 3600)) || !(await allow(`contact-email:${input.email.toLowerCase()}`, 3, 3600))) {
+    return { ok: false, error: "Too many messages from here in the last hour. Try again later, or email us directly." };
+  }
 
   // Never let an operational document or a patient identifier through a public form.
   if (/\b\d{9,}\b/.test(input.message)) {
@@ -141,7 +148,7 @@ export async function submitContact(formData: FormData): Promise<ContactResult> 
     console.error("[submitContact] failed", error);
     return {
       ok: false,
-      error: "That did not send. Try again, or reach us on WhatsApp.",
+      error: "That did not send. Try again in a moment.",
     };
   }
 }
@@ -157,6 +164,9 @@ export async function subscribeNotes(formData: FormData): Promise<ContactResult>
   const parsed = NotesInput.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message, field: "email" };
   const { email } = parsed.data;
+  if (!(await allow(`notes:${clientIp(await headers())}`, 10, 3600))) {
+    return { ok: false, error: "Too many sign-ups from here in the last hour. Try again later." };
+  }
   try {
     const existing = await prisma.lead.findFirst({ where: { email }, orderBy: { createdAt: "desc" } });
     const lead = existing
@@ -180,7 +190,7 @@ export async function subscribeNotes(formData: FormData): Promise<ContactResult>
 }
 
 export async function setLeadStage(leadId: string, stage: LeadStage) {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("lead.manage");
 
   const before = await prisma.lead.findUnique({ where: { id: leadId } });
   if (!before) throw new Error("That lead no longer exists.");
@@ -204,7 +214,7 @@ export async function setLeadStage(leadId: string, stage: LeadStage) {
 
 /** Admin only. Claims a lead. */
 export async function assignLead(leadId: string, ownerId: string | null) {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("lead.manage");
 
   await prisma.lead.update({ where: { id: leadId }, data: { ownerId } });
 

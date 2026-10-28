@@ -2,8 +2,9 @@
 
 import { useRef } from "react";
 import { gsap, useGSAP, SplitText } from "@/lib/gsap/register";
-import { ROLE_LADDER } from "@/lib/data/founder";
 import { METRICS, PERIODS, formatValue } from "@/lib/data/telemetry";
+import type { PageContent } from "@/lib/site/fields";
+import type { homePage } from "@/lib/site/pages/home";
 import { Chapter } from "./Chapter";
 
 const W = 132;
@@ -32,7 +33,8 @@ function spark(series: number[]) {
  * is read (scrubbed), the rows rise in turn, each resting trend line draws itself and each
  * value counts up once. CSS owns the hover and focus states, on different properties.
  */
-export function Leadership() {
+export function Leadership({ content: c }: { content: PageContent<typeof homePage>["people"] }) {
+  const roles = c.roles;
   const root = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -40,10 +42,10 @@ export function Leadership() {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const q = gsap.utils.selector(root);
-        const split = SplitText.create(q(".second")[0], { type: "words" });
+        const split = SplitText.create(q(".second")[0], { type: "words", aria: "none" });
         gsap.fromTo(
           split.words,
-          { opacity: 0.18 },
+          { opacity: 0.6 },
           {
             opacity: 1,
             ease: "none",
@@ -57,7 +59,7 @@ export function Leadership() {
           .from(q(".row"), { y: 22, opacity: 0, duration: 0.7, ease: "power3.out", stagger: 0.08 }, "-=0.45")
           .from(q(".rest-line"), { drawSVG: "0%", duration: 1.1, ease: "power2.inOut", stagger: 0.08 }, "<0.15");
         q(".now").forEach((el, i) => {
-          const m = METRICS[ROLE_LADDER[i].metric];
+          const m = METRICS[roles[i].metric];
           const box = { v: 0 };
           tl.to(box, { v: m.current, duration: 1.2, ease: "power2.out", onUpdate: () => void (el.textContent = formatValue(m, box.v)) }, 0.35 + i * 0.08);
         });
@@ -69,11 +71,11 @@ export function Leadership() {
   );
 
   return (
-    <Chapter folio="06" title="The people">
+    <Chapter folio="06" title={c.runningHead}>
       <div ref={root} data-gsap-scope>
       <h2 className="statement max-w-[24ch] text-[clamp(2.4rem,5vw,4.6rem)] leading-[1.02]">
-        Execution gets you into operations.{" "}
-        <span className="second text-foreground/40 motion-safe:text-foreground">Leadership changes what operations can achieve.</span>
+        {c.statement}{" "}
+        <span className="second text-muted-foreground motion-safe:text-foreground">{c.statementSecond}</span>
       </h2>
 
       <div className="ledger relative mt-16">
@@ -86,12 +88,12 @@ export function Leadership() {
           <span className="text-right">NOW</span>
         </div>
         <ol>
-          {ROLE_LADDER.map((r) => {
+          {roles.map((r, i) => {
             const m = METRICS[r.metric];
             const d = spark(m.series);
             return (
               <li
-                key={r.level}
+                key={i}
                 tabIndex={0}
                 className="row group grid grid-cols-[2.25rem_minmax(0,1fr)_5.5rem] items-center gap-x-4 gap-y-2 border-b border-border px-2 py-5 outline-none transition-colors duration-[var(--dur-med)] hover:bg-[#161513] hover:text-[#f4efe6] focus-visible:bg-[#161513] focus-visible:text-[#f4efe6] md:grid-cols-[3rem_minmax(0,1.3fr)_minmax(0,1fr)_9rem_6rem] md:gap-x-6"
               >

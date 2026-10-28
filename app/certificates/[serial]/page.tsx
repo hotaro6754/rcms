@@ -5,24 +5,28 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CertificateSheet } from "@/components/certificates/CertificateSheet";
 import { PrintButton } from "@/components/certificates/PrintButton";
+import { BRAND } from "@/lib/brand";
+import { Wordmark } from "@/components/brand/Wordmark";
+import { NOINDEX } from "@/lib/seo";
 
 const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
 async function load(serial: string) {
   return prisma.certificate.findUnique({
     where: { serial: serial.toUpperCase() },
-    include: { program: { select: { level: true, slug: true } } },
+    include: { program: { select: { level: true, slug: true, learningLevel: { select: { name: true } } } } },
   });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ serial: string }> }): Promise<Metadata> {
   const { serial } = await params;
   const cert = await load(serial);
-  if (!cert) return { title: "Certificate not found · RCMS Operations Academy" };
+  // A certificate carries a person's name: verifiable by link, never listed in search engines.
+  if (!cert) return { ...NOINDEX, title: { absolute: `Certificate not found · ${BRAND.name}` } };
   return {
-    title: `${cert.holderName} · ${cert.programName} · RCMS Operations Academy`,
+    ...NOINDEX,
+    title: { absolute: `${cert.holderName} · ${cert.programName} · ${BRAND.name}` },
     description: `Certificate ${cert.serial}, issued ${DATE.format(cert.issuedAt)}.`,
-    robots: { index: false },
   };
 }
 
@@ -45,8 +49,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
       <header className="border-b border-border">
         <div className="mx-auto flex h-14 max-w-[1320px] items-center justify-between gap-6 px-6">
           <Link href="/" className="flex items-baseline gap-2.5">
-            <span className="text-data text-[13px] font-semibold tracking-[0.18em]">RCMS</span>
-            <span className="font-serif-display hidden text-[17px] leading-none sm:inline">Operations Academy</span>
+            <Wordmark hideRestOnSmall />
           </Link>
           <p className="text-data text-[11px] tracking-[0.12em] text-subtle">CERTIFICATE VERIFICATION</p>
         </div>
@@ -85,7 +88,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
               {[
                 ["Holder", cert.holderName],
                 ["Program", cert.programName],
-                ["Level", String(cert.program.level).padStart(2, "0")],
+                ...(cert.program.learningLevel ? [["Level", cert.program.learningLevel.name]] : []),
                 ["Issued", DATE.format(cert.issuedAt)],
                 ...(revoked && cert.revokedAt ? [["Revoked", DATE.format(cert.revokedAt)]] : []),
                 ["Serial", cert.serial],
@@ -97,6 +100,9 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
               ))}
             </dl>
 
+            <a href={`/certificates/${cert.serial}/pdf`} className="inline-flex min-h-11 w-fit items-center rounded-[3px] border border-input px-5 text-[14px] font-medium transition-colors hover:bg-secondary">
+              Download PDF
+            </a>
             {!revoked && (
               <PrintButton className="inline-flex min-h-11 w-fit items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover" />
             )}
@@ -105,7 +111,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
               Certificates are issued when every lesson of a program is complete and every
               assessment is passed. Questions about a certificate:{" "}
               <Link href="/contact" className="underline underline-offset-4 hover:text-foreground">
-                write to the Academy
+                write to RCMExcel
               </Link>
               .
             </p>

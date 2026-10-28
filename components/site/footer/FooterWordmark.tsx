@@ -10,7 +10,7 @@ import { gsap, useGSAP, SplitText } from "@/lib/gsap/register";
  *
  * GSAP owns the letters. Under reduced motion they are simply there.
  */
-export function FooterWordmark() {
+export function FooterWordmark({ text }: { text: string }) {
   const root = useRef<HTMLDivElement>(null);
   const word = useRef<HTMLParagraphElement>(null);
 
@@ -18,7 +18,7 @@ export function FooterWordmark() {
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        const split = SplitText.create(word.current, { type: "chars" });
+        const split = SplitText.create(word.current, { type: "chars", aria: "none" });
         gsap.fromTo(
           split.chars,
           { yPercent: 70 },
@@ -42,7 +42,7 @@ export function FooterWordmark() {
         ref={word}
         className="font-serif-display absolute inset-x-0 top-0 select-none whitespace-nowrap pt-[0.06em] text-center text-[clamp(7rem,23vw,26rem)] leading-[0.9] tracking-[-0.05em] text-foreground"
       >
-        RCMS
+        {text}
       </p>
     </div>
   );

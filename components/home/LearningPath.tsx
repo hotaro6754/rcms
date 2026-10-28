@@ -3,25 +3,32 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap/register";
-import { LEVELS, PROGRAMS, inr } from "@/lib/data/catalog";
+import type { PublicLevel } from "@/lib/services/learning/public-catalog";
+import { SiteLink } from "@/components/site/SiteLink";
+import type { PageContent } from "@/lib/site/fields";
+import type { homePage } from "@/lib/site/pages/home";
 import { Chapter } from "./Chapter";
 import { cn } from "@/lib/utils";
 
 /**
  * The path, set as a prospectus.
  *
- * Five levels, each a full ruled spread in normal document flow: the verb set large, the
- * outcome, who it is for, every module, and what it costs. Nothing pins and nothing snaps;
- * the page scrolls at the reader's pace.
+ * The published learning levels, each a full ruled spread in normal document flow: the level
+ * set large, the outcome, who it is for, its core topics, and the released courses with their
+ * live prices. Levels, courses and prices come from the CMS and the product catalogue, so
+ * this section never advertises something that cannot be bought. Nothing pins and nothing
+ * snaps; the page scrolls at the reader's pace.
  *
- * Desktop: an index of the five sits in the margin and stays in view. A line beside it
+ * Desktop: an index of the levels sits in the margin and stays in view. A line beside it
  * fills continuously with the reader's progress through the chapter, and the level being
  * read is lit. Clicking a level scrolls to it.
  *
  * GSAP owns the index line (scrubbed) and each spread's one-time entrance. CSS owns the
  * index colours.
  */
-export function LearningPath() {
+type Content = PageContent<typeof homePage>["path"];
+
+export function LearningPath({ levels, content: c }: { levels: PublicLevel[]; content: Content }) {
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
@@ -79,15 +86,14 @@ export function LearningPath() {
   };
 
   return (
-    <Chapter id="tracks" folio="03" title="The path" surface="sheet">
+    <Chapter id="tracks" folio="03" title={c.runningHead} surface="sheet">
       <span id="programs" className="sr-only" />
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
         <h2 data-reveal className="max-w-[20ch] text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
-          You don&rsquo;t need another course. You need to know which level you are on.
+          {c.title}
         </h2>
         <p data-reveal className="text-[15px] leading-relaxed text-muted-foreground">
-          Five levels, each built on the one before. Start where you actually work today; every
-          level ends with work you can show, not a certificate.
+          {levels.length ? `${NUMBER[levels.length] ?? levels.length} ${c.countLine}` : c.countLine.charAt(0).toUpperCase() + c.countLine.slice(1)} {c.lead}
         </p>
       </div>
 
@@ -95,13 +101,13 @@ export function LearningPath() {
         {/* The index: desktop only, stays in the margin while the spreads scroll. */}
         <nav aria-label="Levels" className="hidden lg:block">
           <div className="sticky top-28">
-            <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">THE FIVE LEVELS</p>
+            <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">{c.indexLabel}</p>
             <div className="relative mt-5">
               <span aria-hidden="true" className="absolute inset-y-1 left-0 w-px bg-border" />
               <span ref={fill} aria-hidden="true" className="absolute inset-y-1 left-0 w-px origin-top scale-y-0 bg-foreground" />
               <ol className="flex flex-col">
-                {LEVELS.map((l, i) => (
-                  <li key={l.n}>
+                {levels.map((l, i) => (
+                  <li key={l.slug}>
                     <button
                       type="button"
                       onClick={() => goTo(i)}
@@ -109,33 +115,37 @@ export function LearningPath() {
                       className="group flex w-full items-baseline gap-3 py-2 pl-5 text-left"
                     >
                       <span className={cn("text-data w-5 text-[10.5px] transition-colors", i === active ? "text-brand" : "text-subtle")}>
-                        {String(l.n).padStart(2, "0")}
+                        {String(i + 1).padStart(2, "0")}
                       </span>
                       <span
                         className={cn(
                           "font-serif-display text-[1.45rem] leading-none transition-colors duration-300",
-                          i === active ? "text-foreground" : "text-foreground/35 group-hover:text-foreground/70",
+                          i === active ? "text-foreground" : "text-foreground/60 group-hover:text-foreground/80",
                         )}
                       >
-                        {l.verb}
+                        {l.name}
                       </span>
                     </button>
                   </li>
                 ))}
               </ol>
             </div>
-            <Link
-              href="/learning-paths"
+            <SiteLink
+              link={c.compare}
               className="mt-8 inline-flex min-h-10 items-center pl-5 text-[13px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
-            >
-              Compare all five
-            </Link>
+            />
           </div>
         </nav>
 
         <div className="flex flex-col gap-20 lg:gap-28">
-          {LEVELS.map((lv, i) => (
-            <LevelSpread key={lv.n} index={i} />
+          {levels.length === 0 && (
+            <p className="text-[15px] text-muted-foreground">
+              {c.unavailable} <SiteLink link={c.unavailableLink} className="underline underline-offset-4" />
+              {c.unavailableAfter && ` ${c.unavailableAfter}`}
+            </p>
+          )}
+          {levels.map((lv, i) => (
+            <LevelSpread key={lv.slug} level={lv} index={i} total={levels.length} c={c} />
           ))}
         </div>
       </div>
@@ -143,38 +153,38 @@ export function LearningPath() {
   );
 }
 
-function LevelSpread({ index }: { index: number }) {
-  const level = LEVELS[index];
-  const program = PROGRAMS.find((p) => p.level === level.n);
+const NUMBER: Record<number, string> = { 1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six" };
+
+const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
+
+function LevelSpread({ level, index, total, c }: { level: PublicLevel; index: number; total: number; c: Content }) {
+  const n = index + 1;
+  const topics = level.coreTopics;
   return (
-    <article data-level={index} aria-labelledby={`level-${level.n}`} className="border-t-2 border-foreground pt-6">
+    <article data-level={index} aria-labelledby={`level-${level.slug}`} className="border-t-2 border-foreground pt-6">
       <div data-part className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
         <p className="text-data text-[11px] tracking-[0.12em] text-subtle">
-          LEVEL <span className="text-foreground">{String(level.n).padStart(2, "0")}</span> OF {LEVELS.length}
+          LEVEL <span className="text-foreground">{String(n).padStart(2, "0")}</span> OF {total}
         </p>
-        <p className="text-data text-[11px] tracking-[0.12em] text-subtle">{level.title.toUpperCase()}</p>
+        <p className="text-data text-[11px] tracking-[0.12em] text-subtle">{level.displayTitle.toUpperCase()}</p>
       </div>
 
       <div className="mt-6 grid gap-x-12 gap-y-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <h3
-          id={`level-${level.n}`}
+          id={`level-${level.slug}`}
           data-part
           className="font-serif-display text-[clamp(3.4rem,6.4vw,5.6rem)] leading-[0.9] tracking-[-0.03em]"
         >
-          {level.verb}
+          {level.name}
         </h3>
         <div data-part>
-          <p className="font-serif-display text-[clamp(1.4rem,2vw,1.8rem)] leading-snug">{level.outcome}</p>
-          <p className="mt-4 text-[14.5px] leading-relaxed text-muted-foreground">
-            <span className="text-foreground">For </span>
-            {/* Lower-case the first word unless it is an acronym ("SMEs"). */}
-            {/^[A-Z][a-z]/.test(level.who) ? level.who.charAt(0).toLowerCase() + level.who.slice(1) : level.who}
-          </p>
+          <p className="font-serif-display text-[clamp(1.4rem,2vw,1.8rem)] leading-snug">{level.shortDescription}</p>
+          {level.audience && <p className="mt-4 text-[14.5px] leading-relaxed text-muted-foreground">{level.audience}</p>}
         </div>
       </div>
 
       <ol data-part className="mt-10 grid gap-x-10 border-t border-border sm:grid-cols-2">
-        {level.modules.map((m, k) => (
+        {topics.map((m, k) => (
           <li
             key={m}
             className={cn(
@@ -187,34 +197,40 @@ function LevelSpread({ index }: { index: number }) {
           </li>
         ))}
       </ol>
-      {level.modules.length > 4 && (
-        <p className="mt-3 text-[13px] text-subtle sm:hidden">and {level.modules.length - 4} more modules</p>
-      )}
+      {topics.length > 4 && <p className="mt-3 text-[13px] text-subtle sm:hidden">and {topics.length - 4} {c.moreTopics}</p>}
 
       <div data-part className="mt-7 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
-        {program ? (
-          <p className="text-[14px] text-muted-foreground">
-            <span className="text-foreground">{program.name}</span>
-            <span className="text-data"> · {inr(program.price)} · {program.weeks}</span>
-          </p>
+        {level.courses.length ? (
+          <ul className="flex flex-col gap-1 text-[14px] text-muted-foreground">
+            {level.courses.map((course) => (
+              <li key={course.slug}>
+                <Link href={`/catalog/${course.slug}`} className="text-foreground underline decoration-input underline-offset-[5px] hover:decoration-foreground">
+                  {course.name}
+                </Link>
+                <span className="text-data">
+                  {" "}
+                  · {course.isFree ? c.freeLabel : course.price !== null ? inr(course.price) : c.includedLabel}
+                </span>
+              </li>
+            ))}
+          </ul>
         ) : (
-          <p className="text-[14px] text-muted-foreground">Taught inside the Operational Excellence track</p>
+          <p className="text-[14px] text-muted-foreground">{c.notReleased}</p>
         )}
         <div className="flex items-center gap-6">
-          <Link
-            href="/mentoring"
+          <SiteLink
+            link={c.notSure}
             className="hidden min-h-11 items-center text-[13.5px] underline decoration-input underline-offset-[6px] hover:decoration-foreground sm:inline-flex"
-          >
-            Not sure it&rsquo;s your level?
-          </Link>
+          />
           <Link
-            href={program ? `/courses#${program.id}` : "/learning-paths"}
+            href={`/catalog?level=${level.slug}`}
             className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
           >
-            {program ? "See the program" : "See the path"}
+            {c.coursesButton}
           </Link>
         </div>
       </div>
+      {level.estimatedEffort && <p className="mt-3 text-[12.5px] text-subtle">{c.effortLabel} {level.estimatedEffort}</p>}
     </article>
   );
 }

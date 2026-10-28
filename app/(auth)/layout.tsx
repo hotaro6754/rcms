@@ -1,7 +1,12 @@
 import Link from "next/link";
+import { Wordmark } from "@/components/brand/Wordmark";
+import { NOINDEX } from "@/lib/seo";
+
+/** Signed-in and sign-in pages are kept out of search engines. */
+export const metadata = NOINDEX;
 
 const INSIDE = [
-  ["Five levels", "From your first revenue cycle role to running a portfolio."],
+  ["Three levels", "Trainee, Professional and Leadership: from your first revenue cycle role to running operations."],
   ["Lessons and materials", "Written from the floor, with the SOPs and templates that go with them."],
   ["Certificates", "Issued when the work is done, with a serial anyone can verify."],
 ];
@@ -15,8 +20,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="editorial grid min-h-dvh bg-background lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       <aside className="env-ink relative hidden flex-col justify-between bg-background px-12 py-10 text-foreground lg:flex xl:px-16">
         <Link href="/" className="flex items-baseline gap-2.5">
-          <span className="text-data text-[13px] font-semibold tracking-[0.18em]">RCMS</span>
-          <span className="font-serif-display text-[17px] leading-none">Operations Academy</span>
+          <Wordmark />
         </Link>
 
         <div>
@@ -43,8 +47,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex min-h-dvh flex-col">
         <header className="flex h-14 items-center justify-between border-b border-border px-6 lg:border-b-0 lg:px-12">
           <Link href="/" className="flex items-baseline gap-2.5 lg:invisible">
-            <span className="text-data text-[13px] font-semibold tracking-[0.18em]">RCMS</span>
-            <span className="font-serif-display text-[17px] leading-none">Operations Academy</span>
+            <Wordmark />
           </Link>
           <Link href="/" className="text-data text-[11px] tracking-[0.1em] text-subtle hover:text-foreground">
             ← THE SITE

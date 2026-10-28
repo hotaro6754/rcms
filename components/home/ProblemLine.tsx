@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { PROBLEM_LINES } from "@/lib/data/problem";
+import type { ProblemLine as Line } from "@/lib/data/problem";
 
 const EASE = [0.2, 0, 0.1, 1] as const;
 
@@ -10,8 +10,7 @@ const EASE = [0.2, 0, 0.1, 1] as const;
  * the fact beneath it. Motion owns the swap: the outgoing line lifts out of its mask as
  * the incoming one rises into it. Kept in its own file so no GSAP code shares it.
  */
-export function ProblemLine({ index }: { index: number }) {
-  const line = PROBLEM_LINES[index];
+export function ProblemLine({ index, line }: { index: number; line: Line }) {
   return (
     <div>
       <div className="relative overflow-hidden pb-[0.12em]">
@@ -25,7 +24,7 @@ export function ProblemLine({ index }: { index: number }) {
             className="font-serif-display"
           >
             {/* Lead-in on its own line, so every step is the same height, even the longest noun. */}
-            <span className="block text-[clamp(1.6rem,2.6vw,2.5rem)] leading-tight text-foreground/45">{line.lead}</span>
+            <span className="block text-[clamp(1.6rem,2.6vw,2.5rem)] leading-tight text-foreground/60">{line.lead}</span>
             <em className="block whitespace-nowrap text-[clamp(3rem,6.8vw,7.2rem)] italic leading-[1] tracking-[-0.03em]">{line.noun}</em>
           </motion.p>
         </AnimatePresence>

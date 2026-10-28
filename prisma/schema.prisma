@@ -1,11 +1,11 @@
-// RCMS Operations Academy — one schema behind all four applications.
+// RCMS Operations Academy — one schema behind the public site, the learner portal, the admin
+// control centre and the vendor portal.
 //
-// Grouped by concern, in the order the build plan introduces them. Two conventions hold
-// everywhere and are set here in Phase 0 precisely because retrofitting them later is
-// painful:
+// Grouped by concern. Three conventions hold everywhere:
 //
-//   1. Every table carries createdAt / updatedAt.
+//   1. Every table carries createdAt (and updatedAt where rows change).
 //   2. Every mutation writes an AuditLog row naming the actor, the entity and the change.
+//   3. Records with learner, financial or assessment history are archived, never deleted.
 
 generator client {
   provider = "prisma-client-js"
@@ -16,55 +16,108 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
-// Identity. The four user-facing shapes: visitor, student, trainer, admin.
-// User / Session / Account / Verification match what Better Auth expects.
+// Identity. User / Session / Account / Verification / TwoFactor / RateLimit match what
+// Better Auth expects.
 // ---------------------------------------------------------------------------
 
+/// The coarse account type. Staff authority comes from StaffRoleAssignment, not from here;
+/// OWNER, ADMIN and TRAINER are kept for continuity and imply a default staff role
+/// (see lib/permissions.ts).
 enum Role {
   STUDENT
   TRAINER
   ADMIN
   OWNER
+  VENDOR
+}
+
+/// Blueprint §5.3 subscriber statuses.
+enum AccountStatus {
+  INVITATION_PENDING
+  PENDING_VERIFICATION
+  ACTIVE
+  TRIAL
+  PAYMENT_PENDING
+  PAYMENT_FAILED
+  GRACE_PERIOD
+  SUSPENDED
+  COMPLETED
+  CANCELLED
+  DEACTIVATED
+  ARCHIVED
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String        @unique
+  emailVerified Boolean       @default(false)
   image         String?
-  role          Role      @default(STUDENT)
+  role          Role          @default(STUDENT)
+  status        AccountStatus @default(PENDING_VERIFICATION)
 
   // Career context, which is what the ladder is measured against.
-  currentRole   String?
-  experience    Int? // years
-  phone         String?
-  whatsapp      String?
+  currentRole String?
+  experience  Int? // years
+  phone       String?
+  whatsapp    String?
+  country     String?
+  timezone    String?
 
-  bannedAt      DateTime?
-  lastSeenAt    DateTime?
+  // Communication preferences. Consent history lives in ConsentRecord.
+  marketingOptIn  Boolean   @default(false)
+  termsAcceptedAt DateTime?
 
-  sessions      Session[]
-  accounts      Account[]
-  enrolments    Enrolment[]
-  certificates  Certificate[]
-  progress      Progress[]
-  quizAttempts  QuizAttempt[]
-  orders        Order[]
-  bookings      Booking[]
-  labAttempts   LabAttempt[]
-  posts         Post[]
-  threads       Thread[]
-  notifications Notification[]
-  auditLogs     AuditLog[]     @relation("AuditActor")
-  ownedLeads    Lead[]         @relation("LeadOwner")
-  trainer       Trainer?
-  orgMembers    OrgMember[]
+  // Account protection.
+  twoFactorEnabled Boolean   @default(false)
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  previousLoginAt  DateTime?
+  lastLoginIp      String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  bannedAt   DateTime?
+  lastSeenAt DateTime?
+
+  sessions           Session[]
+  accounts           Account[]
+  twoFactors         TwoFactor[]
+  enrolments         Enrolment[]
+  certificates       Certificate[]
+  badges             LevelBadge[]
+  progress           Progress[]
+  quizAttempts       QuizAttempt[]
+  orders             Order[]
+  subscriptions      Subscription[]
+  bookings           Booking[]
+  labAttempts        LabAttempt[]
+  posts              Post[]
+  threads            Thread[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]            @relation("AuditActor")
+  ownedLeads         Lead[]                @relation("LeadOwner")
+  trainer            Trainer?
+  orgMembers         OrgMember[]
+  staffRoles         StaffRoleAssignment[] @relation("StaffRoleHolder")
+  consents           ConsentRecord[]
+  notesAbout         AdminNote[]           @relation("NoteSubject")
+  notesWritten       AdminNote[]           @relation("NoteAuthor")
+  tickets            SupportTicket[]       @relation("TicketRequester")
+  assignedTickets    SupportTicket[]       @relation("TicketAssignee")
+  vendorMembers      VendorMember[]
+  privacyRequests    PrivacyRequest[]
+  bookmarks          Bookmark[]
+  simAttempts        SimAttempt[]
+  competencyOutcomes CompetencyOutcome[]
+
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  supportTeamMembers     SupportTeamMember[]
+  assistantConversations AssistantConversation[]
 
   @@index([role])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Session {
@@ -115,75 +168,425 @@ model Verification {
   @@index([identifier])
 }
 
-/// Corporate cohorts. A company buys seats and a manager watches progress.
+/// TOTP secrets for multi-factor authentication (Better Auth two-factor plugin). The secret
+/// is encrypted by Better Auth with BETTER_AUTH_SECRET before it is written.
+model TwoFactor {
+  id                      String    @id @default(cuid())
+  secret                  String
+  backupCodes             String
+  userId                  String
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([secret])
+}
+
+/// Better Auth's rate limiter, stored in the database so limits hold across server
+/// instances and restarts. Also used by lib/rate-limit.ts for the public forms.
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
+// ---------------------------------------------------------------------------
+// Staff authority. Blueprint §3.2–3.4: least privilege, action-level permissions,
+// maker-checker for high-risk changes.
+// ---------------------------------------------------------------------------
+
+enum StaffRole {
+  SUPER_ADMIN
+  ACADEMY_DIRECTOR
+  CONTENT_ADMIN
+  ACADEMIC_REVIEWER
+  COMPLIANCE_REVIEWER
+  SUBSCRIBER_ADMIN
+  SUPPORT_AGENT
+  SUPPORT_MANAGER
+  FINANCE_ADMIN
+  VENDOR_MANAGER
+  REPORTING_ANALYST
+  AUDITOR
+}
+
+model StaffRoleAssignment {
+  id           String    @id @default(cuid())
+  userId       String
+  role         StaffRole
+  grantedById  String?
+  approvedById String?
+
+  user User @relation("StaffRoleHolder", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, role])
+  @@index([role])
+}
+
+enum ApprovalKind {
+  ROLE_CHANGE
+  PRICE_CHANGE
+  VENDOR_PAYOUT_CHANGE
+  DATA_EXPORT
+  COURSE_DELETE
+  SECURITY_SETTING
+  PROGRESS_RESET
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXECUTED
+  FAILED
+}
+
+/// One maker-checker request. The initiator and the decider are always different people;
+/// the handler for each kind (lib/services/approvals.ts) decides who may approve and what
+/// approval does.
+model ApprovalRequest {
+  id            String         @id @default(cuid())
+  kind          ApprovalKind
+  status        ApprovalStatus @default(PENDING)
+  targetType    String
+  targetId      String?
+  summary       String
+  payload       Json
+  reason        String
+  requestedById String
+  decidedById   String?
+  decisionNote  String?
+  decidedAt     DateTime?
+  executedAt    DateTime?
+  failure       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, kind])
+  @@index([targetType, targetId])
+}
+
+model ConsentRecord {
+  id      String  @id @default(cuid())
+  userId  String
+  /// "terms", "privacy", "marketing"
+  kind    String
+  granted Boolean
+  version String?
+  ip      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind])
+}
+
+/// Internal administrative notes on a subscriber. Never shown to the subscriber.
+model AdminNote {
+  id        String @id @default(cuid())
+  subjectId String
+  authorId  String
+  body      String
+
+  subject User @relation("NoteSubject", fields: [subjectId], references: [id], onDelete: Cascade)
+  author  User @relation("NoteAuthor", fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([subjectId, createdAt])
+}
+
+enum PrivacyRequestKind {
+  ACCESS
+  DELETION
+  CORRECTION
+}
+
+enum PrivacyRequestStatus {
+  OPEN
+  IN_REVIEW
+  COMPLETED
+  REJECTED
+}
+
+model PrivacyRequest {
+  id          String               @id @default(cuid())
+  userId      String
+  kind        PrivacyRequestKind
+  status      PrivacyRequestStatus @default(OPEN)
+  detail      String?
+  handledById String?
+  resolution  String?
+  closedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+/// Monotonic counters for human-readable numbers (invoices, tickets). One row per key,
+/// incremented atomically.
+model Counter {
+  key   String @id
+  value Int    @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Corporate accounts. A company buys seats and a manager watches progress.
+// ---------------------------------------------------------------------------
+
 model Organisation {
-  id       String @id @default(cuid())
-  name     String
-  slug     String @unique
-  gstin    String?
-  seats    Int    @default(0)
-  members  OrgMember[]
-  orders   Order[]
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  gstin         String?
+  seats         Int       @default(0)
+  billingEmail  String?
+  contractStart DateTime?
+  contractEnd   DateTime?
+  active        Boolean   @default(true)
+
+  members     OrgMember[]
+  groups      OrgGroup[]
+  orders      Order[]
+  enrolments  Enrolment[]
+  invitations Invitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model OrgMember {
-  id     String @id @default(cuid())
-  orgId  String
-  userId String
+  id        String  @id @default(cuid())
+  orgId     String
+  userId    String
   isManager Boolean @default(false)
 
-  org  Organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org    Organisation     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groups OrgGroupMember[]
 
   createdAt DateTime @default(now())
 
   @@unique([orgId, userId])
 }
 
+model OrgGroup {
+  id    String @id @default(cuid())
+  orgId String
+  name  String
+
+  org     Organisation     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  members OrgGroupMember[]
+  courses OrgGroupCourse[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([orgId, name])
+}
+
+model OrgGroupMember {
+  id       String @id @default(cuid())
+  groupId  String
+  memberId String
+
+  group  OrgGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  member OrgMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, memberId])
+}
+
+model OrgGroupCourse {
+  id        String @id @default(cuid())
+  groupId   String
+  programId String
+
+  group   OrgGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  program Program  @relation(fields: [programId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([groupId, programId])
+}
+
+/// An invitation to join the Academy, optionally into a corporate account. The token is
+/// stored hashed; the plain token only ever exists in the email.
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  orgId       String?
+  tokenHash   String    @unique
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+
+  org Organisation? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 // ---------------------------------------------------------------------------
-// Academy. Programs contain modules contain lessons.
+// Academy. Level → Course (Program) → Module → Lesson → Content block / Resource / Assessment.
+//
+// Staff edit a working draft. Learners read the course's published CourseVersion, an
+// immutable snapshot, so an edit never reaches a learner until it has been reviewed and
+// released. See docs/ARCHITECTURE.md.
 // ---------------------------------------------------------------------------
 
+/// Item state inside a course draft. PUBLISHED reads "ready": the item is included the next
+/// time the course is released. ARCHIVED items are kept, restorable and excluded.
 enum PublishState {
   DRAFT
   PUBLISHED
   ARCHIVED
 }
 
-model Program {
-  id          String       @id @default(cuid())
-  slug        String       @unique
-  tier        String // "TIER 01"
-  name        String
-  level       Int
-  who         String
-  artefact    String
-  weeks       String
-  flag        String?
-  outcomes    String[]
-  state       PublishState @default(DRAFT)
-  sortOrder   Int          @default(0)
+/// Blueprint §4.3 status workflow, applied to the course (and level) as the unit of release.
+enum ContentStatus {
+  DRAFT
+  IN_DEVELOPMENT
+  ACADEMIC_REVIEW
+  COMPLIANCE_REVIEW
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  UNDER_REVISION
+  ARCHIVED
+}
 
-  modules    Module[]
-  products     Product[]
-  enrolments   Enrolment[]
-  certificates Certificate[]
+model LearningLevel {
+  id                    String        @id @default(cuid())
+  slug                  String        @unique
+  name                  String
+  displayTitle          String
+  sequence              Int           @default(0)
+  shortDescription      String
+  description           String?
+  audience              String?
+  prerequisites         String[]
+  outcomes              String[]
+  coreTopics            String[]
+  estimatedEffort       String?
+  assessmentRequirement String?
+  passingCriteria       String?
+  completionRequirement String?
+  badgeName             String?
+  /// Display accent: "teal" (Trainee), "blue" (Professional), "navy" (Leadership).
+  accent                String        @default("teal")
+  status                ContentStatus @default(DRAFT)
+  disclaimer            String?
+  ownerId               String?
+  academicReviewerId    String?
+  complianceReviewerId  String?
+  effectiveDate         DateTime?
+  reviewDate            DateTime?
+  archivedAt            DateTime?
+
+  courses Program[]
+  badges  LevelBadge[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([status, sequence])
+}
+
+/// A course. The table keeps its original name, Program; the admin calls it a course.
+model Program {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  tier      String // "TIER 01"
+  name      String
+  /// Position on the marketing site's five-step ladder (1–5). Not the learning level.
+  level     Int
+  levelId   String?
+  who       String
+  artefact  String
+  weeks     String
+  flag      String?
+  outcomes  String[]
+  /// Learner visibility, kept in step with `status` by the release service: PUBLISHED while
+  /// a released version is live.
+  state     PublishState @default(DRAFT)
+  sortOrder Int          @default(0)
+
+  description            String?
+  prerequisites          String[]
+  durationMinutes        Int?
+  difficulty             String?
+  /// No payment needed to enrol.
+  isFree                 Boolean       @default(false)
+  /// Covered by an active all-access or level subscription.
+  includedInSubscription Boolean       @default(true)
+  /// Requires compliance review before release (payer, coding, regulatory or privacy
+  /// content). Defaults to true: the conservative choice for RCM material.
+  complianceSensitive    Boolean       @default(true)
+  status                 ContentStatus @default(DRAFT)
+  disclaimer             String?
+  ownerId                String?
+  academicReviewerId     String?
+  complianceReviewerId   String?
+  effectiveDate          DateTime?
+  reviewDate             DateTime?
+  scheduledFor           DateTime?
+  /// When set, the course is withdrawn from learners at this time by the scheduler.
+  expiresAt              DateTime?
+  /// A template course: never published, only copied to start new courses.
+  isTemplate             Boolean       @default(false)
+  /// Learners need a valid certificate for this course before they can enrol.
+  requiresCourseId       String?
+  archivedAt             DateTime?
+  thumbnailId            String?
+  publishedVersionId     String?       @unique
+  /// Optimistic concurrency for the course record itself.
+  lockVersion            Int           @default(0)
+
+  learningLevel    LearningLevel?   @relation(fields: [levelId], references: [id])
+  publishedVersion CourseVersion?   @relation("PublishedVersion", fields: [publishedVersionId], references: [id])
+  versions         CourseVersion[]  @relation("CourseVersions")
+  reviews          ReviewDecision[]
+  modules          Module[]
+  products         Product[]
+  enrolments       Enrolment[]
+  certificates     Certificate[]
+  groupCourses     OrgGroupCourse[]
+  deliverables     Deliverable[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  supportTickets SupportTicket[]
+
   @@index([state, sortOrder])
+  @@index([levelId, sortOrder])
+  @@index([status])
 }
 
 model Module {
-  id        String @id @default(cuid())
-  programId String
-  title     String
-  summary   String?
-  sortOrder Int    @default(0)
+  id                   String       @id @default(cuid())
+  programId            String
+  title                String
+  summary              String?
+  objectives           String[]
+  estimatedMinutes     Int?
+  /// Learners must complete this module (every lesson) before opening this one.
+  prerequisiteModuleId String?
+  sortOrder            Int          @default(0)
+  state                PublishState @default(PUBLISHED)
+  lockVersion          Int          @default(0)
 
   program Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
   lessons Lesson[]
@@ -194,20 +597,41 @@ model Module {
   @@index([programId, sortOrder])
 }
 
-model Lesson {
-  id          String       @id @default(cuid())
-  moduleId    String
-  title       String
-  body        String?
-  videoAssetId String? // provider-side id; playback URLs are always signed
-  durationSec Int?
-  sortOrder   Int          @default(0)
-  state       PublishState @default(DRAFT)
+enum LessonCompletion {
+  /// The learner marks it complete.
+  MANUAL
+  /// Completed automatically, and only, by passing the lesson's assessment.
+  ASSESSMENT_PASS
+}
 
-  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+model Lesson {
+  id             String           @id @default(cuid())
+  moduleId       String
+  title          String
+  /// Legacy plain-text body. Migrated into a TEXT content block; no longer written.
+  body           String?
+  objectives     String[]
+  videoAssetId   String? // provider-side id; playback URLs are always signed
+  durationSec    Int?
+  sortOrder      Int              @default(0)
+  state          PublishState     @default(DRAFT)
+  freePreview    Boolean          @default(false)
+  completionRule LessonCompletion @default(MANUAL)
+  effectiveDate  DateTime?
+  /// Compliance metadata for regulated content: who owns it, when it was last reviewed,
+  /// when it must be reviewed next, and the sources it relies on.
+  contentOwnerId String?
+  lastReviewedAt DateTime?
+  nextReviewAt   DateTime?
+  sources        String[]         @default([])
+  lockVersion    Int              @default(0)
+
+  module    Module         @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  blocks    ContentBlock[]
   resources Resource[]
   quizzes   Quiz[]
   progress  Progress[]
+  bookmarks Bookmark[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -215,14 +639,146 @@ model Lesson {
   @@index([moduleId, sortOrder])
 }
 
+enum BlockKind {
+  TEXT
+  HEADING
+  CALLOUT
+  IMAGE
+  VIDEO
+  LINK
+  TABLE
+  STEPS
+  SCENARIO
+  CODE
+  AUDIO
+  DESIGN
+  DOCUMENT
+}
+
+/// One block of lesson content. `data` is validated per kind by lib/cms/blocks.ts before
+/// it is written; rich text is a restricted Markdown subset rendered without HTML.
+model ContentBlock {
+  id        String    @id @default(cuid())
+  lessonId  String
+  kind      BlockKind
+  data      Json
+  sortOrder Int       @default(0)
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lessonId, sortOrder])
+}
+
+/// Field-level history for every CMS edit (blueprint §4.5). `snapshot` is the entity's full
+/// editable state after the edit, which is what a rollback restores.
+model ContentRevision {
+  id         String  @id @default(cuid())
+  entityType String
+  entityId   String
+  courseId   String?
+  version    Int
+  editorId   String?
+  reason     String?
+  changes    Json
+  snapshot   Json
+
+  createdAt DateTime @default(now())
+
+  @@unique([entityType, entityId, version])
+  @@index([courseId, createdAt])
+}
+
+/// An immutable release of a course: the whole learner-facing tree as JSON, plus who
+/// approved it and when it went live.
+model CourseVersion {
+  id                   String    @id @default(cuid())
+  courseId             String
+  version              Int
+  snapshot             Json
+  /// Media referenced by the snapshot; the media route grants learners access by this list.
+  mediaIds             String[]
+  changeSummary        String?
+  submittedById        String?
+  academicApproverId   String?
+  complianceApproverId String?
+  publishedById        String?
+  publishedAt          DateTime?
+  effectiveDate        DateTime?
+
+  course      Program  @relation("CourseVersions", fields: [courseId], references: [id], onDelete: Restrict)
+  publishedOf Program? @relation("PublishedVersion")
+
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, version])
+}
+
+enum ReviewStage {
+  ACADEMIC
+  COMPLIANCE
+  PUBLICATION
+}
+
+model ReviewDecision {
+  id         String      @id @default(cuid())
+  courseId   String
+  stage      ReviewStage
+  /// "submitted", "approved", "rejected", "published", "withdrawn", "scheduled", "archived", "restored"
+  decision   String
+  reviewerId String
+  comment    String?
+  /// The draft revision counter the decision applies to, so an approval cannot outlive an edit.
+  draftStamp Int         @default(0)
+
+  course Program @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([courseId, createdAt])
+}
+
+enum MediaKind {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  AUDIO
+}
+
+/// The media library. Files live in storage; this row holds metadata and the storage key.
+model MediaAsset {
+  id           String    @id @default(cuid())
+  kind         MediaKind
+  title        String
+  altText      String?
+  fileKey      String    @unique
+  mimeType     String
+  sizeBytes    Int
+  /// Public assets (course thumbnails) are served without a session.
+  isPublic     Boolean   @default(false)
+  uploadedById String?
+  archivedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, archivedAt])
+}
+
 model Resource {
-  id       String @id @default(cuid())
-  lessonId String
-  title    String
-  fileKey  String
-  mimeType String
-  sizeBytes Int?
-  watermark Boolean @default(true)
+  id         String    @id @default(cuid())
+  lessonId   String
+  title      String
+  fileKey    String
+  mimeType   String
+  sizeBytes  Int?
+  watermark  Boolean   @default(true)
+  /// Learners may download the file itself. Off by default: PDFs are read in the
+  /// page-by-page reader and other files stay with the course team.
+  downloadable Boolean  @default(false)
+  archivedAt DateTime?
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
@@ -231,13 +787,39 @@ model Resource {
   @@index([lessonId])
 }
 
-model Quiz {
-  id           String @id @default(cuid())
-  lessonId     String
-  title        String
-  passingScore Int    @default(70)
+// ---------------------------------------------------------------------------
+// Assessment engine (blueprint §4.6).
+// ---------------------------------------------------------------------------
 
-  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+enum AssessmentKind {
+  KNOWLEDGE_CHECK
+  MODULE_TEST
+  FINAL
+  ASSIGNMENT
+}
+
+model Quiz {
+  id                 String         @id @default(cuid())
+  lessonId           String
+  title              String
+  kind               AssessmentKind @default(KNOWLEDGE_CHECK)
+  instructions       String?
+  passingScore       Int            @default(70)
+  /// null = untimed.
+  timeLimitMinutes   Int?
+  /// null = unlimited.
+  maxAttempts        Int?
+  retakeWaitMinutes  Int            @default(0)
+  randomizeQuestions Boolean        @default(false)
+  randomizeOptions   Boolean        @default(false)
+  /// Questions drawn at random from `bankId` in addition to the quiz's own questions.
+  bankId             String?
+  drawCount          Int            @default(0)
+  showAnswers        Boolean        @default(true)
+  archivedAt         DateTime?
+
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+  bank      QuestionBank?  @relation(fields: [bankId], references: [id])
   questions QuizQuestion[]
   attempts  QuizAttempt[]
 
@@ -247,34 +829,120 @@ model Quiz {
   @@index([lessonId])
 }
 
-model QuizQuestion {
-  id        String   @id @default(cuid())
-  quizId    String
-  prompt    String
-  options   String[]
-  correct   Int
-  rationale String?
-  sortOrder Int      @default(0)
+model QuestionBank {
+  id          String    @id @default(cuid())
+  title       String
+  competency  String?
+  description String?
+  archivedAt  DateTime?
 
-  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  quizzes   Quiz[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum QuestionType {
+  SINGLE
+  MULTI
+  TRUE_FALSE
+  MATCHING
+  SEQUENCE
+  SHORT_ANSWER
+  FILE_UPLOAD
+}
+
+model QuizQuestion {
+  id                  String       @id @default(cuid())
+  quizId              String?
+  bankId              String?
+  type                QuestionType @default(SINGLE)
+  /// Scenario or case text shown above the prompt. Synthetic data only.
+  scenario            String?
+  prompt              String
+  /// Choices (SINGLE/MULTI/TRUE_FALSE), items to order (SEQUENCE) or left column (MATCHING).
+  options             String[]
+  /// Right column for MATCHING.
+  targets             String[]
+  /// Legacy single-choice key, kept in step with answerKey for SINGLE and TRUE_FALSE.
+  correct             Int          @default(0)
+  /// Typed answer key: { index } | { indices } | { order } | { pairs } | { rubric }.
+  answerKey           Json?
+  rationale           String?
+  points              Int          @default(1)
+  difficulty          Int          @default(2)
+  competency          String?
+  /// Lesson to recommend when this question is answered wrongly.
+  remediationLessonId String?
+  sortOrder           Int          @default(0)
+  archivedAt          DateTime?
+
+  quiz Quiz?         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  bank QuestionBank? @relation(fields: [bankId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([quizId, sortOrder])
+  @@index([bankId])
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  PENDING_REVIEW
+  GRADED
+  EXPIRED
 }
 
 model QuizAttempt {
-  id       String   @id @default(cuid())
-  quizId   String
-  userId   String
-  score    Int
-  passed   Boolean
-  answers  Json
+  id             String        @id @default(cuid())
+  quizId         String
+  userId         String
+  attemptNo      Int           @default(1)
+  status         AttemptStatus @default(GRADED)
+  /// The questions, options order and answer key exactly as this attempt saw them. Grading
+  /// reads this, never the live quiz, so later edits cannot change a recorded result.
+  snapshot       Json?
+  courseVersion  Int?
+  score          Int?
+  passed         Boolean?
+  pointsAwarded  Int?
+  pointsPossible Int?
+  answers        Json
+  breakdown      Json?
+  feedback       String?
+  startedAt      DateTime      @default(now())
+  expiresAt      DateTime?
+  submittedAt    DateTime?
+  gradedAt       DateTime?
+  gradedById     String?
 
-  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Restrict)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  uploads AttemptUpload[]
 
   createdAt DateTime @default(now())
 
+  @@unique([quizId, userId, attemptNo])
   @@index([userId, quizId])
+  @@index([status])
+}
+
+model AttemptUpload {
+  id         String @id @default(cuid())
+  attemptId  String
+  questionId String
+  fileKey    String
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+
+  attempt QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([attemptId])
 }
 
 enum EnrolmentState {
@@ -282,37 +950,55 @@ enum EnrolmentState {
   COMPLETED
   REFUNDED
   EXPIRED
+  SUSPENDED
+  CANCELLED
+}
+
+enum EnrolmentSource {
+  ADMIN
+  FREE
+  PURCHASE
+  SUBSCRIPTION
+  COMPLIMENTARY
+  CORPORATE
 }
 
 model Enrolment {
-  id        String         @id @default(cuid())
-  userId    String
-  programId String
-  orderId   String?
-  state     EnrolmentState @default(ACTIVE)
-  startedAt DateTime       @default(now())
+  id          String          @id @default(cuid())
+  userId      String
+  programId   String
+  orderId     String?
+  orgId       String?
+  source      EnrolmentSource @default(ADMIN)
+  state       EnrolmentState  @default(ACTIVE)
+  startedAt   DateTime        @default(now())
+  expiresAt   DateTime?
   completedAt DateTime?
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  program Program @relation(fields: [programId], references: [id])
-  order   Order?  @relation(fields: [orderId], references: [id])
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program Program       @relation(fields: [programId], references: [id])
+  order   Order?        @relation(fields: [orderId], references: [id])
+  org     Organisation? @relation(fields: [orgId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, programId])
   @@index([state])
+  @@index([programId, state])
 }
 
 model Progress {
-  id          String    @id @default(cuid())
-  userId      String
-  lessonId    String
-  completedAt DateTime?
-  secondsIn   Int       @default(0)
+  id           String    @id @default(cuid())
+  userId       String
+  lessonId     String
+  startedAt    DateTime  @default(now())
+  lastViewedAt DateTime?
+  completedAt  DateTime?
+  secondsIn    Int       @default(0)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -320,54 +1006,93 @@ model Progress {
   @@unique([userId, lessonId])
 }
 
-// ---------------------------------------------------------------------------
-// Commerce. Razorpay at launch; the shape allows a second gateway later.
-// ---------------------------------------------------------------------------
-
-/// A certificate of completion. The holder's name and the program are frozen at issue, so
-/// a later rename of either never changes a certificate someone has already shared. The
-/// serial is the public identifier printed on the certificate and used to verify it.
+/// A certificate of completion. The holder's name, the course and its released version are
+/// frozen at issue, so a later rename never changes a certificate someone has shared. A
+/// re-issue creates a new row; revoked rows are kept so their serial keeps resolving.
 model Certificate {
-  id           String    @id @default(cuid())
-  serial       String    @unique
-  userId       String
-  programId    String
-  holderName   String
-  programName  String
-  issuedAt     DateTime  @default(now())
-  issuedById   String?
+  id            String    @id @default(cuid())
+  serial        String    @unique
+  userId        String
+  programId     String
+  holderName    String
+  programName   String
+  courseVersion Int?
+  /// What the certificate rests on: lessons completed, attempts passed, at issue.
+  evidence      Json?
+  issuedAt      DateTime  @default(now())
+  issuedById    String?
   /// "completion" when the student met every requirement; "manual" when an admin issued it.
-  basis        String    @default("completion")
-  revokedAt    DateTime?
-  revokeReason String?
+  basis         String    @default("completion")
+  revokedAt     DateTime?
+  revokedById   String?
+  revokeReason  String?
+  replacesId    String?
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   program Program @relation(fields: [programId], references: [id])
 
-  @@unique([userId, programId])
+  @@index([userId, programId])
   @@index([programId])
 }
+
+/// A level badge (Foundation, Professional, Leadership), earned by holding a valid
+/// certificate for every released course in the level.
+model LevelBadge {
+  id       String   @id @default(cuid())
+  serial   String   @unique
+  userId   String
+  levelId  String
+  name     String
+  issuedAt DateTime @default(now())
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level LearningLevel @relation(fields: [levelId], references: [id])
+
+  @@unique([userId, levelId])
+}
+
+// ---------------------------------------------------------------------------
+// Commerce. Razorpay at launch; the shape allows a second gateway later. Money is integer
+// minor units (paise) everywhere.
+// ---------------------------------------------------------------------------
 
 enum ProductKind {
   PROGRAM
   TRACK
   MENTORING
   CORPORATE
+  SUBSCRIPTION
+}
+
+enum BillingInterval {
+  MONTH
+  YEAR
 }
 
 model Product {
-  id        String      @id @default(cuid())
-  sku       String      @unique
-  kind      ProductKind
-  name      String
+  id          String           @id @default(cuid())
+  sku         String           @unique
+  kind        ProductKind
+  name        String
+  description String?
   /// Minor units. Rupees are stored as paise so no float ever touches money.
-  amount    Int
-  currency  String      @default("INR")
-  active    Boolean     @default(true)
-  programId String?
+  amount      Int
+  currency    String           @default("INR")
+  active      Boolean          @default(true)
+  programId   String?
+  /// TRACK products and level subscriptions grant every released course in this level.
+  levelId     String?
+  /// Course slugs a TRACK (bundle) product grants, when it is not a whole level.
+  includes    String[]         @default([])
+  interval    BillingInterval?
+  trialDays   Int              @default(0)
+  graceDays   Int              @default(0)
+  /// Percentage of GST included in `amount` (18 for 18%). 0 when not applicable.
+  taxPercent  Int              @default(0)
 
-  program Program? @relation(fields: [programId], references: [id])
-  orders  Order[]
+  program       Program?       @relation(fields: [programId], references: [id])
+  orders        Order[]
+  subscriptions Subscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -375,97 +1100,535 @@ model Product {
 
 enum OrderState {
   CREATED
+  PENDING
   PAID
   FAILED
+  CANCELLED
+  PARTIALLY_REFUNDED
   REFUNDED
+  DISPUTED
 }
 
 model Order {
-  id        String     @id @default(cuid())
-  userId    String
-  orgId     String?
-  productId String
-  state     OrderState @default(CREATED)
-  amount    Int
-  currency  String     @default("INR")
-  couponId  String?
+  id            String     @id @default(cuid())
+  number        String?    @unique
+  userId        String
+  orgId         String?
+  productId     String
+  state         OrderState @default(CREATED)
+  /// Amount charged, after discount, tax included.
+  amount        Int
+  subtotal      Int        @default(0)
+  discount      Int        @default(0)
+  tax           Int        @default(0)
+  currency      String     @default("INR")
+  provider      String     @default("razorpay")
+  couponId      String?
   /// Razorpay order id. Unique so a replayed webhook cannot create a second order.
-  gatewayRef String?   @unique
+  gatewayRef    String?    @unique
+  paidAt        DateTime?
+  failureReason String?
+  notes         String?
 
-  user       User          @relation(fields: [userId], references: [id])
-  org        Organisation? @relation(fields: [orgId], references: [id])
-  product    Product       @relation(fields: [productId], references: [id])
-  coupon     Coupon?       @relation(fields: [couponId], references: [id])
-  payments   Payment[]
-  invoice    Invoice?
-  refunds    Refund[]
-  enrolments Enrolment[]
+  user         User          @relation(fields: [userId], references: [id])
+  org          Organisation? @relation(fields: [orgId], references: [id])
+  product      Product       @relation(fields: [productId], references: [id])
+  coupon       Coupon?       @relation(fields: [couponId], references: [id])
+  payments     Payment[]
+  invoice      Invoice?
+  refunds      Refund[]
+  enrolments   Enrolment[]
+  subscription Subscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId, state])
+  @@index([state, createdAt])
+}
+
+enum ReconciliationStatus {
+  UNRECONCILED
+  RECONCILED
+  EXCEPTION
 }
 
 model Payment {
-  id         String   @id @default(cuid())
-  orderId    String
+  id                 String               @id @default(cuid())
+  orderId            String
   /// Razorpay payment id. Unique: the idempotency key for webhook replay.
-  gatewayRef String   @unique
-  amount     Int
-  method     String?
-  status     String
-  rawPayload Json?
+  gatewayRef         String               @unique
+  amount             Int
+  method             String?
+  /// Blueprint §8.3 vocabulary: initiated, pending, authorized, successful, failed, …
+  status             String
+  rawPayload         Json?
+  settledAt          DateTime?
+  reconciliation     ReconciliationStatus @default(UNRECONCILED)
+  reconciledById     String?
+  reconciledAt       DateTime?
+  reconciliationNote String?
 
   order Order @relation(fields: [orderId], references: [id])
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([orderId])
+  @@index([reconciliation])
 }
 
 model Invoice {
-  id        String   @id @default(cuid())
-  orderId   String   @unique
-  number    String   @unique
-  gstin     String?
-  hsnSac    String?
-  taxAmount Int      @default(0)
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  number      String   @unique
+  gstin       String?
+  hsnSac      String?
+  taxAmount   Int      @default(0)
   totalAmount Int
-  pdfKey    String?
-  issuedAt  DateTime @default(now())
+  pdfKey      String?
+  issuedAt    DateTime @default(now())
 
   order Order @relation(fields: [orderId], references: [id])
 }
 
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  SUBMITTED
+  CONFIRMED
+  FAILED
+}
+
 model Refund {
-  id         String   @id @default(cuid())
-  orderId    String
-  amount     Int
-  reason     String
-  gatewayRef String?  @unique
-  approvedBy String?
+  id             String       @id @default(cuid())
+  orderId        String
+  amount         Int
+  reason         String
+  status         RefundStatus @default(REQUESTED)
+  /// Outside the published policy, or above the routine limit: needs an Academy Director.
+  exceptional    Boolean      @default(false)
+  policyEligible Boolean      @default(true)
+  /// Share of the course's lessons the learner had completed when the refund was requested.
+  consumptionPct Int          @default(0)
+  requestedById  String?
+  approvedBy     String?
+  decidedAt      DateTime?
+  decisionNote   String?
+  gatewayRef     String?      @unique
+  confirmedAt    DateTime?
+  reconciled     Boolean      @default(false)
+  notifiedAt     DateTime?
 
   order Order @relation(fields: [orderId], references: [id])
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([orderId])
+  @@index([status])
 }
 
 model Coupon {
-  id          String    @id @default(cuid())
-  code        String    @unique
-  percentOff  Int?
-  amountOff   Int?
+  id             String    @id @default(cuid())
+  code           String    @unique
+  percentOff     Int?
+  amountOff      Int?
   maxRedemptions Int?
-  redeemed    Int       @default(0)
-  expiresAt   DateTime?
-  active      Boolean   @default(true)
+  redeemed       Int       @default(0)
+  expiresAt      DateTime?
+  active         Boolean   @default(true)
 
   orders Order[]
 
   createdAt DateTime @default(now())
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  GRACE_PERIOD
+  CANCELLED
+  EXPIRED
+}
+
+model Subscription {
+  id                String             @id @default(cuid())
+  userId            String
+  productId         String
+  orderId           String?            @unique
+  status            SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd  DateTime
+  graceEndsAt       DateTime?
+  cancelAtPeriodEnd Boolean            @default(false)
+  cancelledAt       DateTime?
+  gatewayRef        String?            @unique
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, status])
+}
+
+/// Every payment-provider webhook, recorded before it is processed. The provider's event id
+/// is unique, so a replay is recognised and acknowledged without being applied twice.
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String
+  eventId     String
+  type        String
+  status      String    @default("received")
+  error       String?
+  processedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([provider, eventId])
+  @@index([status, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Learner support (blueprint §6).
+// ---------------------------------------------------------------------------
+
+enum SupportCategory {
+  ENROLLMENT
+  LOGIN_ACCESS
+  COURSE_NAVIGATION
+  MODULE_CONTENT
+  ASSESSMENT
+  CERTIFICATE
+  SUBSCRIPTION
+  PAYMENT
+  REFUND
+  TECHNICAL
+  FACULTY
+  COMPLAINT
+  PRIVACY_SECURITY
+  OTHER
+}
+
+enum SupportStatus {
+  WAITING
+  ASSIGNED
+  IN_PROGRESS
+  PENDING_SUBSCRIBER
+  PENDING_INTERNAL
+  ESCALATED
+  RESOLVED
+  CLOSED
+  REOPENED
+}
+
+enum SupportPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum SupportChannel {
+  CHAT
+  TICKET
+}
+
+model SupportTicket {
+  id                      String          @id @default(cuid())
+  reference               String          @unique
+  requesterId             String
+  subject                 String
+  category                SupportCategory
+  priority                SupportPriority @default(NORMAL)
+  status                  SupportStatus   @default(WAITING)
+  channel                 SupportChannel  @default(TICKET)
+  assigneeId              String?
+  /// "academic" | "billing" | "technical" | "security"
+  escalatedTo             String?
+  isComplaint             Boolean         @default(false)
+  firstResponseAt         DateTime?
+  resolvedAt              DateTime?
+  closedAt                DateTime?
+  followUpAt              DateTime?
+  rating                  Int?
+  feedback                String?
+  reopenCount             Int             @default(0)
+  /// Team that owns the case; null only if no team exists at all.
+  teamId                  String?
+  source                  TicketSource    @default(WEB_FORM)
+  /// Related course, and a free reference to a lesson, assessment or case attempt.
+  programId               String?
+  relatedRef              String?
+  /// The page the learner raised it from (path only, no query string).
+  pageContext             String?
+  tags                    String[]        @default([])
+  /// 1 (only me, minor) to 3 (stops my learning or affects many).
+  impact                  Int?
+  /// 1 (whenever) to 3 (deadline today).
+  urgency                 Int?
+  /// Learner-visible summary written when the case is resolved.
+  resolutionSummary       String?
+  firstResponseDueAt      DateTime?
+  resolutionDueAt         DateTime?
+  firstResponseBreachedAt DateTime?
+  resolutionBreachedAt    DateTime?
+  slaWarnedAt             DateTime?
+
+  requester   User                 @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignee    User?                @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  team        SupportTeam?         @relation(fields: [teamId], references: [id])
+  program     Program?             @relation(fields: [programId], references: [id])
+  messages    SupportMessage[]
+  events      SupportTicketEvent[]
+  attachments SupportAttachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, priority])
+  @@index([requesterId])
+  @@index([assigneeId, status])
+  @@index([teamId, status])
+}
+
+model SupportMessage {
+  id       String  @id @default(cuid())
+  ticketId String
+  authorId String
+  body     String
+  /// Internal notes are visible to support staff only.
+  internal Boolean @default(false)
+  /// Set when the masking filter changed the text before storage.
+  masked   Boolean @default(false)
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model ResponseTemplate {
+  id           String           @id @default(cuid())
+  title        String
+  body         String
+  category     SupportCategory?
+  approved     Boolean          @default(false)
+  approvedById String?
+  archivedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Vendors (blueprint §7). Vendors see only their own records through the vendor portal.
+// ---------------------------------------------------------------------------
+
+enum VendorType {
+  CONTENT_AUTHOR
+  SUBJECT_MATTER_EXPERT
+  INSTRUCTOR
+  VIDEO_PRODUCTION
+  ASSESSMENT_DEVELOPER
+  TECHNOLOGY
+  MARKETING
+  PAYMENT_SERVICE
+  HOSTING_SUPPORT
+  AFFILIATE
+}
+
+enum VendorStatus {
+  PROPOSED
+  DUE_DILIGENCE
+  DOCUMENTS_PENDING
+  UNDER_REVIEW
+  APPROVED
+  CONTRACTED
+  ACTIVE
+  PERFORMANCE_REVIEW
+  RENEWAL
+  OFFBOARDING
+  OFFBOARDED
+}
+
+model Vendor {
+  id                  String       @id @default(cuid())
+  code                String       @unique
+  legalName           String
+  tradingName         String?
+  type                VendorType
+  status              VendorStatus @default(PROPOSED)
+  country             String?
+  contactName         String?
+  contactEmail        String?
+  services            String?
+  commercialModel     String?
+  riskRating          String       @default("medium")
+  complianceClass     String?
+  dataAccessClass     String       @default("none")
+  contractOwnerId     String?
+  contractStart       DateTime?
+  contractEnd         DateTime?
+  accessExpiresAt     DateTime?
+  /// Approved payout reference at the payment provider and the last four digits only.
+  /// Full bank or tax numbers are never stored here.
+  payoutReference     String?
+  payoutLast4         String?
+  taxIdLast4          String?
+  payoutChangedById   String?
+  payoutChangedAt     DateTime?
+  onboardingChecklist Json?
+
+  members      VendorMember[]
+  documents    VendorDocument[]
+  deliverables Deliverable[]
+  invoices     VendorInvoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model VendorMember {
+  id       String @id @default(cuid())
+  vendorId String
+  userId   String
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([vendorId, userId])
+}
+
+model VendorDocument {
+  id              String    @id @default(cuid())
+  vendorId        String
+  title           String
+  /// "contract", "nda", "tax", "insurance", "security", "coi", "other"
+  kind            String
+  fileKey         String
+  mimeType        String
+  sizeBytes       Int
+  expiresAt       DateTime?
+  uploadedById    String?
+  visibleToVendor Boolean   @default(true)
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([vendorId])
+}
+
+enum DeliverableStatus {
+  ASSIGNED
+  IN_PROGRESS
+  SUBMITTED
+  CHANGES_REQUESTED
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+model Deliverable {
+  id           String            @id @default(cuid())
+  vendorId     String
+  programId    String?
+  title        String
+  description  String?
+  dueDate      DateTime?
+  status       DeliverableStatus @default(ASSIGNED)
+  /// Agreed fee in minor units.
+  fee          Int               @default(0)
+  acceptedAt   DateTime?
+  reworkCount  Int               @default(0)
+  qualityScore Int?
+
+  vendor      Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  program     Program?                @relation(fields: [programId], references: [id])
+  submissions DeliverableSubmission[]
+  comments    DeliverableComment[]
+  invoices    VendorInvoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId, status])
+}
+
+model DeliverableSubmission {
+  id            String  @id @default(cuid())
+  deliverableId String
+  submittedById String
+  note          String?
+  link          String?
+  fileKey       String?
+  fileName      String?
+  mimeType      String?
+
+  deliverable Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([deliverableId])
+}
+
+model DeliverableComment {
+  id            String @id @default(cuid())
+  deliverableId String
+  authorId      String
+  body          String
+
+  deliverable Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([deliverableId, createdAt])
+}
+
+enum VendorInvoiceStatus {
+  SUBMITTED
+  VALIDATED
+  APPROVED
+  PAYMENT_INITIATED
+  PAID
+  RECONCILED
+  REJECTED
+}
+
+model VendorInvoice {
+  id            String              @id @default(cuid())
+  vendorId      String
+  deliverableId String?
+  number        String
+  amount        Int
+  currency      String              @default("INR")
+  status        VendorInvoiceStatus @default(SUBMITTED)
+  note          String?
+  submittedById String
+  validatedById String?
+  approvedById  String?
+  paidById      String?
+  paymentRef    String?
+  paidAt        DateTime?
+  rejectReason  String?
+
+  vendor      Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  deliverable Deliverable? @relation(fields: [deliverableId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([vendorId, number])
+  @@index([status])
 }
 
 // ---------------------------------------------------------------------------
@@ -481,21 +1644,21 @@ enum LeadStage {
 }
 
 model Lead {
-  id           String    @id @default(cuid())
-  name         String
-  email        String
-  phone        String?
-  whatsapp     String?
-  currentRole  String?
-  experience   Int?
-  interestedIn String?
-  source       String    @default("website")
-  stage        LeadStage @default(NEW)
-  score        Int       @default(0)
-  ownerId      String?
-  companyId    String?
-  notes        String?
-  lastContactAt DateTime?
+  id              String    @id @default(cuid())
+  name            String
+  email           String
+  phone           String?
+  whatsapp        String?
+  currentRole     String?
+  experience      Int?
+  interestedIn    String?
+  source          String    @default("website")
+  stage           LeadStage @default(NEW)
+  score           Int       @default(0)
+  ownerId         String?
+  companyId       String?
+  notes           String?
+  lastContactAt   DateTime?
   convertedUserId String?
 
   owner      User?          @relation("LeadOwner", fields: [ownerId], references: [id])
@@ -510,12 +1673,12 @@ model Lead {
 }
 
 model LeadActivity {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   leadId String
   /// "brochure_download", "pricing_view", "mentoring_booked", "whatsapp_reply", "purchase"
   kind   String
   detail String?
-  points Int    @default(0)
+  points Int     @default(0)
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
@@ -525,7 +1688,7 @@ model LeadActivity {
 }
 
 model Company {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   name     String
   domain   String?
   size     String?
@@ -537,12 +1700,12 @@ model Company {
 }
 
 model Campaign {
-  id       String   @id @default(cuid())
+  id       String    @id @default(cuid())
   name     String
   channel  String
   startsAt DateTime?
   endsAt   DateTime?
-  spend    Int      @default(0)
+  spend    Int       @default(0)
 
   createdAt DateTime @default(now())
 }
@@ -589,18 +1752,18 @@ enum BookingState {
 }
 
 model Booking {
-  id        String       @id @default(cuid())
-  userId    String
-  trainerId String
-  productId String?
-  startsAt  DateTime
-  minutes   Int
-  state     BookingState @default(HELD)
-  topic     String?
+  id          String       @id @default(cuid())
+  userId      String
+  trainerId   String
+  productId   String?
+  startsAt    DateTime
+  minutes     Int
+  state       BookingState @default(HELD)
+  topic       String?
   artefactKey String?
 
-  user    User          @relation(fields: [userId], references: [id])
-  trainer Trainer       @relation(fields: [trainerId], references: [id])
+  user    User           @relation(fields: [userId], references: [id])
+  trainer Trainer        @relation(fields: [trainerId], references: [id])
   session MentorSession?
 
   createdAt DateTime @default(now())
@@ -611,8 +1774,8 @@ model Booking {
 }
 
 model MentorSession {
-  id         String   @id @default(cuid())
-  bookingId  String   @unique
+  id         String    @id @default(cuid())
+  bookingId  String    @unique
   notes      String?
   actionPlan String?
   followUpAt DateTime?
@@ -628,15 +1791,15 @@ model MentorSession {
 // ---------------------------------------------------------------------------
 
 model Scenario {
-  id          String       @id @default(cuid())
-  slug        String       @unique
-  clientName  String
-  specialty   String
-  providers   Int
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  clientName   String
+  specialty    String
+  providers    Int
   reviewPeriod String
   /// The whole telemetry model for this engagement: metrics, denials, pods, escalations.
-  telemetry   Json
-  state       PublishState @default(DRAFT)
+  telemetry    Json
+  state        PublishState @default(DRAFT)
 
   attempts LabAttempt[]
 
@@ -651,20 +1814,20 @@ enum LabState {
 }
 
 model LabAttempt {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   scenarioId  String
-  state       LabState @default(IN_PROGRESS)
+  state       LabState  @default(IN_PROGRESS)
   submittedAt DateTime?
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   scenario Scenario @relation(fields: [scenarioId], references: [id])
 
-  capacityRuns   CapacityRun[]
-  rcaBoard       RcaBoard?
-  actionItems    ActionItem[]
-  executiveNote  ExecutiveNote?
-  rubricScores   RubricScore[]
+  capacityRuns  CapacityRun[]
+  rcaBoard      RcaBoard?
+  actionItems   ActionItem[]
+  executiveNote ExecutiveNote?
+  rubricScores  RubricScore[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -674,13 +1837,13 @@ model LabAttempt {
 }
 
 model CapacityRun {
-  id        String @id @default(cuid())
-  attemptId String
-  analysts  Int
-  qaBar     Int
+  id         String @id @default(cuid())
+  attemptId  String
+  analysts   Int
+  qaBar      Int
   automation Int
   /// The computed result, stored so a graded attempt cannot drift if the model changes.
-  result    Json
+  result     Json
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
@@ -690,11 +1853,11 @@ model CapacityRun {
 }
 
 model RcaBoard {
-  id        String @id @default(cuid())
-  attemptId String @unique
-  subject   String
+  id         String  @id @default(cuid())
+  attemptId  String  @unique
+  subject    String
   /// Five whys: [{ question, answer, evidence }]
-  steps     Json
+  steps      Json
   conclusion String?
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
@@ -704,13 +1867,13 @@ model RcaBoard {
 }
 
 model ActionItem {
-  id          String @id @default(cuid())
-  attemptId   String
-  action      String
-  owner       String
-  dueDate     String
-  status      String @default("not-started")
-  blockedReason String?
+  id             String  @id @default(cuid())
+  attemptId      String
+  action         String
+  owner          String
+  dueDate        String
+  status         String  @default("not-started")
+  blockedReason  String?
   expectedImpact String?
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
@@ -722,15 +1885,15 @@ model ActionItem {
 }
 
 model ExecutiveNote {
-  id        String @id @default(cuid())
-  attemptId String @unique
-  whatChanged String
-  whyChanged  String
-  financialImpact String
-  rootCause   String
+  id                String @id @default(cuid())
+  attemptId         String @unique
+  whatChanged       String
+  whyChanged        String
+  financialImpact   String
+  rootCause         String
   recommendedAction String
-  owner       String
-  deadline    String
+  owner             String
+  deadline          String
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
@@ -739,11 +1902,11 @@ model ExecutiveNote {
 }
 
 model RubricScore {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   attemptId  String
   criterion  String
   score      Int
-  maxScore   Int    @default(5)
+  maxScore   Int     @default(5)
   comment    String?
   gradedById String?
 
@@ -780,8 +1943,8 @@ model Thread {
   pinned    Boolean @default(false)
   closed    Boolean @default(false)
 
-  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  author  User    @relation(fields: [authorId], references: [id])
+  channel Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User     @relation(fields: [authorId], references: [id])
   posts   Post[]
   reports Report[]
 
@@ -807,7 +1970,7 @@ model Post {
 }
 
 model Report {
-  id         String @id @default(cuid())
+  id         String    @id @default(cuid())
   threadId   String
   reason     String
   resolvedAt DateTime?
@@ -822,16 +1985,22 @@ model Report {
 // ---------------------------------------------------------------------------
 
 model AuditLog {
-  id       String  @id @default(cuid())
-  actorId  String?
+  id            String   @id @default(cuid())
+  actorId       String?
   /// "create" | "update" | "delete" | "login" | "refund" | ...
-  action   String
-  entity   String
-  entityId String?
+  action        String
+  entity        String
+  entityId      String?
   /// Before/after for updates. Never store secrets or payment instruments here.
-  diff     Json?
-  ip       String?
-  userAgent String?
+  diff          Json?
+  /// "success" | "failure" | "denied"
+  outcome       String   @default("success")
+  /// The actor's effective staff roles when the action happened.
+  actorRoles    String[]
+  /// Ties together the rows written by one request or one workflow.
+  correlationId String?
+  ip            String?
+  userAgent     String?
 
   actor User? @relation("AuditActor", fields: [actorId], references: [id])
 
@@ -839,16 +2008,18 @@ model AuditLog {
 
   @@index([entity, entityId])
   @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
 }
 
 /// Behavioural events. Lead scoring in Phase 5 reads these, so they are captured from Phase 2.
 model Event {
-  id        String  @id @default(cuid())
-  userId    String?
-  anonId    String?
-  name      String
-  props     Json?
-  path      String?
+  id     String  @id @default(cuid())
+  userId String?
+  anonId String?
+  name   String
+  props  Json?
+  path   String?
 
   createdAt DateTime @default(now())
 
@@ -883,4 +2054,468 @@ model FeatureFlag {
   enabled     Boolean  @default(false)
   description String?
   updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Public library: glossary, process library, case studies, leadership toolkit, resources.
+// Reference content with one review stage (reviewer ≠ submitter). Public pages read the
+// approved snapshot in `published`, never the draft fields.
+// ---------------------------------------------------------------------------
+
+enum LibraryKind {
+  GLOSSARY
+  PROCESS
+  CASE_STUDY
+  TOOLKIT
+  RESOURCE
+}
+
+enum LibraryStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+model LibraryEntry {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  kind            LibraryKind
+  title           String
+  summary         String
+  body            String
+  tags            String[]      @default([])
+  sources         String[]      @default([])
+  levelId         String?
+  status          LibraryStatus @default(DRAFT)
+  /// The approved version learners and visitors see. Null until first approval.
+  published       Json?
+  /// True when the draft differs from the published snapshot and is not yet approved.
+  hasDraftChanges Boolean       @default(false)
+  authorId        String
+  submittedById   String?
+  reviewerId      String?
+  reviewNote      String?
+  lastReviewedAt  DateTime?
+  nextReviewAt    DateTime?
+  publishedAt     DateTime?
+  archivedAt      DateTime?
+  lockVersion     Int           @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, status])
+}
+
+/// A lesson a learner saved to come back to.
+model Bookmark {
+  id       String @id @default(cuid())
+  userId   String
+  lessonId String
+  courseId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
+}
+
+// ---------------------------------------------------------------------------
+// Case simulations and competencies. A case is authored as a draft, reviewed by someone other
+// than the submitter, and published as an immutable version; attempts point at the version
+// they were taken against, so a later edit never changes how an old attempt was scored.
+// ---------------------------------------------------------------------------
+
+enum CaseStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  RETIRED
+}
+
+model SimCase {
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  title           String
+  /// The working definition, including the answer key. Never sent to learners.
+  draft           Json
+  status          CaseStatus @default(DRAFT)
+  hasDraftChanges Boolean    @default(false)
+  /// Optional: only learners with access to this course may attempt the case.
+  programId       String?
+  authorId        String
+  submittedById   String?
+  reviewerId      String?
+  reviewNote      String?
+  lockVersion     Int        @default(0)
+
+  versions SimCaseVersion[]
+  attempts SimAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model SimCaseVersion {
+  id            String    @id @default(cuid())
+  caseId        String
+  version       Int
+  /// Immutable copy of the definition and its rubric at approval.
+  definition    Json
+  publishedById String
+  reviewedById  String
+  retiredAt     DateTime?
+
+  case     SimCase      @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  attempts SimAttempt[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([caseId, version])
+}
+
+enum SimAttemptState {
+  IN_PROGRESS
+  SCORED
+  REVIEWED
+}
+
+model SimAttempt {
+  id             String          @id @default(cuid())
+  userId         String
+  caseId         String
+  versionId      String
+  attemptNo      Int
+  state          SimAttemptState @default(IN_PROGRESS)
+  answers        Json            @default("{}")
+  /// Percentage 0-100 after scoring (and after instructor adjustment, if any).
+  score          Int?
+  passed         Boolean?
+  /// The scored result: criteria, critical errors and feedback. Written by the server only.
+  result         Json?
+  instructorNote String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  submittedAt    DateTime?
+
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  case     SimCase             @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  version  SimCaseVersion      @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  outcomes CompetencyOutcome[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, caseId, attemptNo])
+  @@index([caseId, state])
+  @@index([userId, state])
+}
+
+enum CompetencyStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+model Competency {
+  id               String           @id @default(cuid())
+  code             String           @unique
+  name             String
+  description      String
+  expectedBehavior String
+  /// 1 Foundation, 2 Guided Practitioner, 3 Independent Practitioner, 4 Specialist / Analyst,
+  /// 5 Team Lead / Quality Auditor, 6 Manager / Strategist.
+  proficiencyLevel Int
+  /// Rubric criteria whose scores are this competency's evidence.
+  criteria         String[]
+  /// Minimum score (0-100) on each linked criterion, in a passing attempt with no critical error.
+  threshold        Int              @default(75)
+  /// Months before the competency should be shown again; null means no reassessment.
+  reassessMonths   Int?
+  status           CompetencyStatus @default(DRAFT)
+  authorId         String
+  reviewerId       String?
+  reviewedAt       DateTime?
+  lockVersion      Int              @default(0)
+
+  outcomes CompetencyOutcome[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompetencyOutcome {
+  id            String    @id @default(cuid())
+  userId        String
+  competencyId  String
+  attemptId     String
+  demonstrated  Boolean
+  /// Lowest linked-criterion score in the attempt, 0-100.
+  evidenceScore Int
+  expiresAt     DateTime?
+  /// Set when an instructor review replaces this outcome; history is kept.
+  supersededAt  DateTime?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  competency Competency @relation(fields: [competencyId], references: [id], onDelete: Restrict)
+  attempt    SimAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, competencyId])
+  @@index([attemptId])
+}
+
+// ---------------------------------------------------------------------------
+// Support operations: teams, routing, SLA targets and the case history.
+// ---------------------------------------------------------------------------
+
+enum TicketSource {
+  WEB_FORM
+  CHAT
+  ASSISTANT
+  COURSE_PAGE
+  ACCOUNT
+  STAFF
+}
+
+enum TicketEventKind {
+  CREATED
+  ROUTED
+  ASSIGNED
+  UNASSIGNED
+  TEAM_CHANGED
+  STATUS
+  PRIORITY
+  ESCALATED
+  REOPENED
+  SLA_WARNING
+  SLA_BREACH
+  RESOLVED
+  CLOSED
+}
+
+model SupportTeam {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  name        String
+  description String?
+  active      Boolean @default(true)
+  /// Assign new cases to the least-loaded available member; otherwise they wait in the team queue.
+  autoAssign  Boolean @default(true)
+
+  members    SupportTeamMember[]
+  tickets    SupportTicket[]
+  categories SupportCategorySetting[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTeamMember {
+  id             String    @id @default(cuid())
+  teamId         String
+  userId         String
+  isLead         Boolean   @default(false)
+  /// Set by the member or a lead; unavailable members are skipped by automatic assignment.
+  available      Boolean   @default(true)
+  /// Automatic assignment skips a member with this many open cases.
+  maxOpen        Int       @default(15)
+  lastAssignedAt DateTime?
+
+  team SupportTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+/// Per-category routing and wording. Categories themselves are a fixed list (the enum); their
+/// label, visibility to learners, owning team and default priority are configurable here.
+model SupportCategorySetting {
+  category        SupportCategory @id
+  label           String?
+  description     String?
+  active          Boolean         @default(true)
+  teamId          String?
+  defaultPriority SupportPriority @default(NORMAL)
+
+  team SupportTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+}
+
+model SupportSlaPolicy {
+  priority             SupportPriority @id
+  firstResponseMinutes Int
+  resolutionMinutes    Int
+  /// Count only support hours (SupportCalendar); otherwise calendar time.
+  businessHours        Boolean         @default(true)
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Support hours used for SLA due times. One row, id "default".
+model SupportCalendar {
+  id               String @id @default("default")
+  utcOffsetMinutes Int    @default(330)
+  /// 0 Sunday … 6 Saturday.
+  workDays         Int[]  @default([1, 2, 3, 4, 5, 6])
+  /// Minutes after local midnight.
+  startMinute      Int    @default(600)
+  endMinute        Int    @default(1140)
+
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTicketEvent {
+  id       String          @id @default(cuid())
+  ticketId String
+  /// Null for the system (routing, SLA job).
+  actorId  String?
+  kind     TicketEventKind
+  from     String?
+  to       String?
+  note     String?
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+  @@index([kind, createdAt])
+}
+
+model SupportAttachment {
+  id         String  @id @default(cuid())
+  ticketId   String
+  messageId  String?
+  uploaderId String
+  fileKey    String
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+// ---------------------------------------------------------------------------
+// Learning assistant. Conversations belong to one user and are deleted after the retention
+// period (or by the user). Answers record their sources and which provider produced them.
+// ---------------------------------------------------------------------------
+
+enum AssistantRole {
+  USER
+  ASSISTANT
+}
+
+enum AssistantFeedback {
+  HELPFUL
+  NOT_HELPFUL
+  INCORRECT
+}
+
+model AssistantConversation {
+  id      String  @id @default(cuid())
+  userId  String
+  /// "learner" or "staff": which assistant the conversation is with.
+  mode    String  @default("learner")
+  title   String?
+  /// Optional context the conversation started from (course slug / lesson id).
+  context String?
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AssistantMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model AssistantMessage {
+  id             String             @id @default(cuid())
+  conversationId String
+  role           AssistantRole
+  /// Stored after identifier masking.
+  content        String
+  /// [{ title, href, kind, excerpt }] for answers.
+  citations      Json?
+  /// Structured extras: offered ticket draft, created ticket, proposed action, facts.
+  payload        Json?
+  /// "none" (retrieval only), "anthropic", or "facts" (answered from platform records).
+  provider       String?
+  model          String?
+  latencyMs      Int?
+  inputTokens    Int?
+  outputTokens   Int?
+  feedback       AssistantFeedback?
+  feedbackNote   String?
+
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Website content (lib/site): administrators' edits to the public pages' copy.
+// ---------------------------------------------------------------------------
+
+/// One public page's edits. Built-in pages (key = the page's definition key) store only what
+/// differs from the copy that ships with the code; custom pages (custom = true) are created
+/// and removed from the admin. `draft` is work in progress, shown only in preview;
+/// `published` is what visitors see. Null means "nothing here", so the defaults apply.
+model SitePage {
+  key            String    @id
+  custom         Boolean   @default(false)
+  /// Custom pages only: served at /p/<slug>.
+  slug           String?   @unique
+  title          String?
+  draft          Json?
+  draftUpdatedAt DateTime?
+  draftById      String?
+  published      Json?
+  publishedAt    DateTime?
+  publishedById  String?
+  /// Number of the latest published version (0 = never published).
+  version        Int       @default(0)
+  /// Optimistic lock for draft saves: two editors cannot silently overwrite each other.
+  lockVersion    Int       @default(0)
+  archivedAt     DateTime?
+
+  versions SitePageVersion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([custom, archivedAt])
+}
+
+/// Every published state of a page, kept for history and rollback. Never edited.
+model SitePageVersion {
+  id            String   @id @default(cuid())
+  pageKey       String
+  version       Int
+  /// Null records "reset to the default copy".
+  content       Json?
+  publishedById String?
+  note          String?
+
+  page SitePage @relation(fields: [pageKey], references: [key], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([pageKey, version])
 }

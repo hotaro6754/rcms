@@ -6,11 +6,15 @@ import { FOUNDATION_LESSONS } from "../lib/data/curriculum";
 import { CLIENT, METRICS, DENIALS, PODS } from "../lib/data/telemetry";
 import { AGENDA, ESCALATIONS, RCA, RISKS, ACTIONS } from "../lib/data/governance";
 import { NORTHGATE } from "../lib/data/scenarios";
+import { backfillReleases, seedBlocksFromBodies, seedFoundationAssessment, seedLevels, seedPlans } from "./seed-academy";
+import { seedLibrary } from "./seed-library";
+import { seedCases } from "./seed-cases";
+import { seedSupport } from "./seed-support";
 
 /**
- * Seeds the database from the modules that already drive the site, so there is exactly one
- * definition of a program, a price or a metric. Idempotent: every write is an upsert keyed
- * on a natural identifier, so running it twice changes nothing.
+ * Seeds a fresh database from the modules that drive the marketing site. Idempotent and
+ * non-destructive: academy content and prices are created only when missing, because after
+ * that the Admin CMS (and approved price changes) own them. Running it twice changes nothing.
  *
  * Money is stored in paise. Rupees only exist at the presentation layer.
  */
@@ -27,123 +31,74 @@ async function seedPrograms() {
   for (const [i, p] of PROGRAMS.entries()) {
     const level = LEVELS.find((l) => l.n === p.level)!;
 
-    const program = await prisma.program.upsert({
-      where: { slug: p.id },
-      update: {
-        tier: p.tier,
-        name: p.name,
-        level: p.level,
-        who: p.who,
-        artefact: p.artefact,
-        weeks: p.weeks,
-        flag: p.flag ?? null,
-        outcomes: p.outcomes,
-        sortOrder: i,
-      },
-      create: {
-        slug: p.id,
-        tier: p.tier,
-        name: p.name,
-        level: p.level,
-        who: p.who,
-        artefact: p.artefact,
-        weeks: p.weeks,
-        flag: p.flag ?? null,
-        outcomes: p.outcomes,
-        sortOrder: i,
-        state: PublishState.PUBLISHED,
-      },
-    });
-
-    // The level's curriculum becomes this program's modules. Foundation additionally gets
-    // real lessons so Phase 2 exercises the player against something worth reading; the
-    // other four are authored in Trainer Studio.
-    for (const [m, title] of level.modules.entries()) {
-      const existing = await prisma.module.findFirst({
-        where: { programId: program.id, sortOrder: m },
-      });
-      const mod = existing
-        ? await prisma.module.update({ where: { id: existing.id }, data: { title } })
-        : await prisma.module.create({
-            data: { programId: program.id, title, sortOrder: m },
-          });
-
-      if (p.id !== "foundation") continue;
-
-      const lessons = FOUNDATION_LESSONS[title] ?? [];
-      for (const [l, lesson] of lessons.entries()) {
-        const found = await prisma.lesson.findFirst({
-          where: { moduleId: mod.id, sortOrder: l },
+    // Create-if-missing: once a course exists, the Admin CMS owns it. Marketing fields are
+    // still refreshed from the catalogue module for courses nobody has touched in the CMS.
+    const existing = await prisma.program.findUnique({ where: { slug: p.id }, select: { id: true, status: true } });
+    const program = existing
+      ? await prisma.program.findUniqueOrThrow({ where: { slug: p.id } })
+      : await prisma.program.create({
+          data: {
+            slug: p.id,
+            tier: p.tier,
+            name: p.name,
+            level: p.level,
+            who: p.who,
+            artefact: p.artefact,
+            weeks: p.weeks,
+            flag: p.flag ?? null,
+            outcomes: p.outcomes,
+            sortOrder: i,
+            state: PublishState.PUBLISHED,
+            status: "PUBLISHED",
+            disclaimer: null,
+          },
         });
-        const data = {
-          title: lesson.title,
-          body: lesson.body,
-          durationSec: lesson.minutes * 60,
-          state: PublishState.PUBLISHED,
-        };
-        const row = found
-          ? await prisma.lesson.update({ where: { id: found.id }, data })
-          : await prisma.lesson.create({
-              data: { ...data, moduleId: mod.id, sortOrder: l },
-            });
 
-        for (const r of lesson.resources ?? []) {
-          const key = `foundation/${mod.sortOrder}-${l}-${r.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-          const existingRes = await prisma.resource.findFirst({
-            where: { lessonId: row.id, fileKey: key },
+    if (!existing) {
+      // The level's curriculum becomes this course's modules. Foundation additionally gets
+      // real lessons; the other courses are authored in the Admin CMS.
+      for (const [m, title] of level.modules.entries()) {
+        const mod = await prisma.module.create({ data: { programId: program.id, title, sortOrder: m, state: PublishState.PUBLISHED } });
+        if (p.id !== "foundation") continue;
+        const lessons = FOUNDATION_LESSONS[title] ?? [];
+        for (const [l, lesson] of lessons.entries()) {
+          const row = await prisma.lesson.create({
+            data: { moduleId: mod.id, title: lesson.title, durationSec: lesson.minutes * 60, state: PublishState.PUBLISHED, sortOrder: l },
           });
-          if (!existingRes) {
-            await prisma.resource.create({
-              data: { lessonId: row.id, title: r.title, fileKey: key, mimeType: r.kind },
-            });
+          await prisma.contentBlock.create({ data: { lessonId: row.id, kind: "TEXT", data: { text: lesson.body }, sortOrder: 0 } });
+          for (const r of lesson.resources ?? []) {
+            const key = `foundation/${mod.sortOrder}-${l}-${r.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+            await prisma.resource.create({ data: { lessonId: row.id, title: r.title, fileKey: key, mimeType: r.kind } });
           }
         }
       }
     }
 
-    await prisma.product.upsert({
-      where: { sku: `program-${p.id}` },
-      update: { name: p.name, amount: toPaise(p.price), programId: program.id },
-      create: {
-        sku: `program-${p.id}`,
-        kind: ProductKind.PROGRAM,
-        name: p.name,
-        amount: toPaise(p.price),
-        programId: program.id,
-      },
-    });
+    // Prices change through an approved price-change request afterwards, never by re-seeding.
+    const product = await prisma.product.findUnique({ where: { sku: `program-${p.id}` } });
+    if (!product) {
+      await prisma.product.create({ data: { sku: `program-${p.id}`, kind: ProductKind.PROGRAM, name: p.name, amount: toPaise(p.price), programId: program.id } });
+    }
   }
   const lessonCount = await prisma.lesson.count();
   const resourceCount = await prisma.resource.count();
-  console.log(
-    `  programs: ${PROGRAMS.length}, products: ${PROGRAMS.length}, lessons: ${lessonCount}, resources: ${resourceCount}`,
-  );
+  console.log(`  programs: ${PROGRAMS.length}, lessons: ${lessonCount}, resources: ${resourceCount}`);
 }
 
 async function seedTracksAndMentoring() {
   for (const b of BUNDLES) {
-    await prisma.product.upsert({
-      where: { sku: `track-${b.id}` },
-      update: { name: b.name, amount: toPaise(b.price) },
-      create: {
-        sku: `track-${b.id}`,
-        kind: ProductKind.TRACK,
-        name: b.name,
-        amount: toPaise(b.price),
-      },
-    });
+    const found = await prisma.product.findUnique({ where: { sku: `track-${b.id}` } });
+    if (!found) {
+      await prisma.product.create({ data: { sku: `track-${b.id}`, kind: ProductKind.TRACK, name: b.name, amount: toPaise(b.price), includes: b.includes, description: b.who } });
+    } else if (!found.includes.length) {
+      await prisma.product.update({ where: { id: found.id }, data: { includes: b.includes } });
+    }
   }
   for (const m of MENTORING) {
-    await prisma.product.upsert({
-      where: { sku: `mentoring-${m.id}` },
-      update: { name: `${m.name} (${m.minutes} min)`, amount: toPaise(m.price) },
-      create: {
-        sku: `mentoring-${m.id}`,
-        kind: ProductKind.MENTORING,
-        name: `${m.name} (${m.minutes} min)`,
-        amount: toPaise(m.price),
-      },
-    });
+    const found = await prisma.product.findUnique({ where: { sku: `mentoring-${m.id}` } });
+    if (!found) {
+      await prisma.product.create({ data: { sku: `mentoring-${m.id}`, kind: ProductKind.MENTORING, name: `${m.name} (${m.minutes} min)`, amount: toPaise(m.price) } });
+    }
   }
   console.log(`  tracks: ${BUNDLES.length}, mentoring products: ${MENTORING.length}`);
 }
@@ -225,30 +180,26 @@ async function seedPlatform() {
     await prisma.featureFlag.upsert({ where: { key: f.key }, update: f, create: f });
   }
 
-  const settings = [
-    { key: "refund_window_days", value: 7 },
-    { key: "refund_max_access_percent", value: 20 },
-    { key: "mentoring_cancel_hours", value: 24 },
-    { key: "currency", value: "INR" },
-  ];
-  for (const s of settings) {
-    await prisma.setting.upsert({
-      where: { key: s.key },
-      update: { value: s.value as never },
-      create: { key: s.key, value: s.value as never },
-    });
-  }
-  console.log(`  feature flags: ${flags.length}, settings: ${settings.length}`);
+  // Operational settings have defaults in lib/settings.ts and change through approvals.
+  console.log(`  feature flags: ${flags.length}`);
 }
 
 async function main() {
-  console.log("Seeding RCMS Operations Academy…");
+  console.log("Seeding RCMExcel…");
   await seedPrograms();
+  await seedLevels(prisma);
+  await seedBlocksFromBodies(prisma);
+  await seedFoundationAssessment(prisma);
+  await backfillReleases(prisma);
   await seedTracksAndMentoring();
+  await seedPlans(prisma);
+  await seedLibrary(prisma);
+  await seedCases(prisma);
+  await seedSupport(prisma);
   await seedScenario();
   await seedChannels();
   await seedPlatform();
-  console.log("Done. Re-running this is safe: every write is an upsert.");
+  console.log("Done. Re-running this is safe: existing records are never overwritten.");
 }
 
 main()

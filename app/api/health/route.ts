@@ -1,0 +1,17 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * Liveness and database reachability for the load balancer, uptime monitor and deploy script.
+ * Public, so it says nothing beyond "up" or "down": no versions, hosts or error text.
+ */
+export async function GET() {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return NextResponse.json({ status: "ok" }, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return NextResponse.json({ status: "unavailable" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
+}

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/rbac";
+import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -16,7 +16,7 @@ const STAGE_TONE: Record<string, string> = {
 };
 
 export default async function LeadsPage() {
-  await requireAdmin();
+  await requirePagePermission("lead.manage");
 
   const leads = await prisma.lead.findMany({
     orderBy: [{ score: "desc" }, { createdAt: "desc" }],

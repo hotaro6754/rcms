@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronRight } from "lucide-react";
 import { CommandPalette } from "./CommandPalette";
@@ -37,9 +38,9 @@ export function Topbar() {
             {CLIENT.reviewPeriod}
           </span>
 
-          <button
-            type="button"
-            aria-label={`Notifications, ${openEscalations} open escalations`}
+          <Link
+            href="/governance"
+            aria-label={`${openEscalations} open escalations, in the Governance Room`}
             className="relative flex h-9 w-9 items-center justify-center rounded-md border border-input transition-colors hover:bg-secondary"
           >
             <Bell className="h-4 w-4" aria-hidden />
@@ -48,7 +49,7 @@ export function Topbar() {
                 {openEscalations}
               </span>
             )}
-          </button>
+          </Link>
 
           <button
             type="button"

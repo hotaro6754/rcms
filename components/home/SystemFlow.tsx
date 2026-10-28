@@ -3,9 +3,16 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap/register";
-import { SYSTEM } from "@/lib/data/system";
-import { LEVELS } from "@/lib/data/catalog";
+import { SYSTEM, type SystemStage } from "@/lib/data/system";
+import type { PageContent } from "@/lib/site/fields";
+import type { homePage } from "@/lib/site/pages/home";
 import { cn } from "@/lib/utils";
+
+type Content = PageContent<typeof homePage>["system"];
+
+/** The stage data predates the three learning levels; this maps its 1–5 ladder onto them. */
+const LEVEL_KEY = { 1: "trainee", 2: "professional", 3: "professional", 4: "leadership", 5: "leadership" } as const;
+const PHASE_KEY: Record<SystemStage["phase"], keyof Content["phases"]> = { "Front end": "front", Middle: "middle", "Back end": "back" };
 
 const PHASES = ["Front end", "Middle", "Back end"] as const;
 const COUNT = SYSTEM.length;
@@ -28,7 +35,10 @@ const PER_STAGE = 280;
  *
  * GSAP owns the pin and the route's fill. CSS owns the markers and the spread transitions.
  */
-export function SystemFlow() {
+export function SystemFlow({ content: c }: { content: Content }) {
+  // The stages' copy is editable; their phase, order and teaching level stay with the data.
+  const stages = SYSTEM.map((s, i) => ({ ...s, ...c.stages[i] }));
+  const phaseName = (p: SystemStage["phase"]) => c.phases[PHASE_KEY[p]];
   const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
@@ -111,7 +121,7 @@ export function SystemFlow() {
                 className="text-data border-l border-input pl-2.5 text-[10.5px] tracking-[0.12em] text-subtle"
                 style={{ gridColumn: `span ${span} / span ${span}` }}
               >
-                {ph.toUpperCase()}
+                {phaseName(ph).toUpperCase()}
               </p>
             );
           })}
@@ -124,7 +134,7 @@ export function SystemFlow() {
             className="absolute h-px origin-left scale-x-0 bg-foreground"
             style={{ left: line.left, top: line.top, width: line.width }}
           />
-          {SYSTEM.map((s, i) => {
+          {stages.map((s, i) => {
             const on = i === active;
             const reached = i <= active;
             return (
@@ -166,7 +176,7 @@ export function SystemFlow() {
           ← PREV
         </button>
         <span className="text-data text-[12px]">
-          {String(active + 1).padStart(2, "0")} / {SYSTEM.length} · {SYSTEM[active].phase.toUpperCase()}
+          {String(active + 1).padStart(2, "0")} / {SYSTEM.length} · {phaseName(SYSTEM[active].phase).toUpperCase()}
         </span>
         <button type="button" onClick={() => goTo(active + 1)} disabled={active === LAST} className="text-data min-h-10 px-1 text-[12px] disabled:opacity-30">
           NEXT →
@@ -175,8 +185,7 @@ export function SystemFlow() {
 
       {/* The spread: every stage in one cell, the active one in place. */}
       <div className="mt-14 grid" aria-live="polite">
-        {SYSTEM.map((s, i) => {
-          const level = LEVELS[s.level - 1];
+        {stages.map((s, i) => {
           const on = i === active;
           return (
             <article
@@ -189,29 +198,29 @@ export function SystemFlow() {
             >
               <div>
                 <p className="text-data text-[11px] tracking-[0.12em] text-subtle">
-                  STAGE <span className="text-foreground">{String(i + 1).padStart(2, "0")}</span> OF {COUNT} · {s.phase.toUpperCase()}
+                  STAGE <span className="text-foreground">{String(i + 1).padStart(2, "0")}</span> OF {COUNT} · {phaseName(s.phase).toUpperCase()}
                 </p>
                 <h3 className="font-serif-display mt-4 text-[clamp(2.2rem,3.6vw,3.25rem)] leading-none tracking-[-0.02em]">{s.label}</h3>
                 <p className="mt-5 max-w-[38ch] text-[16px] leading-relaxed text-secondary-foreground">{s.does}</p>
               </div>
               <dl className="border-t-2 border-foreground">
                 <div className="grid gap-2 border-b border-border py-4 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-6">
-                  <dt className="text-data pt-0.5 text-[10.5px] tracking-[0.12em] text-subtle">HOW IT BREAKS</dt>
+                  <dt className="text-data pt-0.5 text-[10.5px] tracking-[0.12em] text-subtle">{c.breaksLabel}</dt>
                   <dd className="max-w-[48ch] text-[15px] leading-relaxed">{s.breaks}</dd>
                 </div>
                 <div className="grid gap-2 border-b border-border py-4 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-6">
-                  <dt className="text-data pt-0.5 text-[10.5px] tracking-[0.12em] text-subtle">THE NUMBER</dt>
+                  <dt className="text-data pt-0.5 text-[10.5px] tracking-[0.12em] text-subtle">{c.numberLabel}</dt>
                   <dd className="text-[15px] text-brand">{s.metric}</dd>
                 </div>
                 <div className="grid gap-2 border-b border-border py-4 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-6">
-                  <dt className="text-data pt-0.5 text-[10.5px] tracking-[0.12em] text-subtle">WHERE YOU LEARN IT</dt>
+                  <dt className="text-data pt-0.5 text-[10.5px] tracking-[0.12em] text-subtle">{c.learnLabel}</dt>
                   <dd className="text-[15px]">
                     <Link
                       href="#tracks"
                       tabIndex={on ? 0 : -1}
                       className="underline decoration-input underline-offset-4 hover:decoration-foreground"
                     >
-                      Level {String(level.n).padStart(2, "0")}, {level.verb}: {level.title}
+                      {c.levelNames[LEVEL_KEY[s.level]]}
                     </Link>
                   </dd>
                 </div>

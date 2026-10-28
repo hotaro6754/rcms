@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { issueCertificate, revokeCertificate } from "@/lib/actions/certificates";
+import { issueCertificateAction, revokeCertificateAction } from "@/lib/actions/learning";
 
 const SELECT = "min-h-10 w-full border-b border-input bg-transparent text-[14px] outline-none focus:border-foreground";
 const BTN =
@@ -15,8 +15,8 @@ export function IssueForm({ people, programs }: { people: { id: string; label: s
     <form
       action={(fd) =>
         start(async () => {
-          const res = await issueCertificate(fd);
-          setMsg(res.ok ? { ok: true, text: `Issued ${res.serial}.` } : { ok: false, text: res.error });
+          const res = await issueCertificateAction(fd);
+          setMsg(res.ok ? { ok: true, text: `Issued ${res.data.serial}.` } : { ok: false, text: res.error });
         })
       }
       className="grid gap-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
@@ -73,8 +73,8 @@ export function IssueNow({ userId, programId }: { userId: string; programId: str
           const fd = new FormData();
           fd.set("userId", userId);
           fd.set("programId", programId);
-          const res = await issueCertificate(fd);
-          setDone(res.ok ? res.serial : res.error);
+          const res = await issueCertificateAction(fd);
+          setDone(res.ok ? res.data.serial : res.error);
         })
       }
       className="text-data text-[11px] tracking-[0.1em] underline underline-offset-4 disabled:opacity-50"
@@ -99,7 +99,8 @@ export function RevokeControl({ certificateId }: { certificateId: string }) {
     <form
       action={(fd) =>
         start(async () => {
-          const res = await revokeCertificate(certificateId, fd);
+          fd.set("certificateId", certificateId);
+          const res = await revokeCertificateAction(fd);
           if (!res.ok) setError(res.error);
         })
       }
