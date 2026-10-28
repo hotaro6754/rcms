@@ -145,6 +145,11 @@
   color-scheme: dark;
 }
 
+/* The logo is navy and teal, drawn for light grounds; on ink it is set in white. */
+.env-ink .brand-logo img {
+  filter: brightness(0) invert(1);
+}
+
 /* Stone: a quieter chapter (the learning path, mentoring). Text tones deepen one step so
    everything stays AA on the darker ground. */
 .env-sheet {
