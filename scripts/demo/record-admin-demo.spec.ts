@@ -1,6 +1,6 @@
 import "dotenv/config";
 import fs from "node:fs";
-import { Client } from "pg";
+import { localDb } from "../../tests/e2e/db";
 import { expect, test, type Page } from "@playwright/test";
 import { caption, go, hideDevOverlay, OUT, pause, saveVideo, scrollBy, signIn, title } from "./helpers";
 
@@ -18,14 +18,11 @@ import { caption, go, hideDevOverlay, OUT, pause, saveVideo, scrollBy, signIn, t
 const GRANTEE = "agent@rcmexcel.com";
 
 test.beforeAll(async () => {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error("The demo resets data only on a local database.");
-  const db = new Client({ connectionString: url });
-  await db.connect();
-  const { rows } = await db.query(`SELECT id FROM "User" WHERE email = $1`, [GRANTEE]);
+  const db = await localDb();
+  const rows: { id: string }[] = await db.query("SELECT id FROM `User` WHERE email = ?", [GRANTEE]);
   if (!rows.length) throw new Error(`Run npm run dev:accounts first (${GRANTEE} is missing).`);
-  await db.query(`DELETE FROM "StaffRoleAssignment" WHERE "userId" = $1 AND role = 'REPORTING_ANALYST'`, [rows[0].id]);
-  await db.query(`UPDATE "ApprovalRequest" SET status = 'CANCELLED' WHERE kind = 'ROLE_CHANGE' AND status = 'PENDING' AND "targetId" = $1`, [rows[0].id]);
+  await db.query("DELETE FROM `StaffRoleAssignment` WHERE `userId` = ? AND role = 'REPORTING_ANALYST'", [rows[0].id]);
+  await db.query("UPDATE `ApprovalRequest` SET status = 'CANCELLED' WHERE kind = 'ROLE_CHANGE' AND status = 'PENDING' AND `targetId` = ?", [rows[0].id]);
   await db.end();
   fs.mkdirSync(OUT, { recursive: true });
 });

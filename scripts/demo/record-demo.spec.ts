@@ -1,6 +1,6 @@
 import "dotenv/config";
 import fs from "node:fs";
-import { Client } from "pg";
+import { localDb } from "../../tests/e2e/db";
 import { expect, test } from "@playwright/test";
 import { ask, caption, go, hideDevOverlay, OUT, pause, saveVideo, scrollBy, signIn, title } from "./helpers";
 
@@ -17,14 +17,11 @@ const CASE_SLUG = "medical-necessity-plan-of-care-lapsed";
 const CASE_TITLE = "A medical necessity denial that billing cannot fix alone";
 
 test.beforeAll(async () => {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!/@(127\.0\.0\.1|localhost)[:/]/.test(url)) throw new Error("The demo resets data only on a local database.");
-  const db = new Client({ connectionString: url });
-  await db.connect();
+  const db = await localDb();
   // Put the demo case back into review so the recording shows a reviewer approving it.
-  await db.query(`UPDATE "SimCase" SET status = 'IN_REVIEW', "submittedById" = 'seed', "hasDraftChanges" = true WHERE slug = $1 AND status = 'PUBLISHED'`, [CASE_SLUG]);
-  await db.query(`DELETE FROM "AssistantConversation" WHERE "userId" IN (SELECT id FROM "User" WHERE email IN ('student@rcmexcel.com', 'supportmgr@rcmexcel.com'))`);
-  await db.query(`DELETE FROM "SimAttempt" WHERE "userId" = (SELECT id FROM "User" WHERE email = 'student@rcmexcel.com') AND "caseId" = (SELECT id FROM "SimCase" WHERE slug = $1)`, [CASE_SLUG]);
+  await db.query("UPDATE `SimCase` SET status = 'IN_REVIEW', `submittedById` = 'seed', `hasDraftChanges` = true WHERE slug = ? AND status = 'PUBLISHED'", [CASE_SLUG]);
+  await db.query("DELETE FROM `AssistantConversation` WHERE `userId` IN (SELECT id FROM `User` WHERE email IN ('student@rcmexcel.com', 'supportmgr@rcmexcel.com'))");
+  await db.query("DELETE FROM `SimAttempt` WHERE `userId` = (SELECT id FROM `User` WHERE email = 'student@rcmexcel.com') AND `caseId` = (SELECT id FROM `SimCase` WHERE slug = ?)", [CASE_SLUG]);
   await db.end();
   fs.mkdirSync(OUT, { recursive: true });
 });

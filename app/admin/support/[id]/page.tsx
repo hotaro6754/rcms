@@ -14,6 +14,7 @@ import { TemplatePicker } from "@/components/support/TemplatePicker";
 import { assignAction, attachFileAction, declineAction, escalateAction, replyAction, setTeamAction, triageAction } from "@/lib/actions/support";
 import { STAFF_TRANSITIONS, STATUS_LABEL } from "@/lib/support/states";
 import { humanSize } from "@/lib/storage";
+import { strings } from "@/lib/json-list";
 
 export const metadata = { title: "Support case" };
 
@@ -48,12 +49,12 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
         ← Support queue
       </Link>
       <PageHead kicker={`${t.reference} · ${t.channel.toLowerCase()} · ${t.source.toLowerCase().replace("_", " ")} · opened ${when(t.createdAt, true)}`} title={t.subject} lede={<span className="flex flex-wrap items-center gap-2"><StatusPill status={t.status} label={STATUS_LABEL[t.status]} /> {CATEGORY_LABEL[t.category]} · {t.priority.toLowerCase()} priority · {t.team?.name ?? "no team"} {t.assignee ? `· with ${t.assignee.name}` : "· unassigned"}</span>} />
-      {(t.program || t.pageContext || t.relatedRef || t.tags.length > 0) && (
+      {(t.program || t.pageContext || t.relatedRef || strings(t.tags).length > 0) && (
         <p className="mt-3 text-[12.5px] text-muted-foreground">
           {t.program && <>Course: {t.program.name} · </>}
           {t.relatedRef && <>About: {t.relatedRef} · </>}
           {t.pageContext && <>Raised from {t.pageContext} · </>}
-          {t.tags.length > 0 && <>Tags: {t.tags.join(", ")}</>}
+          {strings(t.tags).length > 0 && <>Tags: {strings(t.tags).join(", ")}</>}
         </p>
       )}
       {t.resolutionSummary && <p className="mt-3 border-l-2 border-success pl-3 text-[13.5px]">Resolution: {t.resolutionSummary}</p>}
@@ -213,7 +214,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
                   <textarea id="tri-res" name="resolutionSummary" rows={2} defaultValue={t.resolutionSummary ?? ""} className={TEXTAREA} />
                 </Field>
                 <Field label="Tags" htmlFor="tri-tags" hint="Comma-separated.">
-                  <input id="tri-tags" name="tags" defaultValue={t.tags.join(", ")} className={FIELD} />
+                  <input id="tri-tags" name="tags" defaultValue={strings(t.tags).join(", ")} className={FIELD} />
                 </Field>
                 <Field label="Follow up on" htmlFor="tri-fu">
                   <input id="tri-fu" name="followUpAt" type="date" defaultValue={t.followUpAt ? t.followUpAt.toISOString().slice(0, 10) : ""} className={FIELD} />

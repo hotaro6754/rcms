@@ -4,6 +4,7 @@ import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { BTN_OUTLINE, Empty, FIELD, Pill, Table, Td, when } from "@/components/admin/kit";
+import { strings } from "@/lib/json-list";
 
 export const metadata = { title: "Audit log" };
 
@@ -67,7 +68,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 <Td className="whitespace-nowrap text-[12.5px]">{when(r.createdAt, true)}</Td>
                 <Td className="text-[12.5px]">
                   {r.actor ? r.actor.name : r.actorId ? "deleted account" : "system"}
-                  {r.actorRoles.length > 0 && <span className="block text-[11px] text-muted-foreground">{r.actorRoles.join(", ").toLowerCase().replace(/_/g, " ")}</span>}
+                  {strings(r.actorRoles).length > 0 && <span className="block text-[11px] text-muted-foreground">{strings(r.actorRoles).join(", ").toLowerCase().replace(/_/g, " ")}</span>}
                 </Td>
                 <Td className="text-data text-[12px]">{r.action}</Td>
                 <Td className="text-[12.5px]">

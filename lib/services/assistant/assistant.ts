@@ -13,6 +13,7 @@ import { knowledgeFor } from "@/lib/assistant/knowledge";
 import { learnerIntent, staffCommand } from "@/lib/assistant/intents";
 import { configuredProvider, ProviderUnavailable } from "@/lib/assistant/provider";
 import { excerpt, MIN_SCORE, search, type Hit, type Passage } from "@/lib/assistant/search";
+import { strings } from "@/lib/json-list";
 
 /**
  * The learning assistant and the staff copilot.
@@ -366,7 +367,7 @@ async function staffAnswer(actor: Actor, q: string): Promise<Reply> {
       const items = rows
         .map((c) => {
           const reasons = [];
-          if (!c.outcomes.length) reasons.push("no learning outcomes");
+          if (!strings(c.outcomes).length) reasons.push("no learning outcomes");
           if (!c.modules.some((m) => m.lessons.some((l) => l._count.quizzes > 0))) reasons.push("no assessment, so completion rests on lessons alone");
           return reasons.length ? { label: c.name, href: `/admin/content/courses/${c.id}`, meta: reasons.join("; ") } : null;
         })
@@ -406,7 +407,7 @@ async function staffAnswer(actor: Actor, q: string): Promise<Reply> {
 
     case "not_completed_module": {
       if (!can(actor, "subscriber.view")) return denied("learner records");
-      const course = await prisma.program.findFirst({ where: { name: { contains: cmd.course, mode: "insensitive" }, publishedVersionId: { not: null } }, select: { id: true, name: true, publishedVersion: { select: { snapshot: true } } } });
+      const course = await prisma.program.findFirst({ where: { name: { contains: cmd.course }, publishedVersionId: { not: null } }, select: { id: true, name: true, publishedVersion: { select: { snapshot: true } } } });
       if (!course) return listReply("", []);
       const s = course.publishedVersion!.snapshot as unknown as CourseSnapshot;
       const mod = s.modules[cmd.module - 1];

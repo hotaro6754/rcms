@@ -15,6 +15,7 @@ import { usersWithPermission } from "@/lib/services/people/staff-lookup";
 import { STATUS_LABEL } from "@/lib/services/cms/core";
 import { humanSize, typeLabel } from "@/lib/storage";
 import type { QuestionValue } from "@/components/cms/QuestionForm";
+import { strings } from "@/lib/json-list";
 
 export const metadata = { title: "Course workspace" };
 
@@ -84,6 +85,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
         lessonList={mod.lessons.filter((l) => l.state !== "ARCHIVED").map((l) => ({ id: l.id, title: l.title, state: l.state }))}
         mod={{
           ...mod,
+          objectives: strings(mod.objectives),
           lessons: mod.lessons.length,
           blocks: mod.lessons.reduce((n, l) => n + l._count.blocks, 0),
           resources: mod.lessons.reduce((n, l) => n + l._count.resources, 0),
@@ -119,7 +121,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
           actor={canEdit ? actor : { ...actor, permissions: new Set() }}
           courseId={id}
           courseSlug={course.slug}
-          lesson={{ ...lesson, hasAssessment: !!quiz }}
+          lesson={{ ...lesson, objectives: strings(lesson.objectives), sources: strings(lesson.sources), hasAssessment: !!quiz }}
           modules={allModules.map((m) => ({ id: m.id, title: m.title, course: m.program.name, sameCourse: m.programId === id }))}
           owners={(await usersWithPermission("content.edit")).map((u) => ({ id: u.id, name: u.name }))}
         />
@@ -180,7 +182,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
               {can(actor, "content.create") && <DuplicateCourse id={id} />}
             </span>
           }>
-          <CourseForm course={course} otherCourses={otherCourses} levels={levels} reviewers={{ academic, compliance }} thumbnails={thumbnails} canEdit={canEdit} />
+          <CourseForm course={{ ...course, outcomes: strings(course.outcomes), prerequisites: strings(course.prerequisites) }} otherCourses={otherCourses} levels={levels} reviewers={{ academic, compliance }} thumbnails={thumbnails} canEdit={canEdit} />
         </Panel>
       </div>
     );

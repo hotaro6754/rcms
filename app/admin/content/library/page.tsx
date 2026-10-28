@@ -20,7 +20,7 @@ export default async function LibraryAdmin({ searchParams }: { searchParams: Pro
   const status = STATUSES.includes(sp.status as LibraryStatus) ? (sp.status as LibraryStatus) : undefined;
   const q = sp.q?.trim();
   const [rows, levels] = await Promise.all([
-    prisma.libraryEntry.findMany({ where: { ...(kind ? { kind } : {}), ...(status ? { status } : {}), ...(q ? { title: { contains: q, mode: "insensitive" } } : {}) }, orderBy: [{ status: "asc" }, { title: "asc" }], take: 300 }),
+    prisma.libraryEntry.findMany({ where: { ...(kind ? { kind } : {}), ...(status ? { status } : {}), ...(q ? { title: { contains: q } } : {}) }, orderBy: [{ status: "asc" }, { title: "asc" }], take: 300 }),
     prisma.learningLevel.findMany({ where: { status: { not: "ARCHIVED" } }, orderBy: { sequence: "asc" }, select: { id: true, name: true } }),
   ]);
   const now = new Date();

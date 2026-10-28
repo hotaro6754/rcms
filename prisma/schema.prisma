@@ -12,7 +12,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 // ---------------------------------------------------------------------------
@@ -49,20 +49,20 @@ enum AccountStatus {
 
 model User {
   id            String        @id @default(cuid())
-  name          String
+  name          String @db.MediumText
   email         String        @unique
   emailVerified Boolean       @default(false)
-  image         String?
+  image         String? @db.MediumText
   role          Role          @default(STUDENT)
   status        AccountStatus @default(PENDING_VERIFICATION)
 
   // Career context, which is what the ladder is measured against.
-  currentRole String?
+  currentRole String? @db.MediumText
   experience  Int? // years
-  phone       String?
-  whatsapp    String?
-  country     String?
-  timezone    String?
+  phone       String? @db.MediumText
+  whatsapp    String? @db.MediumText
+  country     String? @db.MediumText
+  timezone    String? @db.MediumText
 
   // Communication preferences. Consent history lives in ConsentRecord.
   marketingOptIn  Boolean   @default(false)
@@ -74,7 +74,7 @@ model User {
   lockedUntil      DateTime?
   lastLoginAt      DateTime?
   previousLoginAt  DateTime?
-  lastLoginIp      String?
+  lastLoginIp      String? @db.MediumText
 
   bannedAt   DateTime?
   lastSeenAt DateTime?
@@ -124,8 +124,8 @@ model Session {
   id        String   @id @default(cuid())
   token     String   @unique
   expiresAt DateTime
-  ipAddress String?
-  userAgent String?
+  ipAddress String? @db.MediumText
+  userAgent String? @db.MediumText
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -141,13 +141,13 @@ model Account {
   providerId            String
   userId                String
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
+  accessToken           String? @db.MediumText
+  refreshToken          String? @db.MediumText
+  idToken               String? @db.MediumText
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
+  scope                 String? @db.MediumText
+  password              String? @db.MediumText
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -158,8 +158,8 @@ model Account {
 
 model Verification {
   id         String   @id @default(cuid())
-  identifier String
-  value      String
+  identifier String @db.VarChar(512)
+  value      String @db.MediumText
   expiresAt  DateTime
 
   createdAt DateTime @default(now())
@@ -172,8 +172,8 @@ model Verification {
 /// is encrypted by Better Auth with BETTER_AUTH_SECRET before it is written.
 model TwoFactor {
   id                      String    @id @default(cuid())
-  secret                  String
-  backupCodes             String
+  secret                  String @db.VarChar(512)
+  backupCodes             String @db.MediumText
   userId                  String
   verified                Boolean   @default(true)
   failedVerificationCount Int       @default(0)
@@ -217,8 +217,8 @@ model StaffRoleAssignment {
   id           String    @id @default(cuid())
   userId       String
   role         StaffRole
-  grantedById  String?
-  approvedById String?
+  grantedById  String? @db.MediumText
+  approvedById String? @db.MediumText
 
   user User @relation("StaffRoleHolder", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -256,15 +256,15 @@ model ApprovalRequest {
   status        ApprovalStatus @default(PENDING)
   targetType    String
   targetId      String?
-  summary       String
+  summary       String @db.MediumText
   payload       Json
-  reason        String
-  requestedById String
-  decidedById   String?
-  decisionNote  String?
+  reason        String @db.MediumText
+  requestedById String @db.MediumText
+  decidedById   String? @db.MediumText
+  decisionNote  String? @db.MediumText
   decidedAt     DateTime?
   executedAt    DateTime?
-  failure       String?
+  failure       String? @db.MediumText
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -279,8 +279,8 @@ model ConsentRecord {
   /// "terms", "privacy", "marketing"
   kind    String
   granted Boolean
-  version String?
-  ip      String?
+  version String? @db.MediumText
+  ip      String? @db.MediumText
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -294,7 +294,7 @@ model AdminNote {
   id        String @id @default(cuid())
   subjectId String
   authorId  String
-  body      String
+  body      String @db.MediumText
 
   subject User @relation("NoteSubject", fields: [subjectId], references: [id], onDelete: Cascade)
   author  User @relation("NoteAuthor", fields: [authorId], references: [id])
@@ -322,9 +322,9 @@ model PrivacyRequest {
   userId      String
   kind        PrivacyRequestKind
   status      PrivacyRequestStatus @default(OPEN)
-  detail      String?
-  handledById String?
-  resolution  String?
+  detail      String? @db.MediumText
+  handledById String? @db.MediumText
+  resolution  String? @db.MediumText
   closedAt    DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -348,11 +348,11 @@ model Counter {
 
 model Organisation {
   id            String    @id @default(cuid())
-  name          String
+  name          String @db.MediumText
   slug          String    @unique
-  gstin         String?
+  gstin         String? @db.MediumText
   seats         Int       @default(0)
-  billingEmail  String?
+  billingEmail  String? @db.MediumText
   contractStart DateTime?
   contractEnd   DateTime?
   active        Boolean   @default(true)
@@ -427,7 +427,7 @@ model Invitation {
   email       String
   orgId       String?
   tokenHash   String    @unique
-  invitedById String
+  invitedById String @db.MediumText
   expiresAt   DateTime
   acceptedAt  DateTime?
   revokedAt   DateTime?
@@ -471,27 +471,27 @@ enum ContentStatus {
 model LearningLevel {
   id                    String        @id @default(cuid())
   slug                  String        @unique
-  name                  String
-  displayTitle          String
+  name                  String @db.MediumText
+  displayTitle          String @db.MediumText
   sequence              Int           @default(0)
-  shortDescription      String
-  description           String?
-  audience              String?
-  prerequisites         String[]
-  outcomes              String[]
-  coreTopics            String[]
-  estimatedEffort       String?
-  assessmentRequirement String?
-  passingCriteria       String?
-  completionRequirement String?
-  badgeName             String?
+  shortDescription      String @db.MediumText
+  description           String? @db.MediumText
+  audience              String? @db.MediumText
+  prerequisites         Json @default("[]")
+  outcomes              Json @default("[]")
+  coreTopics            Json @default("[]")
+  estimatedEffort       String? @db.MediumText
+  assessmentRequirement String? @db.MediumText
+  passingCriteria       String? @db.MediumText
+  completionRequirement String? @db.MediumText
+  badgeName             String? @db.MediumText
   /// Display accent: "teal" (Trainee), "blue" (Professional), "navy" (Leadership).
   accent                String        @default("teal")
   status                ContentStatus @default(DRAFT)
-  disclaimer            String?
-  ownerId               String?
-  academicReviewerId    String?
-  complianceReviewerId  String?
+  disclaimer            String? @db.MediumText
+  ownerId               String? @db.MediumText
+  academicReviewerId    String? @db.MediumText
+  complianceReviewerId  String? @db.MediumText
   effectiveDate         DateTime?
   reviewDate            DateTime?
   archivedAt            DateTime?
@@ -509,25 +509,25 @@ model LearningLevel {
 model Program {
   id        String       @id @default(cuid())
   slug      String       @unique
-  tier      String // "TIER 01"
-  name      String
+  tier      String @db.MediumText  // "TIER 01"
+  name      String @db.MediumText
   /// Position on the marketing site's five-step ladder (1–5). Not the learning level.
   level     Int
   levelId   String?
-  who       String
-  artefact  String
-  weeks     String
-  flag      String?
-  outcomes  String[]
+  who       String @db.MediumText
+  artefact  String @db.MediumText
+  weeks     String @db.MediumText
+  flag      String? @db.MediumText
+  outcomes  Json @default("[]")
   /// Learner visibility, kept in step with `status` by the release service: PUBLISHED while
   /// a released version is live.
   state     PublishState @default(DRAFT)
   sortOrder Int          @default(0)
 
-  description            String?
-  prerequisites          String[]
+  description            String? @db.MediumText
+  prerequisites          Json @default("[]")
   durationMinutes        Int?
-  difficulty             String?
+  difficulty             String? @db.MediumText
   /// No payment needed to enrol.
   isFree                 Boolean       @default(false)
   /// Covered by an active all-access or level subscription.
@@ -536,10 +536,10 @@ model Program {
   /// content). Defaults to true: the conservative choice for RCM material.
   complianceSensitive    Boolean       @default(true)
   status                 ContentStatus @default(DRAFT)
-  disclaimer             String?
-  ownerId                String?
-  academicReviewerId     String?
-  complianceReviewerId   String?
+  disclaimer             String? @db.MediumText
+  ownerId                String? @db.MediumText
+  academicReviewerId     String? @db.MediumText
+  complianceReviewerId   String? @db.MediumText
   effectiveDate          DateTime?
   reviewDate             DateTime?
   scheduledFor           DateTime?
@@ -548,9 +548,9 @@ model Program {
   /// A template course: never published, only copied to start new courses.
   isTemplate             Boolean       @default(false)
   /// Learners need a valid certificate for this course before they can enrol.
-  requiresCourseId       String?
+  requiresCourseId       String? @db.MediumText
   archivedAt             DateTime?
-  thumbnailId            String?
+  thumbnailId            String? @db.MediumText
   publishedVersionId     String?       @unique
   /// Optimistic concurrency for the course record itself.
   lockVersion            Int           @default(0)
@@ -578,12 +578,12 @@ model Program {
 model Module {
   id                   String       @id @default(cuid())
   programId            String
-  title                String
-  summary              String?
-  objectives           String[]
+  title                String @db.MediumText
+  summary              String? @db.MediumText
+  objectives           Json @default("[]")
   estimatedMinutes     Int?
   /// Learners must complete this module (every lesson) before opening this one.
-  prerequisiteModuleId String?
+  prerequisiteModuleId String? @db.MediumText
   sortOrder            Int          @default(0)
   state                PublishState @default(PUBLISHED)
   lockVersion          Int          @default(0)
@@ -607,11 +607,11 @@ enum LessonCompletion {
 model Lesson {
   id             String           @id @default(cuid())
   moduleId       String
-  title          String
+  title          String @db.MediumText
   /// Legacy plain-text body. Migrated into a TEXT content block; no longer written.
-  body           String?
-  objectives     String[]
-  videoAssetId   String? // provider-side id; playback URLs are always signed
+  body           String? @db.MediumText
+  objectives     Json @default("[]")
+  videoAssetId   String? @db.MediumText  // provider-side id; playback URLs are always signed
   durationSec    Int?
   sortOrder      Int              @default(0)
   state          PublishState     @default(DRAFT)
@@ -620,10 +620,10 @@ model Lesson {
   effectiveDate  DateTime?
   /// Compliance metadata for regulated content: who owns it, when it was last reviewed,
   /// when it must be reviewed next, and the sources it relies on.
-  contentOwnerId String?
+  contentOwnerId String? @db.MediumText
   lastReviewedAt DateTime?
   nextReviewAt   DateTime?
-  sources        String[]         @default([])
+  sources        Json         @default("[]")
   lockVersion    Int              @default(0)
 
   module    Module         @relation(fields: [moduleId], references: [id], onDelete: Restrict)
@@ -680,8 +680,8 @@ model ContentRevision {
   entityId   String
   courseId   String?
   version    Int
-  editorId   String?
-  reason     String?
+  editorId   String? @db.MediumText
+  reason     String? @db.MediumText
   changes    Json
   snapshot   Json
 
@@ -699,12 +699,12 @@ model CourseVersion {
   version              Int
   snapshot             Json
   /// Media referenced by the snapshot; the media route grants learners access by this list.
-  mediaIds             String[]
-  changeSummary        String?
-  submittedById        String?
-  academicApproverId   String?
-  complianceApproverId String?
-  publishedById        String?
+  mediaIds             Json @default("[]")
+  changeSummary        String? @db.MediumText
+  submittedById        String? @db.MediumText
+  academicApproverId   String? @db.MediumText
+  complianceApproverId String? @db.MediumText
+  publishedById        String? @db.MediumText
   publishedAt          DateTime?
   effectiveDate        DateTime?
 
@@ -727,9 +727,9 @@ model ReviewDecision {
   courseId   String
   stage      ReviewStage
   /// "submitted", "approved", "rejected", "published", "withdrawn", "scheduled", "archived", "restored"
-  decision   String
-  reviewerId String
-  comment    String?
+  decision   String @db.MediumText
+  reviewerId String @db.MediumText
+  comment    String? @db.MediumText
   /// The draft revision counter the decision applies to, so an approval cannot outlive an edit.
   draftStamp Int         @default(0)
 
@@ -751,14 +751,14 @@ enum MediaKind {
 model MediaAsset {
   id           String    @id @default(cuid())
   kind         MediaKind
-  title        String
-  altText      String?
+  title        String @db.MediumText
+  altText      String? @db.MediumText
   fileKey      String    @unique
-  mimeType     String
+  mimeType     String @db.MediumText
   sizeBytes    Int
   /// Public assets (course thumbnails) are served without a session.
   isPublic     Boolean   @default(false)
-  uploadedById String?
+  uploadedById String? @db.MediumText
   archivedAt   DateTime?
 
   createdAt DateTime @default(now())
@@ -770,9 +770,9 @@ model MediaAsset {
 model Resource {
   id         String    @id @default(cuid())
   lessonId   String
-  title      String
-  fileKey    String
-  mimeType   String
+  title      String @db.MediumText
+  fileKey    String @db.MediumText
+  mimeType   String @db.MediumText
   sizeBytes  Int?
   watermark  Boolean   @default(true)
   /// Learners may download the file itself. Off by default: PDFs are read in the
@@ -801,9 +801,9 @@ enum AssessmentKind {
 model Quiz {
   id                 String         @id @default(cuid())
   lessonId           String
-  title              String
+  title              String @db.MediumText
   kind               AssessmentKind @default(KNOWLEDGE_CHECK)
-  instructions       String?
+  instructions       String? @db.MediumText
   passingScore       Int            @default(70)
   /// null = untimed.
   timeLimitMinutes   Int?
@@ -831,9 +831,9 @@ model Quiz {
 
 model QuestionBank {
   id          String    @id @default(cuid())
-  title       String
-  competency  String?
-  description String?
+  title       String @db.MediumText
+  competency  String? @db.MediumText
+  description String? @db.MediumText
   archivedAt  DateTime?
 
   questions QuizQuestion[]
@@ -859,22 +859,22 @@ model QuizQuestion {
   bankId              String?
   type                QuestionType @default(SINGLE)
   /// Scenario or case text shown above the prompt. Synthetic data only.
-  scenario            String?
-  prompt              String
+  scenario            String? @db.MediumText
+  prompt              String @db.MediumText
   /// Choices (SINGLE/MULTI/TRUE_FALSE), items to order (SEQUENCE) or left column (MATCHING).
-  options             String[]
+  options             Json @default("[]")
   /// Right column for MATCHING.
-  targets             String[]
+  targets             Json @default("[]")
   /// Legacy single-choice key, kept in step with answerKey for SINGLE and TRUE_FALSE.
   correct             Int          @default(0)
   /// Typed answer key: { index } | { indices } | { order } | { pairs } | { rubric }.
   answerKey           Json?
-  rationale           String?
+  rationale           String? @db.MediumText
   points              Int          @default(1)
   difficulty          Int          @default(2)
-  competency          String?
+  competency          String? @db.MediumText
   /// Lesson to recommend when this question is answered wrongly.
-  remediationLessonId String?
+  remediationLessonId String? @db.MediumText
   sortOrder           Int          @default(0)
   archivedAt          DateTime?
 
@@ -911,12 +911,12 @@ model QuizAttempt {
   pointsPossible Int?
   answers        Json
   breakdown      Json?
-  feedback       String?
+  feedback       String? @db.MediumText
   startedAt      DateTime      @default(now())
   expiresAt      DateTime?
   submittedAt    DateTime?
   gradedAt       DateTime?
-  gradedById     String?
+  gradedById     String? @db.MediumText
 
   quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Restrict)
   user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -932,10 +932,10 @@ model QuizAttempt {
 model AttemptUpload {
   id         String @id @default(cuid())
   attemptId  String
-  questionId String
-  fileKey    String
-  fileName   String
-  mimeType   String
+  questionId String @db.MediumText
+  fileKey    String @db.MediumText
+  fileName   String @db.MediumText
+  mimeType   String @db.MediumText
   sizeBytes  Int
 
   attempt QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
@@ -1014,19 +1014,19 @@ model Certificate {
   serial        String    @unique
   userId        String
   programId     String
-  holderName    String
-  programName   String
+  holderName    String @db.MediumText
+  programName   String @db.MediumText
   courseVersion Int?
   /// What the certificate rests on: lessons completed, attempts passed, at issue.
   evidence      Json?
   issuedAt      DateTime  @default(now())
-  issuedById    String?
+  issuedById    String? @db.MediumText
   /// "completion" when the student met every requirement; "manual" when an admin issued it.
   basis         String    @default("completion")
   revokedAt     DateTime?
-  revokedById   String?
-  revokeReason  String?
-  replacesId    String?
+  revokedById   String? @db.MediumText
+  revokeReason  String? @db.MediumText
+  replacesId    String? @db.MediumText
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   program Program @relation(fields: [programId], references: [id])
@@ -1042,7 +1042,7 @@ model LevelBadge {
   serial   String   @unique
   userId   String
   levelId  String
-  name     String
+  name     String @db.MediumText
   issuedAt DateTime @default(now())
 
   user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1073,17 +1073,17 @@ model Product {
   id          String           @id @default(cuid())
   sku         String           @unique
   kind        ProductKind
-  name        String
-  description String?
+  name        String @db.MediumText
+  description String? @db.MediumText
   /// Minor units. Rupees are stored as paise so no float ever touches money.
   amount      Int
   currency    String           @default("INR")
   active      Boolean          @default(true)
   programId   String?
   /// TRACK products and level subscriptions grant every released course in this level.
-  levelId     String?
+  levelId     String? @db.MediumText
   /// Course slugs a TRACK (bundle) product grants, when it is not a whole level.
-  includes    String[]         @default([])
+  includes    Json         @default("[]")
   interval    BillingInterval?
   trialDays   Int              @default(0)
   graceDays   Int              @default(0)
@@ -1127,8 +1127,8 @@ model Order {
   /// Razorpay order id. Unique so a replayed webhook cannot create a second order.
   gatewayRef    String?    @unique
   paidAt        DateTime?
-  failureReason String?
-  notes         String?
+  failureReason String? @db.MediumText
+  notes         String? @db.MediumText
 
   user         User          @relation(fields: [userId], references: [id])
   org          Organisation? @relation(fields: [orgId], references: [id])
@@ -1159,15 +1159,15 @@ model Payment {
   /// Razorpay payment id. Unique: the idempotency key for webhook replay.
   gatewayRef         String               @unique
   amount             Int
-  method             String?
+  method             String? @db.MediumText
   /// Blueprint §8.3 vocabulary: initiated, pending, authorized, successful, failed, …
-  status             String
+  status             String @db.MediumText
   rawPayload         Json?
   settledAt          DateTime?
   reconciliation     ReconciliationStatus @default(UNRECONCILED)
-  reconciledById     String?
+  reconciledById     String? @db.MediumText
   reconciledAt       DateTime?
-  reconciliationNote String?
+  reconciliationNote String? @db.MediumText
 
   order Order @relation(fields: [orderId], references: [id])
 
@@ -1182,11 +1182,11 @@ model Invoice {
   id          String   @id @default(cuid())
   orderId     String   @unique
   number      String   @unique
-  gstin       String?
-  hsnSac      String?
+  gstin       String? @db.MediumText
+  hsnSac      String? @db.MediumText
   taxAmount   Int      @default(0)
   totalAmount Int
-  pdfKey      String?
+  pdfKey      String? @db.MediumText
   issuedAt    DateTime @default(now())
 
   order Order @relation(fields: [orderId], references: [id])
@@ -1205,17 +1205,17 @@ model Refund {
   id             String       @id @default(cuid())
   orderId        String
   amount         Int
-  reason         String
+  reason         String @db.MediumText
   status         RefundStatus @default(REQUESTED)
   /// Outside the published policy, or above the routine limit: needs an Academy Director.
   exceptional    Boolean      @default(false)
   policyEligible Boolean      @default(true)
   /// Share of the course's lessons the learner had completed when the refund was requested.
   consumptionPct Int          @default(0)
-  requestedById  String?
-  approvedBy     String?
+  requestedById  String? @db.MediumText
+  approvedBy     String? @db.MediumText
   decidedAt      DateTime?
-  decisionNote   String?
+  decisionNote   String? @db.MediumText
   gatewayRef     String?      @unique
   confirmedAt    DateTime?
   reconciled     Boolean      @default(false)
@@ -1281,9 +1281,9 @@ model WebhookEvent {
   id          String    @id @default(cuid())
   provider    String
   eventId     String
-  type        String
+  type        String @db.MediumText
   status      String    @default("received")
-  error       String?
+  error       String? @db.MediumText
   processedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -1341,37 +1341,37 @@ model SupportTicket {
   id                      String          @id @default(cuid())
   reference               String          @unique
   requesterId             String
-  subject                 String
+  subject                 String @db.MediumText
   category                SupportCategory
   priority                SupportPriority @default(NORMAL)
   status                  SupportStatus   @default(WAITING)
   channel                 SupportChannel  @default(TICKET)
   assigneeId              String?
   /// "academic" | "billing" | "technical" | "security"
-  escalatedTo             String?
+  escalatedTo             String? @db.MediumText
   isComplaint             Boolean         @default(false)
   firstResponseAt         DateTime?
   resolvedAt              DateTime?
   closedAt                DateTime?
   followUpAt              DateTime?
   rating                  Int?
-  feedback                String?
+  feedback                String? @db.MediumText
   reopenCount             Int             @default(0)
   /// Team that owns the case; null only if no team exists at all.
   teamId                  String?
   source                  TicketSource    @default(WEB_FORM)
   /// Related course, and a free reference to a lesson, assessment or case attempt.
   programId               String?
-  relatedRef              String?
+  relatedRef              String? @db.MediumText
   /// The page the learner raised it from (path only, no query string).
-  pageContext             String?
-  tags                    String[]        @default([])
+  pageContext             String? @db.MediumText
+  tags                    Json        @default("[]")
   /// 1 (only me, minor) to 3 (stops my learning or affects many).
   impact                  Int?
   /// 1 (whenever) to 3 (deadline today).
   urgency                 Int?
   /// Learner-visible summary written when the case is resolved.
-  resolutionSummary       String?
+  resolutionSummary       String? @db.MediumText
   firstResponseDueAt      DateTime?
   resolutionDueAt         DateTime?
   firstResponseBreachedAt DateTime?
@@ -1398,8 +1398,8 @@ model SupportTicket {
 model SupportMessage {
   id       String  @id @default(cuid())
   ticketId String
-  authorId String
-  body     String
+  authorId String @db.MediumText
+  body     String @db.MediumText
   /// Internal notes are visible to support staff only.
   internal Boolean @default(false)
   /// Set when the masking filter changed the text before storage.
@@ -1414,11 +1414,11 @@ model SupportMessage {
 
 model ResponseTemplate {
   id           String           @id @default(cuid())
-  title        String
-  body         String
+  title        String @db.MediumText
+  body         String @db.MediumText
   category     SupportCategory?
   approved     Boolean          @default(false)
-  approvedById String?
+  approvedById String? @db.MediumText
   archivedAt   DateTime?
 
   createdAt DateTime @default(now())
@@ -1459,28 +1459,28 @@ enum VendorStatus {
 model Vendor {
   id                  String       @id @default(cuid())
   code                String       @unique
-  legalName           String
-  tradingName         String?
+  legalName           String @db.MediumText
+  tradingName         String? @db.MediumText
   type                VendorType
   status              VendorStatus @default(PROPOSED)
-  country             String?
-  contactName         String?
-  contactEmail        String?
-  services            String?
-  commercialModel     String?
+  country             String? @db.MediumText
+  contactName         String? @db.MediumText
+  contactEmail        String? @db.MediumText
+  services            String? @db.MediumText
+  commercialModel     String? @db.MediumText
   riskRating          String       @default("medium")
-  complianceClass     String?
+  complianceClass     String? @db.MediumText
   dataAccessClass     String       @default("none")
-  contractOwnerId     String?
+  contractOwnerId     String? @db.MediumText
   contractStart       DateTime?
   contractEnd         DateTime?
   accessExpiresAt     DateTime?
   /// Approved payout reference at the payment provider and the last four digits only.
   /// Full bank or tax numbers are never stored here.
-  payoutReference     String?
-  payoutLast4         String?
-  taxIdLast4          String?
-  payoutChangedById   String?
+  payoutReference     String? @db.MediumText
+  payoutLast4         String? @db.MediumText
+  taxIdLast4          String? @db.MediumText
+  payoutChangedById   String? @db.MediumText
   payoutChangedAt     DateTime?
   onboardingChecklist Json?
 
@@ -1511,14 +1511,14 @@ model VendorMember {
 model VendorDocument {
   id              String    @id @default(cuid())
   vendorId        String
-  title           String
+  title           String @db.MediumText
   /// "contract", "nda", "tax", "insurance", "security", "coi", "other"
-  kind            String
-  fileKey         String
-  mimeType        String
+  kind            String @db.MediumText
+  fileKey         String @db.MediumText
+  mimeType        String @db.MediumText
   sizeBytes       Int
   expiresAt       DateTime?
-  uploadedById    String?
+  uploadedById    String? @db.MediumText
   visibleToVendor Boolean   @default(true)
 
   vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
@@ -1542,8 +1542,8 @@ model Deliverable {
   id           String            @id @default(cuid())
   vendorId     String
   programId    String?
-  title        String
-  description  String?
+  title        String @db.MediumText
+  description  String? @db.MediumText
   dueDate      DateTime?
   status       DeliverableStatus @default(ASSIGNED)
   /// Agreed fee in minor units.
@@ -1567,12 +1567,12 @@ model Deliverable {
 model DeliverableSubmission {
   id            String  @id @default(cuid())
   deliverableId String
-  submittedById String
-  note          String?
-  link          String?
-  fileKey       String?
-  fileName      String?
-  mimeType      String?
+  submittedById String @db.MediumText
+  note          String? @db.MediumText
+  link          String? @db.MediumText
+  fileKey       String? @db.MediumText
+  fileName      String? @db.MediumText
+  mimeType      String? @db.MediumText
 
   deliverable Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
 
@@ -1584,8 +1584,8 @@ model DeliverableSubmission {
 model DeliverableComment {
   id            String @id @default(cuid())
   deliverableId String
-  authorId      String
-  body          String
+  authorId      String @db.MediumText
+  body          String @db.MediumText
 
   deliverable Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
 
@@ -1612,14 +1612,14 @@ model VendorInvoice {
   amount        Int
   currency      String              @default("INR")
   status        VendorInvoiceStatus @default(SUBMITTED)
-  note          String?
-  submittedById String
-  validatedById String?
-  approvedById  String?
-  paidById      String?
-  paymentRef    String?
+  note          String? @db.MediumText
+  submittedById String @db.MediumText
+  validatedById String? @db.MediumText
+  approvedById  String? @db.MediumText
+  paidById      String? @db.MediumText
+  paymentRef    String? @db.MediumText
   paidAt        DateTime?
-  rejectReason  String?
+  rejectReason  String? @db.MediumText
 
   vendor      Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   deliverable Deliverable? @relation(fields: [deliverableId], references: [id])
@@ -1645,21 +1645,21 @@ enum LeadStage {
 
 model Lead {
   id              String    @id @default(cuid())
-  name            String
-  email           String
-  phone           String?
-  whatsapp        String?
-  currentRole     String?
+  name            String @db.MediumText
+  email           String @db.MediumText
+  phone           String? @db.MediumText
+  whatsapp        String? @db.MediumText
+  currentRole     String? @db.MediumText
   experience      Int?
-  interestedIn    String?
+  interestedIn    String? @db.MediumText
   source          String    @default("website")
   stage           LeadStage @default(NEW)
   score           Int       @default(0)
   ownerId         String?
   companyId       String?
-  notes           String?
+  notes           String? @db.MediumText
   lastContactAt   DateTime?
-  convertedUserId String?
+  convertedUserId String? @db.MediumText
 
   owner      User?          @relation("LeadOwner", fields: [ownerId], references: [id])
   company    Company?       @relation(fields: [companyId], references: [id])
@@ -1676,8 +1676,8 @@ model LeadActivity {
   id     String  @id @default(cuid())
   leadId String
   /// "brochure_download", "pricing_view", "mentoring_booked", "whatsapp_reply", "purchase"
-  kind   String
-  detail String?
+  kind   String @db.MediumText
+  detail String? @db.MediumText
   points Int     @default(0)
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -1689,10 +1689,10 @@ model LeadActivity {
 
 model Company {
   id       String  @id @default(cuid())
-  name     String
-  domain   String?
-  size     String?
-  industry String?
+  name     String @db.MediumText
+  domain   String? @db.MediumText
+  size     String? @db.MediumText
+  industry String? @db.MediumText
 
   leads Lead[]
 
@@ -1701,8 +1701,8 @@ model Company {
 
 model Campaign {
   id       String    @id @default(cuid())
-  name     String
-  channel  String
+  name     String @db.MediumText
+  channel  String @db.MediumText
   startsAt DateTime?
   endsAt   DateTime?
   spend    Int       @default(0)
@@ -1717,8 +1717,8 @@ model Campaign {
 model Trainer {
   id       String  @id @default(cuid())
   userId   String  @unique
-  headline String?
-  bio      String?
+  headline String? @db.MediumText
+  bio      String? @db.MediumText
   active   Boolean @default(true)
 
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1755,12 +1755,12 @@ model Booking {
   id          String       @id @default(cuid())
   userId      String
   trainerId   String
-  productId   String?
+  productId   String? @db.MediumText
   startsAt    DateTime
   minutes     Int
   state       BookingState @default(HELD)
-  topic       String?
-  artefactKey String?
+  topic       String? @db.MediumText
+  artefactKey String? @db.MediumText
 
   user    User           @relation(fields: [userId], references: [id])
   trainer Trainer        @relation(fields: [trainerId], references: [id])
@@ -1776,8 +1776,8 @@ model Booking {
 model MentorSession {
   id         String    @id @default(cuid())
   bookingId  String    @unique
-  notes      String?
-  actionPlan String?
+  notes      String? @db.MediumText
+  actionPlan String? @db.MediumText
   followUpAt DateTime?
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
@@ -1793,10 +1793,10 @@ model MentorSession {
 model Scenario {
   id           String       @id @default(cuid())
   slug         String       @unique
-  clientName   String
-  specialty    String
+  clientName   String @db.MediumText
+  specialty    String @db.MediumText
   providers    Int
-  reviewPeriod String
+  reviewPeriod String @db.MediumText
   /// The whole telemetry model for this engagement: metrics, denials, pods, escalations.
   telemetry    Json
   state        PublishState @default(DRAFT)
@@ -1855,10 +1855,10 @@ model CapacityRun {
 model RcaBoard {
   id         String  @id @default(cuid())
   attemptId  String  @unique
-  subject    String
+  subject    String @db.MediumText
   /// Five whys: [{ question, answer, evidence }]
   steps      Json
-  conclusion String?
+  conclusion String? @db.MediumText
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
@@ -1869,12 +1869,12 @@ model RcaBoard {
 model ActionItem {
   id             String  @id @default(cuid())
   attemptId      String
-  action         String
-  owner          String
-  dueDate        String
+  action         String @db.MediumText
+  owner          String @db.MediumText
+  dueDate        String @db.MediumText
   status         String  @default("not-started")
-  blockedReason  String?
-  expectedImpact String?
+  blockedReason  String? @db.MediumText
+  expectedImpact String? @db.MediumText
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
@@ -1887,13 +1887,13 @@ model ActionItem {
 model ExecutiveNote {
   id                String @id @default(cuid())
   attemptId         String @unique
-  whatChanged       String
-  whyChanged        String
-  financialImpact   String
-  rootCause         String
-  recommendedAction String
-  owner             String
-  deadline          String
+  whatChanged       String @db.MediumText
+  whyChanged        String @db.MediumText
+  financialImpact   String @db.MediumText
+  rootCause         String @db.MediumText
+  recommendedAction String @db.MediumText
+  owner             String @db.MediumText
+  deadline          String @db.MediumText
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
@@ -1904,11 +1904,11 @@ model ExecutiveNote {
 model RubricScore {
   id         String  @id @default(cuid())
   attemptId  String
-  criterion  String
+  criterion  String @db.MediumText
   score      Int
   maxScore   Int     @default(5)
-  comment    String?
-  gradedById String?
+  comment    String? @db.MediumText
+  gradedById String? @db.MediumText
 
   attempt LabAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
@@ -1924,9 +1924,9 @@ model RubricScore {
 model Channel {
   id          String  @id @default(cuid())
   slug        String  @unique
-  name        String
-  description String
-  houseRule   String
+  name        String @db.MediumText
+  description String @db.MediumText
+  houseRule   String @db.MediumText
   membersOnly Boolean @default(true)
 
   threads Thread[]
@@ -1938,8 +1938,8 @@ model Thread {
   id        String  @id @default(cuid())
   channelId String
   authorId  String
-  title     String
-  body      String
+  title     String @db.MediumText
+  body      String @db.MediumText
   pinned    Boolean @default(false)
   closed    Boolean @default(false)
 
@@ -1958,7 +1958,7 @@ model Post {
   id       String @id @default(cuid())
   threadId String
   authorId String
-  body     String
+  body     String @db.MediumText
 
   thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   author User   @relation(fields: [authorId], references: [id])
@@ -1972,7 +1972,7 @@ model Post {
 model Report {
   id         String    @id @default(cuid())
   threadId   String
-  reason     String
+  reason     String @db.MediumText
   resolvedAt DateTime?
 
   thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
@@ -1996,11 +1996,11 @@ model AuditLog {
   /// "success" | "failure" | "denied"
   outcome       String   @default("success")
   /// The actor's effective staff roles when the action happened.
-  actorRoles    String[]
+  actorRoles    Json @default("[]")
   /// Ties together the rows written by one request or one workflow.
-  correlationId String?
-  ip            String?
-  userAgent     String?
+  correlationId String? @db.MediumText
+  ip            String? @db.MediumText
+  userAgent     String? @db.MediumText
 
   actor User? @relation("AuditActor", fields: [actorId], references: [id])
 
@@ -2016,10 +2016,10 @@ model AuditLog {
 model Event {
   id     String  @id @default(cuid())
   userId String?
-  anonId String?
+  anonId String? @db.MediumText
   name   String
   props  Json?
-  path   String?
+  path   String? @db.MediumText
 
   createdAt DateTime @default(now())
 
@@ -2030,10 +2030,10 @@ model Event {
 model Notification {
   id     String    @id @default(cuid())
   userId String
-  kind   String
-  title  String
-  body   String?
-  href   String?
+  kind   String @db.MediumText
+  title  String @db.MediumText
+  body   String? @db.MediumText
+  href   String? @db.MediumText
   readAt DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2052,7 +2052,7 @@ model Setting {
 model FeatureFlag {
   key         String   @id
   enabled     Boolean  @default(false)
-  description String?
+  description String? @db.MediumText
   updatedAt   DateTime @updatedAt
 }
 
@@ -2081,21 +2081,21 @@ model LibraryEntry {
   id              String        @id @default(cuid())
   slug            String        @unique
   kind            LibraryKind
-  title           String
-  summary         String
-  body            String
-  tags            String[]      @default([])
-  sources         String[]      @default([])
-  levelId         String?
+  title           String @db.MediumText
+  summary         String @db.MediumText
+  body            String @db.MediumText
+  tags            Json      @default("[]")
+  sources         Json      @default("[]")
+  levelId         String? @db.MediumText
   status          LibraryStatus @default(DRAFT)
   /// The approved version learners and visitors see. Null until first approval.
   published       Json?
   /// True when the draft differs from the published snapshot and is not yet approved.
   hasDraftChanges Boolean       @default(false)
-  authorId        String
-  submittedById   String?
-  reviewerId      String?
-  reviewNote      String?
+  authorId        String @db.MediumText
+  submittedById   String? @db.MediumText
+  reviewerId      String? @db.MediumText
+  reviewNote      String? @db.MediumText
   lastReviewedAt  DateTime?
   nextReviewAt    DateTime?
   publishedAt     DateTime?
@@ -2113,7 +2113,7 @@ model Bookmark {
   id       String @id @default(cuid())
   userId   String
   lessonId String
-  courseId String
+  courseId String @db.MediumText
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -2139,17 +2139,17 @@ enum CaseStatus {
 model SimCase {
   id              String     @id @default(cuid())
   slug            String     @unique
-  title           String
+  title           String @db.MediumText
   /// The working definition, including the answer key. Never sent to learners.
   draft           Json
   status          CaseStatus @default(DRAFT)
   hasDraftChanges Boolean    @default(false)
   /// Optional: only learners with access to this course may attempt the case.
-  programId       String?
-  authorId        String
-  submittedById   String?
-  reviewerId      String?
-  reviewNote      String?
+  programId       String? @db.MediumText
+  authorId        String @db.MediumText
+  submittedById   String? @db.MediumText
+  reviewerId      String? @db.MediumText
+  reviewNote      String? @db.MediumText
   lockVersion     Int        @default(0)
 
   versions SimCaseVersion[]
@@ -2167,8 +2167,8 @@ model SimCaseVersion {
   version       Int
   /// Immutable copy of the definition and its rubric at approval.
   definition    Json
-  publishedById String
-  reviewedById  String
+  publishedById String @db.MediumText
+  reviewedById  String @db.MediumText
   retiredAt     DateTime?
 
   case     SimCase      @relation(fields: [caseId], references: [id], onDelete: Restrict)
@@ -2192,14 +2192,17 @@ model SimAttempt {
   versionId      String
   attemptNo      Int
   state          SimAttemptState @default(IN_PROGRESS)
+  /// "userId:caseId" while the attempt is in progress, NULL otherwise. Its unique index allows one open
+  /// attempt per learner and case (MariaDB has no partial unique index). Set on create, cleared on scoring.
+  openKey String? @unique @db.VarChar(400)
   answers        Json            @default("{}")
   /// Percentage 0-100 after scoring (and after instructor adjustment, if any).
   score          Int?
   passed         Boolean?
   /// The scored result: criteria, critical errors and feedback. Written by the server only.
   result         Json?
-  instructorNote String?
-  reviewedById   String?
+  instructorNote String? @db.MediumText
+  reviewedById   String? @db.MediumText
   reviewedAt     DateTime?
   submittedAt    DateTime?
 
@@ -2225,21 +2228,21 @@ enum CompetencyStatus {
 model Competency {
   id               String           @id @default(cuid())
   code             String           @unique
-  name             String
-  description      String
-  expectedBehavior String
+  name             String @db.MediumText
+  description      String @db.MediumText
+  expectedBehavior String @db.MediumText
   /// 1 Foundation, 2 Guided Practitioner, 3 Independent Practitioner, 4 Specialist / Analyst,
   /// 5 Team Lead / Quality Auditor, 6 Manager / Strategist.
   proficiencyLevel Int
   /// Rubric criteria whose scores are this competency's evidence.
-  criteria         String[]
+  criteria         Json @default("[]")
   /// Minimum score (0-100) on each linked criterion, in a passing attempt with no critical error.
   threshold        Int              @default(75)
   /// Months before the competency should be shown again; null means no reassessment.
   reassessMonths   Int?
   status           CompetencyStatus @default(DRAFT)
-  authorId         String
-  reviewerId       String?
+  authorId         String @db.MediumText
+  reviewerId       String? @db.MediumText
   reviewedAt       DateTime?
   lockVersion      Int              @default(0)
 
@@ -2303,8 +2306,8 @@ enum TicketEventKind {
 model SupportTeam {
   id          String  @id @default(cuid())
   key         String  @unique
-  name        String
-  description String?
+  name        String @db.MediumText
+  description String? @db.MediumText
   active      Boolean @default(true)
   /// Assign new cases to the least-loaded available member; otherwise they wait in the team queue.
   autoAssign  Boolean @default(true)
@@ -2340,8 +2343,8 @@ model SupportTeamMember {
 /// label, visibility to learners, owning team and default priority are configurable here.
 model SupportCategorySetting {
   category        SupportCategory @id
-  label           String?
-  description     String?
+  label           String? @db.MediumText
+  description     String? @db.MediumText
   active          Boolean         @default(true)
   teamId          String?
   defaultPriority SupportPriority @default(NORMAL)
@@ -2366,7 +2369,7 @@ model SupportCalendar {
   id               String @id @default("default")
   utcOffsetMinutes Int    @default(330)
   /// 0 Sunday … 6 Saturday.
-  workDays         Int[]  @default([1, 2, 3, 4, 5, 6])
+  workDays         Json  @default("[1,2,3,4,5,6]")
   /// Minutes after local midnight.
   startMinute      Int    @default(600)
   endMinute        Int    @default(1140)
@@ -2378,11 +2381,11 @@ model SupportTicketEvent {
   id       String          @id @default(cuid())
   ticketId String
   /// Null for the system (routing, SLA job).
-  actorId  String?
+  actorId  String? @db.MediumText
   kind     TicketEventKind
-  from     String?
-  to       String?
-  note     String?
+  from     String? @db.MediumText
+  to       String? @db.MediumText
+  note     String? @db.MediumText
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
@@ -2395,11 +2398,11 @@ model SupportTicketEvent {
 model SupportAttachment {
   id         String  @id @default(cuid())
   ticketId   String
-  messageId  String?
-  uploaderId String
-  fileKey    String
-  fileName   String
-  mimeType   String
+  messageId  String? @db.MediumText
+  uploaderId String @db.MediumText
+  fileKey    String @db.MediumText
+  fileName   String @db.MediumText
+  mimeType   String @db.MediumText
   sizeBytes  Int
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
@@ -2430,9 +2433,9 @@ model AssistantConversation {
   userId  String
   /// "learner" or "staff": which assistant the conversation is with.
   mode    String  @default("learner")
-  title   String?
+  title   String? @db.MediumText
   /// Optional context the conversation started from (course slug / lesson id).
-  context String?
+  context String? @db.MediumText
 
   user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages AssistantMessage[]
@@ -2448,19 +2451,19 @@ model AssistantMessage {
   conversationId String
   role           AssistantRole
   /// Stored after identifier masking.
-  content        String
+  content        String @db.MediumText
   /// [{ title, href, kind, excerpt }] for answers.
   citations      Json?
   /// Structured extras: offered ticket draft, created ticket, proposed action, facts.
   payload        Json?
   /// "none" (retrieval only), "anthropic", or "facts" (answered from platform records).
-  provider       String?
-  model          String?
+  provider       String? @db.MediumText
+  model          String? @db.MediumText
   latencyMs      Int?
   inputTokens    Int?
   outputTokens   Int?
   feedback       AssistantFeedback?
-  feedbackNote   String?
+  feedbackNote   String? @db.MediumText
 
   conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
@@ -2482,13 +2485,13 @@ model SitePage {
   custom         Boolean   @default(false)
   /// Custom pages only: served at /p/<slug>.
   slug           String?   @unique
-  title          String?
+  title          String? @db.MediumText
   draft          Json?
   draftUpdatedAt DateTime?
-  draftById      String?
+  draftById      String? @db.MediumText
   published      Json?
   publishedAt    DateTime?
-  publishedById  String?
+  publishedById  String? @db.MediumText
   /// Number of the latest published version (0 = never published).
   version        Int       @default(0)
   /// Optimistic lock for draft saves: two editors cannot silently overwrite each other.
@@ -2510,8 +2513,8 @@ model SitePageVersion {
   version       Int
   /// Null records "reset to the default copy".
   content       Json?
-  publishedById String?
-  note          String?
+  publishedById String? @db.MediumText
+  note          String? @db.MediumText
 
   page SitePage @relation(fields: [pageKey], references: [key], onDelete: Cascade)
 

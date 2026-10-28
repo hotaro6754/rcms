@@ -7,6 +7,7 @@ import { legacyCorrect, normaliseQuestion } from "@/lib/assessment/questions";
 import { refusalFor } from "@/lib/cms/screen";
 import { courseOfLesson, courseOfQuiz, lockedCheck, markEdited, nextSortOrder, quizSnapshot, recordRevision, transaction, type Tx } from "./core";
 import { assertSameSet, stepMove } from "./structure";
+import { strings } from "@/lib/json-list";
 
 /**
  * The assessment builder: assessments on lessons, their questions, and shared question
@@ -182,7 +183,7 @@ export async function removeQuestion(actor: Actor, questionId: string) {
     const courseId = q.quizId ? await courseOfQuiz(tx, q.quizId) : null;
     if (courseId) await lockedCheck(tx, courseId);
     const before = q.quizId ? await quizSnapshot(tx, q.quizId) : null;
-    const attempts = q.quizId ? await tx.quizAttempt.count({ where: { quizId: q.quizId } }) : await tx.quizAttempt.count({ where: { snapshot: { path: ["questionIds"], array_contains: [questionId] } } });
+    const attempts = q.quizId ? await tx.quizAttempt.count({ where: { quizId: q.quizId } }) : await tx.quizAttempt.count({ where: { snapshot: { path: "$.questionIds", array_contains: [questionId] } } });
     if (attempts > 0) await tx.quizQuestion.update({ where: { id: questionId }, data: { archivedAt: new Date() } });
     else await tx.quizQuestion.delete({ where: { id: questionId } });
     if (q.quizId && courseId) await quizRevision(tx, actor, q.quizId, courseId, "Question removed", before);
@@ -204,6 +205,8 @@ export async function duplicateQuestion(actor: Actor, questionId: string, target
     const created = await tx.quizQuestion.create({
       data: {
         ...rest,
+        options: strings(rest.options),
+        targets: strings(rest.targets),
         ...owner,
         answerKey: (answerKey ?? undefined) as never,
         remediationLessonId: "bankId" in owner ? null : rest.remediationLessonId,

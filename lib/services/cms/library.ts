@@ -7,6 +7,7 @@ import { AuthorisationError, ServiceError } from "@/lib/errors";
 import { refusalFor } from "@/lib/cms/screen";
 import { notifyPermission, notifyUsers } from "@/lib/services/people/staff-lookup";
 import { slugify } from "./core";
+import { strings } from "@/lib/json-list";
 
 /**
  * The public library: glossary terms, process walkthroughs, case studies, leadership toolkit
@@ -132,7 +133,7 @@ export async function reviewEntry(actor: Actor, id: string, approve: boolean, no
   if (!approve && !note?.trim()) throw new ServiceError("Say what needs to change.");
   const now = new Date();
   if (approve) {
-    const published: PublishedEntry = { kind: e.kind, title: e.title, summary: e.summary, body: e.body, tags: e.tags, sources: e.sources, levelId: e.levelId };
+    const published: PublishedEntry = { kind: e.kind, title: e.title, summary: e.summary, body: e.body, tags: strings(e.tags), sources: strings(e.sources), levelId: e.levelId };
     const next = new Date(now);
     next.setMonth(next.getMonth() + REVIEW_MONTHS);
     // Conditional on still being in review, so two reviewers cannot both decide it.

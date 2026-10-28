@@ -17,24 +17,26 @@ env:
   BETTER_AUTH_SECRET: ci-only-secret-ci-only-secret-ci-only-secret-0123
   BETTER_AUTH_URL: http://localhost:3000
   NEXT_PUBLIC_APP_URL: http://localhost:3000
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rcms_dev
-  TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rcms_test
+  # MariaDB, as on Hostinger's web hosting.
+  DATABASE_URL: mysql://root:root@127.0.0.1:3306/rcms_dev
+  TEST_DATABASE_URL: mysql://root:root@127.0.0.1:3306/rcms_test
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
   checks:
     name: Lint, typecheck, unit and integration tests, build
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 cannot install browsers on.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     services:
-      postgres:
-        image: postgres:16
+      mariadb:
+        image: mariadb:10.11
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: rcms_test
-        ports: ["5432:5432"]
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: rcms_test
+        ports: ["3306:3306"]
         options: >-
-          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "healthcheck.sh --connect --innodb_initialized" --health-interval 5s --health-timeout 5s --health-retries 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -51,24 +53,24 @@ jobs:
       # Some pages are prerendered from the database at build time.
       - name: Prepare the build database
         run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE rcms_dev"
-          npx prisma migrate deploy
+          mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE rcms_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+          npm run db:deploy
       - run: npm run build
 
   e2e:
     name: End-to-end and accessibility
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: checks
     timeout-minutes: 40
     services:
-      postgres:
-        image: postgres:16
+      mariadb:
+        image: mariadb:10.11
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: rcms_dev
-        ports: ["5432:5432"]
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: rcms_dev
+        ports: ["3306:3306"]
         options: >-
-          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "healthcheck.sh --connect --innodb_initialized" --health-interval 5s --health-timeout 5s --health-retries 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -76,7 +78,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx prisma migrate deploy
+      - run: npm run db:deploy
       - run: npm run db:seed
       - run: npm run dev:accounts
       - run: npx playwright install --with-deps chromium

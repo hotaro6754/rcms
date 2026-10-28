@@ -16,12 +16,12 @@ rehearsal on a staging address before launch.
 | Item | Recommended | Approximate cost (check current prices) |
 |---|---|---|
 | Server | DigitalOcean Droplet, Bangalore (BLR1), Ubuntu 24.04, 2 GB RAM / 1 vCPU, with weekly backups | about $12 + $2.40 a month |
-| Database | DigitalOcean Managed PostgreSQL 16, Bangalore, smallest plan | about $15 a month |
+| Database | DigitalOcean Managed MySQL 8, Bangalore, smallest plan | about $15 a month |
 | Off-server backup copies | DigitalOcean Spaces (optional but recommended) | about $5 a month |
 | Domain | Any registrar; see below | about ₹900–1,000 a year for `.in`, about $8–12 a year for `.com` |
 | Email sending | Resend (free tier to start) or Amazon SES (Mumbai) | free to start |
 
-That is roughly **$34 a month**. The cheaper option is to run PostgreSQL on the same server
+That is roughly **$34 a month**. The cheaper option is to run MariaDB on the same server
 (`COMPOSE_PROFILES=localdb`), at roughly **$21 a month** with daily server backups. It is fine
 to start that way. A managed database gives you automatic daily backups, point-in-time recovery
 and upgrades, and keeps the data safe if the server is lost.
@@ -48,8 +48,9 @@ account.
    (not a password). Tick **Backups**.
 3. **Networking → Firewalls:** create a firewall allowing inbound TCP 22 (SSH), 80 and 443 only,
    and apply it to the Droplet.
-4. Database, managed option: **Create → Databases → PostgreSQL 16**, Bangalore. Under **Trusted
-   sources**, add the Droplet. Copy the connection string (it ends with `?sslmode=require`).
+4. Database, managed option: **Create → Databases → MySQL 8**, Bangalore. Under **Trusted
+   sources**, add the Droplet. Copy its connection details into a `mysql://` address and add
+   `?ssl=true`.
 
 ## 3. Point the domain at the server
 
@@ -97,8 +98,8 @@ Fill in at least:
   The last two are the same `https://` address.
 - **The database:** `DATABASE_URL`, one of:
   - the managed database's connection string;
-  - for the database on this server: `COMPOSE_PROFILES=localdb`, a long `POSTGRES_PASSWORD`, and
-    `DATABASE_URL=postgresql://rcmexcel:<that password>@127.0.0.1:5432/rcmexcel`.
+  - for the database on this server: `COMPOSE_PROFILES=localdb`, a long `MARIADB_PASSWORD`, and
+    `DATABASE_URL=mysql://rcmexcel:<that password>@127.0.0.1:3306/rcmexcel`.
 - **The secrets:** `BETTER_AUTH_SECRET` and `CRON_SECRET`, each generated with `openssl rand -base64 32`.
 - **Email:** `RESEND_API_KEY` and `EMAIL_FROM`. Without email, sign-up verification never
   arrives, so nobody can finish creating an account.
@@ -165,14 +166,14 @@ A free Zoho plan has 5 mailboxes, so give mailboxes to people and use aliases fo
   15 2 * * *  /opt/rcmexcel/deploy/backup.sh >> /var/log/rcmexcel-backup.log 2>&1
   ```
 
-  It writes `deploy/backups/db-<time>.dump` and `files-<time>.tar.gz`, and keeps 14 days
+  It writes `deploy/backups/db-<time>.sql.gz` and `files-<time>.tar.gz`, and keeps 14 days
   (`BACKUP_KEEP_DAYS`).
 - **Off the server:** a backup on the server is lost with the server. Copy `deploy/backups/` to
   Spaces (or any S3-compatible storage) nightly, e.g. with `rclone sync`.
 - **Restore drill** (do it once before launch, then quarterly): create an empty database and
-  run `pg_restore --no-owner -d <its URL> db-<time>.dump`. Point a test copy of the app at it and
-  sign in. This exact procedure was tested on the test machine, and the restored database matched
-  the original.
+  run `gunzip -c db-<time>.sql.gz | mariadb -u <user> -p <empty database>`. Point a test copy of
+  the app at it and sign in. This procedure was tested on the test machine with MariaDB 10.11: the
+  restored database matched the original, audit-log triggers included.
 
 ## 8. Updating the site
 
@@ -205,3 +206,36 @@ Useful commands:
 
 The rest of running the platform (daily queues, staff changes, secret rotation, incidents) is in
 `docs/OPERATIONS.md`.
+
+## 10. Alternative: Hostinger web hosting (Node.js)
+
+The steps above are for a server you control. RCMExcel also runs on Hostinger's Node.js web
+hosting (Business or higher, including the plan rcmexcel.com is on), which builds the site from
+GitHub on every push to `main`. What is different there:
+
+- **Database.** Use the website's own MariaDB database from Hostinger (hPanel → Databases, or the
+  "set up website database" step, which also writes `DATABASE_URL`). The app connects to it at
+  `127.0.0.1:3306`; that address only works from Hostinger's servers.
+- **Build command.** Set the build script to `build:deploy`. It applies database migrations,
+  creates the audit-log triggers (or warns if the host refuses them), loads the starter content
+  into an empty database only, then builds. Some pages are prerendered from the database, so
+  the build needs it.
+- **Uploads.** Every build replaces the website folder, so uploads must live outside it: set
+  `STORAGE_DIR` to a folder in the account's home directory, for example
+  `/home/<hosting username>/rcmexcel-storage`, never inside `public_html`. They count against
+  the plan's disk space.
+- **Settings.** In the website's Node.js environment variables: `DATABASE_URL`,
+  `BETTER_AUTH_SECRET`, `CRON_SECRET`, `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL`
+  (`https://rcmexcel.com`), `STORAGE_DIR`, `SITE_INDEXING=off`, `EMAIL_FROM`, email sending
+  (`SMTP_HOST=smtp.hostinger.com`, `SMTP_PORT=465`, `SMTP_USER` and `SMTP_PASSWORD` of a mailbox
+  such as `no-reply@rcmexcel.com`, or `RESEND_API_KEY`), and, until the first administrator
+  exists, `OWNER_EMAILS=admin@rcmexcel.com`.
+  `NEXT_PUBLIC_APP_URL` is read at build time, so rebuild after changing it.
+- **First administrator.** With `OWNER_EMAILS` set, sign up on the live site as
+  `admin@rcmexcel.com` and click the verification link. That account becomes the owner (only
+  while no owner or Super Administrator exists). Then remove `OWNER_EMAILS`. Sign-up needs email
+  sending, so set up the mailbox first. `EMAIL_FROM` must be the same address as `SMTP_USER`.
+- **Scheduled work.** Add a cron job every 15 minutes that requests
+  `https://rcmexcel.com/api/cron` with the header `Authorization: Bearer <CRON_SECRET>`.
+- **Backups.** Hostinger backs up the account; download a database export from hPanel before
+  any risky change too.

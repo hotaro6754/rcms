@@ -8,6 +8,7 @@ import { BTN, Field, FIELD, Panel, Pill, StatusPill, TEXTAREA, when } from "@/co
 import { Markdown } from "@/lib/cms/markdown";
 import { entryWorkflowAction, updateEntryAction } from "@/lib/actions/library";
 import { LIBRARY_KINDS, LIBRARY_LABEL, LIBRARY_PATH, type PublishedEntry } from "@/lib/services/cms/library";
+import { strings } from "@/lib/json-list";
 
 export const metadata = { title: "Library entry" };
 
@@ -87,10 +88,10 @@ export default async function LibraryEntryAdmin({ params }: { params: Promise<{ 
                 <textarea id="b" name="body" rows={14} defaultValue={e.body} className={`${TEXTAREA} font-mono text-[13px]`} />
               </Field>
               <Field label="Tags" htmlFor="tg" hint="Comma-separated.">
-                <input id="tg" name="tags" defaultValue={e.tags.join(", ")} className={FIELD} />
+                <input id="tg" name="tags" defaultValue={strings(e.tags).join(", ")} className={FIELD} />
               </Field>
               <Field label="Sources" htmlFor="src" hint="One per line: regulation, manual section or standard, with its date.">
-                <textarea id="src" name="sources" rows={3} defaultValue={e.sources.join("\n")} className={TEXTAREA} />
+                <textarea id="src" name="sources" rows={3} defaultValue={strings(e.sources).join("\n")} className={TEXTAREA} />
               </Field>
             </fieldset>
             {editable && <button className={`${BTN} w-fit`}>Save draft</button>}

@@ -20,7 +20,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const where: Prisma.OrderWhereInput = {
     ...(STATES.includes(sp.state as OrderState) ? { state: sp.state as OrderState } : {}),
     ...(RECON.includes(sp.reconciliation as ReconciliationStatus) ? { payments: { some: { reconciliation: sp.reconciliation as ReconciliationStatus } } } : {}),
-    ...(sp.q ? { OR: [{ number: { contains: sp.q, mode: "insensitive" } }, { user: { email: { contains: sp.q, mode: "insensitive" } } }, { gatewayRef: sp.q }] } : {}),
+    ...(sp.q ? { OR: [{ number: { contains: sp.q } }, { user: { email: { contains: sp.q } } }, { gatewayRef: sp.q }] } : {}),
   };
   const orders = await prisma.order.findMany({
     where,

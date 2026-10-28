@@ -1,7 +1,7 @@
 # RCMExcel
 
 Public site, learner portal, Admin Control Center and vendor portal on one data layer.
-Next.js 15 · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Prisma 7 · PostgreSQL · Better Auth · GSAP · Motion.
+Next.js 15 · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Prisma 7 · MySQL / MariaDB · Better Auth · GSAP · Motion.
 
 Documentation: `docs/IMPLEMENTATION_AUDIT.md` (starting point) · `docs/FEATURE_MATRIX.md` (what
 exists) · `docs/ARCHITECTURE.md` · `docs/SECURITY_REVIEW.md` · `docs/TEST_PLAN.md` ·
@@ -13,29 +13,27 @@ Training data only: the platform must never hold real patient, provider, payer o
 
 ## Running it
 
-**Quickest, on your own computer** (needs only Node.js 22; no database install, no setup):
+**Quickest, on your own computer.** You need Node.js 22 and MariaDB (free from
+https://mariadb.org/download/; on Windows use the .msi installer, remember the root password it
+asks for, and keep port 3306). Then:
 
 ```bash
 npm install
 npm run local
 ```
 
-It creates `.env`, starts a local database, adds the starter content and the synthetic test
-accounts (password `Rcms-dev-password-1`; sign in as `admin@rcmexcel.com`), and opens the site at
-http://localhost:3000. Ctrl-C stops everything; your data is kept in `.pgdata/`.
+The first run asks for the MariaDB root password and writes `.env`. It then creates the
+`rcmexcel_dev` database, the tables, the starter content and the synthetic test accounts
+(password `Rcms-dev-password-1`; sign in as `admin@rcmexcel.com`), and opens the site at
+http://localhost:3000. Ctrl-C stops the site; the data stays in MariaDB.
 
 The same steps by hand, if you want to run each part yourself:
 
 ```bash
 npm install
-cp .env.example .env      # DATABASE_URL and BETTER_AUTH_SECRET at minimum
+cp .env.example .env      # DATABASE_URL (mysql://...) and BETTER_AUTH_SECRET at minimum
 
-# No database of your own yet:
-npm run db:dev            # PGlite serves real Postgres on 127.0.0.1:55432, leave running
-# then set DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:55432/postgres"
-# and DATABASE_POOL_MAX="1"
-
-npm run db:deploy         # applies prisma/migrations
+npm run db:deploy         # applies prisma/migrations, then the audit-log triggers
 npm run db:seed           # levels, courses, sample assessment, plans, reference data (idempotent)
 npm run dev:accounts      # LOCAL ONLY: one synthetic account per role, see below
 npm run dev
@@ -56,9 +54,8 @@ no web route that creates an administrator.
 |---|---|
 | `npm run dev` / `build` / `start` | Next.js |
 | `npm run lint` / `typecheck` | ESLint / `tsc --noEmit` |
-| `npm test` | Unit and integration tests (needs a test PostgreSQL, see `docs/TEST_PLAN.md`) |
+| `npm test` | Unit and integration tests (needs a test MariaDB/MySQL database, see `docs/TEST_PLAN.md`) |
 | `npm run test:e2e` | Playwright journeys against a running, seeded dev server |
-| `npm run db:dev` / `db:dev:fresh` | Local Postgres via PGlite |
 | `npm run db:migrate` / `db:deploy` | Apply migrations (development / production) |
 | `npm run db:seed` | Idempotent seed |
 | `npm run db:backfill` | Create first releases for courses that have none |

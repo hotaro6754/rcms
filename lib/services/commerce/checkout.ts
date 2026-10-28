@@ -8,6 +8,7 @@ import * as rzp from "@/lib/payments/razorpay";
 import { notifyUsers } from "@/lib/services/people/staff-lookup";
 import { coursePrerequisiteMissing } from "@/lib/services/learning/catalog";
 import { BRAND } from "@/lib/brand";
+import { strings } from "@/lib/json-list";
 
 /**
  * Orders, checkout and fulfilment.
@@ -206,7 +207,7 @@ async function grant(tx: Tx, order: Order & { product: Product }) {
     });
   }
   if (p.kind === "TRACK") {
-    const courses = await tx.program.findMany({ where: p.includes.length ? { slug: { in: p.includes } } : { levelId: p.levelId ?? "__none__", state: "PUBLISHED" }, select: { id: true } });
+    const courses = await tx.program.findMany({ where: strings(p.includes).length ? { slug: { in: strings(p.includes) } } : { levelId: p.levelId ?? "__none__", state: "PUBLISHED" }, select: { id: true } });
     for (const c of courses) {
       await tx.enrolment.upsert({
         where: { userId_programId: { userId: order.userId, programId: c.id } },

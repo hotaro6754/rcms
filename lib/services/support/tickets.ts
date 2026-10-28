@@ -472,7 +472,7 @@ export async function queue(actor: Actor, f: { view?: QueueView; status?: Suppor
         f.category ? { category: f.category } : {},
         f.priority ? { priority: f.priority } : {},
         f.teamId ? { teamId: f.teamId } : {},
-        q ? { OR: [{ reference: { contains: q, mode: "insensitive" } }, { subject: { contains: q, mode: "insensitive" } }, { requester: { email: { contains: q, mode: "insensitive" } } }, { requester: { name: { contains: q, mode: "insensitive" } } }, { tags: { has: q.toLowerCase() } }] } : {},
+        q ? { OR: [{ reference: { contains: q } }, { subject: { contains: q } }, { requester: { email: { contains: q } } }, { requester: { name: { contains: q } } }, { tags: { array_contains: [q.toLowerCase()] } }] } : {},
       ],
     },
     orderBy: [{ priority: "desc" }, { firstResponseDueAt: "asc" }, { createdAt: "asc" }],

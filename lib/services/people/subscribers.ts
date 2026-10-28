@@ -38,7 +38,7 @@ export async function directory(actor: Actor, f: DirectoryFilter) {
     ...LEARNERS_ONLY,
     ...(f.status ? { status: f.status } : {}),
     ...(f.courseId ? { enrolments: { some: { programId: f.courseId } } } : {}),
-    ...(f.q ? { OR: [{ name: { contains: f.q, mode: "insensitive" } }, { email: { contains: f.q, mode: "insensitive" } }, { id: f.q }] } : {}),
+    ...(f.q ? { OR: [{ name: { contains: f.q } }, { email: { contains: f.q } }, { id: f.q }] } : {}),
   };
   const page = Math.max(1, f.page ?? 1);
   const [rows, total] = await Promise.all([
@@ -352,7 +352,7 @@ export async function exportSubscribers(actor: Actor, f: DirectoryFilter) {
     ...LEARNERS_ONLY,
     ...(f.status ? { status: f.status } : {}),
     ...(f.courseId ? { enrolments: { some: { programId: f.courseId } } } : {}),
-    ...(f.q ? { OR: [{ name: { contains: f.q, mode: "insensitive" } }, { email: { contains: f.q, mode: "insensitive" } }] } : {}),
+    ...(f.q ? { OR: [{ name: { contains: f.q } }, { email: { contains: f.q } }] } : {}),
   };
   const count = await prisma.user.count({ where });
   const threshold = Number(await getSetting("export.approvalThreshold"));
