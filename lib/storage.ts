@@ -19,7 +19,9 @@ import { randomUUID } from "node:crypto";
 
 export type StorageArea = "materials" | "media" | "attempts" | "vendor" | "deliverables" | "support" | "cache";
 
-const BASE = resolve(process.cwd(), "storage");
+// STORAGE_DIR puts uploads outside the app folder. Use it on hosts that replace the app folder
+// on every deploy (Hostinger's Node.js hosting does); otherwise uploads would be lost.
+const BASE = resolve(process.env.STORAGE_DIR?.trim() || resolve(process.cwd(), "storage"));
 
 export const MAX_BYTES = 25 * 1024 * 1024;
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;

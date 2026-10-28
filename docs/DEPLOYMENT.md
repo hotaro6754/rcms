@@ -205,3 +205,32 @@ Useful commands:
 
 The rest of running the platform (daily queues, staff changes, secret rotation, incidents) is in
 `docs/OPERATIONS.md`.
+
+## 10. Alternative: Hostinger web hosting (Node.js)
+
+The steps above are for a server you control. RCMExcel can also run on Hostinger's Node.js web
+hosting (Business or higher), which builds the site from GitHub on every push to `main`. What is
+different there:
+
+- **Database.** Hostinger web hosting only offers MySQL; this app needs PostgreSQL. Use a managed
+  PostgreSQL service (for example Neon or Supabase) in the region closest to your learners, and
+  copy its connection string (with `?sslmode=require`) into `DATABASE_URL`.
+- **Build command.** Set the build script to `build:deploy`. It applies database migrations, then
+  builds. The site cannot build without the database, because some pages are prerendered from it.
+- **Uploads.** Every build replaces the website folder, so uploads must live outside it: set
+  `STORAGE_DIR` to a folder in the account's home directory, for example
+  `/home/<hosting username>/rcmexcel-storage`, never inside `public_html`.
+- **Settings.** In the website's Node.js environment variables: `DATABASE_URL`,
+  `BETTER_AUTH_SECRET`, `CRON_SECRET`, `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL`
+  (`https://rcmexcel.com`), `STORAGE_DIR`, `SITE_INDEXING=off`, `EMAIL_FROM`, and
+  `RESEND_API_KEY` once you have one. `NEXT_PUBLIC_APP_URL` is read at build time, so rebuild
+  after changing it.
+- **Scheduled work.** Add a cron job every 15 minutes that requests
+  `https://rcmexcel.com/api/cron` with the header `Authorization: Bearer <CRON_SECRET>`.
+- **One-time steps from your own computer**, in the project folder, with `DATABASE_URL` set to
+  the live database's connection string for that terminal only:
+  1. `npm run db:seed`: starter content (safe to repeat; it never creates logins).
+  2. Sign up on the live site as `admin@rcmexcel.com` and click the verification link.
+  3. `npm run admin:bootstrap -- admin@rcmexcel.com`.
+- **Not tested here.** The Docker route above was built and run end to end; this route was not.
+  Watch the first build's log, and check that a test upload survives a redeploy.
