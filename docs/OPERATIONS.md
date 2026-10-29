@@ -20,7 +20,11 @@ The step-by-step guide for a single server with Docker is `docs/DEPLOYMENT.md`. 
    if a Super Administrator already exists). They must enrol two-step verification before the
    admin area opens (enforced in production).
 6. Grant other staff roles from **Administration → Users and roles**: one administrator
-   requests, another approves. Never share accounts.
+   requests, another approves. Never share accounts. While there is only one administrator
+   nobody can approve, so add the second administrator (and the first reviewers) from the
+   server: the person signs up and verifies their email, then
+   `npm run staff:grant -- them@yourdomain SUPER_ADMIN` (or `ACADEMIC_REVIEWER`,
+   `COMPLIANCE_REVIEWER`, …). Each grant is written to the audit log.
 7. Schedule `GET /api/cron` every 15 minutes with `Authorization: Bearer $CRON_SECRET`.
 8. Check **Administration → Settings and integrations**: every integration should read
    "configured" except the ones you have deliberately left off.

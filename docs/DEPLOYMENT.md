@@ -235,6 +235,13 @@ GitHub on every push to `main`. What is different there:
   `admin@rcmexcel.com` and click the verification link. That account becomes the owner (only
   while no owner or Super Administrator exists). Then remove `OWNER_EMAILS`. Sign-up needs email
   sending, so set up the mailbox first. `EMAIL_FROM` must be the same address as `SMTP_USER`.
+- **More staff.** In-app role changes need a second administrator to approve them, so the
+  second administrator and the first reviewers are granted with `scripts/grant-staff-role.mjs`.
+  The person signs up and verifies their email first. Run it from your own computer against the
+  live database: in hPanel → Databases → Remote MySQL allow your current IP for the database,
+  then, in a checkout of this repository with `npm install` done,
+  `DATABASE_URL="mysql://<db user>:<db password>@<srvNNNN.hstgr.io>:3306/<db name>" npm run staff:grant -- someone@example.com SUPER_ADMIN`
+  (the host is shown on the Remote MySQL page). Remove the Remote MySQL entry afterwards.
 - **Scheduled work.** Add a cron job every 15 minutes that requests
   `https://rcmexcel.com/api/cron` with the header `Authorization: Bearer <CRON_SECRET>`.
 - **Backups.** Hostinger backs up the account; download a database export from hPanel before
