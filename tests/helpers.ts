@@ -15,7 +15,8 @@ export async function resetDb() {
   await prisma.$transaction(
     async (tx) => {
       await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 0");
-      for (const { t } of rows) await tx.$executeRawUnsafe(t === "AuditLog" ? "TRUNCATE TABLE `AuditLog`" : `DELETE FROM \`${t}\``);
+      // Compared without case: on Windows (lower_case_table_names=1) the table is listed as "auditlog".
+      for (const { t } of rows) await tx.$executeRawUnsafe(t.toLowerCase() === "auditlog" ? "TRUNCATE TABLE `AuditLog`" : `DELETE FROM \`${t}\``);
       await tx.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 1");
     },
     { timeout: 60_000 },
