@@ -31,5 +31,11 @@ export function mysqlPoolConfig(url: string, connectionLimit: number): PoolConfi
     ...(ssl ? { ssl: { rejectUnauthorized: true } } : {}),
     // MySQL 8 servers using caching_sha2_password over a plain connection need this; harmless on MariaDB.
     allowPublicKeyRetrieval: u.searchParams.get("allowPublicKeyRetrieval") === "true",
+    // The tables are utf8mb4_unicode_ci. A server whose connection default is another utf8mb4
+    // collation (as on Hostinger; utf8mb4_general_ci reproduces it) mixes the two inside the LIKE patterns
+    // Prisma builds for contains/startsWith/endsWith, and MariaDB refuses with error 1267
+    // ("Illegal mix of collations"). Set it on every new connection, before any statement is
+    // prepared: prepared statements keep the collation they were prepared under.
+    initSql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
   };
 }
