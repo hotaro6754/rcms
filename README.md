@@ -60,6 +60,7 @@ no web route that creates an administrator.
 | `npm run db:seed` | Idempotent seed |
 | `npm run db:backfill` | Create first releases for courses that have none |
 | `npm run admin:bootstrap -- <email>` | First Super Administrator |
+| `npm run staff:grant -- <email> <ROLE>` | Grant a staff role from the server when no second administrator can approve (audited) |
 | `npm run dev:accounts` | Synthetic role accounts, local only |
 | `npm run db:reset` | Drop, re-migrate, re-seed. Destructive |
 | `npm run audit:ownership` | Fails if GSAP and Motion touch the same element |

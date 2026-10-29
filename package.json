@@ -18,6 +18,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset",
     "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
+    "staff:grant": "node scripts/grant-staff-role.mjs",
     "dev:accounts": "tsx scripts/dev-accounts.ts",
     "db:backfill": "tsx scripts/backfill-releases.ts",
     "typecheck": "tsc --noEmit",
