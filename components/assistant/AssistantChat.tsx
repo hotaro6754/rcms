@@ -37,7 +37,9 @@ export function AssistantChat({
   const [pending, start] = useTransition();
   const end = useRef<HTMLDivElement>(null);
 
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [messages.length]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [messages.length]);
 
   // Switch only when the page now shows a different conversation (sidebar link, "New
   // conversation"); the address change after the first answer names the one already here.

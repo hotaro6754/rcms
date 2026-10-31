@@ -3,6 +3,8 @@ import { SiteNav } from "@/components/site/SiteNav";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { PreviewBar } from "@/components/site/PreviewBar";
 import { ThemeStyle } from "@/components/site/ThemeStyle";
+import { PageStyles } from "@/components/site/PageStyles";
+import { SiteScope } from "@/components/site/SiteScope";
 import { Preloader } from "@/components/site/Preloader";
 import { PageReveals } from "@/components/site/PageReveals";
 import { Chapter } from "@/components/home/Chapter";
@@ -74,66 +76,69 @@ export default async function Home() {
     <>
       <Preloader />
       <PageReveals />
-      <SiteNav />
+      <SiteScope>
+        <SiteNav />
 
-      <main id="top" className="editorial">
-        <HeroSequence content={c.hero} />
+        <main id="top" className="editorial">
+          <HeroSequence content={c.hero} />
 
-        {c.problem.show && <OpeningStatement content={c.problem} />}
+          {c.problem.show && <OpeningStatement content={c.problem} />}
 
-        {c.system.show && (
-          <Chapter id="system" folio="02" title={c.system.runningHead}>
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-end">
-              <h2 data-reveal className="text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
-                {c.system.title}
-              </h2>
-              <p data-reveal className="max-w-[40ch] text-[15px] leading-relaxed text-muted-foreground">
-                {c.system.lead}
-              </p>
-            </div>
-            <div className="mt-14">
-              <SystemFlow content={c.system} />
-            </div>
-          </Chapter>
-        )}
-
-        {c.path.show && <LearningPath levels={levels} content={c.path} />}
-
-        {c.lab.show && <OperationsLab content={c.lab} />}
-
-        {/* The month's review, as the first page of the board pack. */}
-        {c.review.show && (
-          <Chapter id="governance" folio="05" title={c.review.runningHead}>
-            <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
-              <div>
-                <h2 data-reveal className="max-w-[18ch] text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
-                  {c.review.title}
+          {c.system.show && (
+            <Chapter id="system" folio="02" title={c.system.runningHead}>
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-end">
+                <h2 data-reveal className="text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
+                  {c.system.title}
                 </h2>
-                <p data-reveal className="mt-6 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">
-                  {c.review.lead}
+                <p data-reveal className="max-w-[40ch] text-[15px] leading-relaxed text-muted-foreground">
+                  {c.system.lead}
                 </p>
               </div>
-              <LottieView name="reporting" className="hidden w-full max-w-[17rem] lg:block" />
-            </div>
-            <div className="mt-14">
-              <ReviewPack content={c.review} />
-            </div>
-            <SiteLink
-              link={c.review.cta}
-              className="mt-10 inline-flex min-h-11 items-center gap-2 text-[14px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
-            />
-          </Chapter>
-        )}
+              <div className="mt-14">
+                <SystemFlow content={c.system} />
+              </div>
+            </Chapter>
+          )}
 
-        {c.people.show && <Leadership content={c.people} />}
-        {c.mentoring.show && <Mentoring prices={mentoringPrices} content={c.mentoring} />}
-        {c.founder.show && <Founder content={c.founder} />}
-      </main>
+          {c.path.show && <LearningPath levels={levels} content={c.path} />}
 
-      <SiteFooter />
+          {c.lab.show && <OperationsLab content={c.lab} />}
+
+          {/* The month's review, as the first page of the board pack. */}
+          {c.review.show && (
+            <Chapter id="governance" folio="05" title={c.review.runningHead}>
+              <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
+                <div>
+                  <h2 data-reveal className="max-w-[18ch] text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
+                    {c.review.title}
+                  </h2>
+                  <p data-reveal className="mt-6 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">
+                    {c.review.lead}
+                  </p>
+                </div>
+                <LottieView name="reporting" className="hidden w-full max-w-[17rem] lg:block" />
+              </div>
+              <div className="mt-14">
+                <ReviewPack content={c.review} />
+              </div>
+              <SiteLink
+                link={c.review.cta}
+                className="mt-10 inline-flex min-h-11 items-center gap-2 text-[14px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
+              />
+            </Chapter>
+          )}
+
+          {c.people.show && <Leadership content={c.people} />}
+          {c.mentoring.show && <Mentoring prices={mentoringPrices} content={c.mentoring} />}
+          {c.founder.show && <Founder content={c.founder} />}
+        </main>
+
+        <SiteFooter />
+      </SiteScope>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({ "@graph": [organisationLd(), { "@type": "WebSite", name: BRAND.name, url: siteUrl().origin }] }) }} />
       <PreviewBar />
       <ThemeStyle />
+      <PageStyles />
     </>
   );
 }

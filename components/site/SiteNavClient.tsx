@@ -57,7 +57,9 @@ export function SiteNavClient({ content: c }: { content: SiteContent["nav"] }) {
     }
   });
 
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   // Which environment sits under the nav: a thin band at the top of the viewport.
   useEffect(() => {

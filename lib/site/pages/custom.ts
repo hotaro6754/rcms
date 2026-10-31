@@ -1,4 +1,5 @@
 import { area, definePage, design, text } from "../fields";
+import { pageStyleField } from "../style";
 
 /** The fields every custom page has: a header, then a layout made in the visual designer. */
 export const customPage = (key: string, slug: string, title: string) =>
@@ -13,6 +14,7 @@ export const customPage = (key: string, slug: string, title: string) =>
       title: text("Title", title, { max: 160 }),
       lead: area("Introduction", "", { max: 600, optional: true }),
       body: design("Page content", { help: "Images on public pages must be marked Public in the media library." }),
+      pageStyle: pageStyleField,
     },
   });
 

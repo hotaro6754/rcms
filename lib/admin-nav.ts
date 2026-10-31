@@ -3,6 +3,9 @@ import type { Permission } from "./permissions";
 /**
  * The Admin Control Center's navigation (blueprint §2), with the permissions that make each
  * entry visible. Visibility is convenience only: every page and action checks again.
+ *
+ * Entries are grouped into sidebar sections. A group with two or more visible links opens
+ * into its pages; a group with one link (or none) is a plain link.
  */
 
 export interface AdminLink {
@@ -12,41 +15,71 @@ export interface AdminLink {
 }
 
 export interface AdminGroup extends AdminLink {
+  /** Sidebar section heading this group sits under. */
+  section: string;
+  /** Icon name, mapped to an icon in the sidebar (components/admin/AdminSidebar.tsx). */
+  icon: string;
   links: AdminLink[];
 }
 
 export const ADMIN_NAV: AdminGroup[] = [
-  { href: "/admin", label: "Dashboard", any: [], links: [] },
-  { href: "/admin/copilot", label: "Copilot", any: [], links: [] },
-  { href: "/admin/site", label: "Website", any: ["site.edit"], links: [] },
+  { section: "Overview", icon: "dashboard", href: "/admin", label: "Dashboard", any: [], links: [] },
+  { section: "Overview", icon: "copilot", href: "/admin/copilot", label: "Copilot", any: [], links: [] },
   {
-    href: "/admin/content",
-    label: "Learning",
-    any: ["content.view", "assessment.grade", "labs.grade", "certificate.issue", "assessment.manage"],
+    section: "Website",
+    icon: "website",
+    href: "/admin/site",
+    label: "Website",
+    any: ["site.edit"],
     links: [
-      { href: "/admin/content", label: "Levels and courses", any: ["content.view"] },
+      { href: "/admin/site", label: "Pages", any: ["site.edit"] },
+      { href: "/admin/site/site", label: "Navigation and footer", any: ["site.edit"] },
+      { href: "/admin/site/theme", label: "Colours, fonts and sizes", any: ["site.edit"] },
+    ],
+  },
+  {
+    section: "Learning",
+    icon: "courses",
+    href: "/admin/content",
+    label: "Courses and content",
+    any: ["content.view", "media.manage"],
+    links: [
+      { href: "/admin/content", label: "Levels, courses and modules", any: ["content.view"] },
       { href: "/admin/content/review", label: "Review queue", any: ["content.view"] },
       { href: "/admin/content/library", label: "Library", any: ["content.view"] },
       { href: "/admin/cases", label: "Case simulations", any: ["content.view"] },
-      { href: "/admin/competencies", label: "Competencies", any: ["content.view", "assessment.manage"] },
-      { href: "/admin/content/banks", label: "Question banks", any: ["assessment.manage", "content.view"] },
       { href: "/admin/content/media", label: "Media library", any: ["media.manage", "content.view"] },
+    ],
+  },
+  {
+    section: "Learning",
+    icon: "assessment",
+    href: "/admin/content/banks",
+    label: "Assessment",
+    any: ["assessment.manage", "assessment.grade", "labs.grade", "certificate.issue", "certificate.revoke", "content.view"],
+    links: [
+      { href: "/admin/content/banks", label: "Question banks", any: ["assessment.manage", "content.view"] },
+      { href: "/admin/competencies", label: "Competencies", any: ["content.view", "assessment.manage"] },
       { href: "/admin/grading", label: "Grading", any: ["assessment.grade", "labs.grade"] },
       { href: "/admin/certificates", label: "Certificates", any: ["certificate.issue", "certificate.revoke"] },
     ],
   },
   {
+    section: "People",
+    icon: "subscribers",
     href: "/admin/subscribers",
     label: "Subscribers",
-    any: ["subscriber.view", "org.manage", "lead.manage"],
+    any: ["subscriber.view", "org.manage", "lead.manage", "subscriber.privacy"],
     links: [
       { href: "/admin/subscribers", label: "Directory", any: ["subscriber.view"] },
       { href: "/admin/organisations", label: "Corporate accounts", any: ["org.manage"] },
-      { href: "/admin/privacy", label: "Privacy requests", any: ["subscriber.privacy"] },
       { href: "/admin/leads", label: "Leads", any: ["lead.manage"] },
+      { href: "/admin/privacy", label: "Privacy requests", any: ["subscriber.privacy"] },
     ],
   },
   {
+    section: "People",
+    icon: "support",
     href: "/admin/support",
     label: "Support",
     any: ["support.view_assigned", "support.view_all"],
@@ -57,12 +90,8 @@ export const ADMIN_NAV: AdminGroup[] = [
     ],
   },
   {
-    href: "/admin/vendors",
-    label: "Vendors",
-    any: ["vendor.view"],
-    links: [{ href: "/admin/vendors", label: "Directory", any: ["vendor.view"] }],
-  },
-  {
+    section: "Business",
+    icon: "finance",
     href: "/admin/finance",
     label: "Finance",
     any: ["finance.view"],
@@ -74,13 +103,11 @@ export const ADMIN_NAV: AdminGroup[] = [
       { href: "/admin/finance/settlements", label: "Vendor settlements", any: ["finance.view", "settlement.approve"] },
     ],
   },
+  { section: "Business", icon: "vendors", href: "/admin/vendors", label: "Vendors", any: ["vendor.view"], links: [] },
+  { section: "Business", icon: "reports", href: "/admin/reports", label: "Reports", any: ["reports.view"], links: [] },
   {
-    href: "/admin/reports",
-    label: "Reports",
-    any: ["reports.view"],
-    links: [],
-  },
-  {
+    section: "System",
+    icon: "admin",
     href: "/admin/users",
     label: "Administration",
     any: ["users.view", "approvals.view", "audit.view", "settings.view", "roles.request"],
@@ -95,7 +122,20 @@ export const ADMIN_NAV: AdminGroup[] = [
 
 export function visibleNav(perms: ReadonlySet<Permission>) {
   const ok = (l: AdminLink) => l.any.length === 0 || l.any.some((p) => perms.has(p));
-  return ADMIN_NAV.filter(ok).map((g) => ({ ...g, links: g.links.filter(ok) }));
+  return ADMIN_NAV.filter(ok)
+    .map((g) => ({ ...g, links: g.links.filter(ok) }))
+    .map((g) => (g.links.length === 1 ? { ...g, href: g.links[0].href } : g));
+}
+
+/** The visible groups, in order, under their section headings. */
+export function navSections(perms: ReadonlySet<Permission>) {
+  const sections: { label: string; groups: ReturnType<typeof visibleNav> }[] = [];
+  for (const g of visibleNav(perms)) {
+    const s = sections.find((x) => x.label === g.section);
+    if (s) s.groups.push(g);
+    else sections.push({ label: g.section, groups: [g] });
+  }
+  return sections;
 }
 
 export function groupFor(path: string) {

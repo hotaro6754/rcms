@@ -83,6 +83,7 @@ export async function deleteLevelAction(fd: FormData) {
   return attempt(async () => {
     await structure.deleteLevel(await requireActor(), str(fd, "id"));
     refresh();
+    return { href: "/admin/content" };
   });
 }
 
@@ -240,7 +241,10 @@ export async function duplicateModuleAction(fd: FormData) {
 export async function deleteModuleAction(fd: FormData) {
   return attempt(async () => {
     await structure.deleteModule(await requireActor(), str(fd, "id"));
-    refresh(opt(fd, "courseId"));
+    const courseId = opt(fd, "courseId");
+    refresh(courseId);
+    // The page was showing what was just deleted: go back to the course.
+    return courseId ? { href: `/admin/content/courses/${courseId}` } : undefined;
   });
 }
 
@@ -295,7 +299,10 @@ export async function duplicateLessonAction(fd: FormData) {
 export async function deleteLessonAction(fd: FormData) {
   return attempt(async () => {
     await structure.deleteLesson(await requireActor(), str(fd, "id"));
-    refresh(opt(fd, "courseId"));
+    const courseId = opt(fd, "courseId");
+    refresh(courseId);
+    // The page was showing what was just deleted: go back to the course.
+    return courseId ? { href: `/admin/content/courses/${courseId}` } : undefined;
   });
 }
 
