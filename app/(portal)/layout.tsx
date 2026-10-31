@@ -26,6 +26,10 @@ export default async function PortalLayout({ children }: { children: React.React
   // Vendor-only contacts keep their account and security settings but have no learner area.
   const path = (await headers()).get("x-pathname") ?? "";
   if (actor.role === "VENDOR" && !isStaff(actor) && !path.startsWith("/account")) redirect("/vendor");
+  // A Super Administrator works in the admin, not as a learner: the learner pages send them
+  // there. Account and security settings stay open (multi-factor setup lives there).
+  const superAdmin = actor.staffRoles.includes("SUPER_ADMIN");
+  if (superAdmin && !path.startsWith("/account")) redirect("/admin");
 
   const switcher = [
     ...(isStaff(actor) ? [{ href: "/admin", label: "Admin" }] : []),
@@ -35,7 +39,13 @@ export default async function PortalLayout({ children }: { children: React.React
   const role = actor.staffRoles.map((r) => ROLE_LABEL[r]).join(", ") || (actor.role === "STUDENT" ? "Learner" : actor.role);
 
   return (
-    <PlatformShell area="Academy" home="/academy" nav={NAV} switcher={switcher} user={{ name: actor.name, role }}>
+    <PlatformShell
+      area={superAdmin ? "Account" : "Academy"}
+      home={superAdmin ? "/admin" : "/academy"}
+      nav={superAdmin ? NAV.filter((n) => n.href === "/account") : NAV}
+      switcher={switcher}
+      user={{ name: actor.name, role }}
+    >
       {children}
     </PlatformShell>
   );

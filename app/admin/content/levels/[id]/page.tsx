@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
@@ -19,7 +19,8 @@ export default async function LevelPage({ params }: { params: Promise<{ id: stri
     where: { id },
     include: { courses: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, status: true } }, _count: { select: { badges: true } } },
   });
-  if (!level) notFound();
+  // Deleted (just now, or by someone else): back to the list rather than a dead page.
+  if (!level) redirect("/admin/content");
   const revisions = await prisma.contentRevision.findMany({ where: { entityType: "Level", entityId: id }, orderBy: { version: "desc" }, take: 20 });
   const canEdit = can(actor, "content.structure") && level.status !== "ARCHIVED";
 

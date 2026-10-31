@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requirePagePermission, can } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
@@ -74,7 +74,8 @@ export default async function CourseWorkspace({ params, searchParams }: { params
       where: { id: itemId, programId: id },
       include: { lessons: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, state: true, _count: { select: { blocks: true, resources: true, quizzes: true } } } } },
     });
-    if (!mod) notFound();
+    // Deleted, or moved to another course (by this person or someone else): show the course.
+    if (!mod) redirect(`/admin/content/courses/${id}`);
     const courses = await prisma.program.findMany({ where: { id: { not: id }, status: { notIn: ["ARCHIVED", "ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED"] } }, select: { id: true, name: true }, orderBy: { name: "asc" } });
     editor = (
       <ModulePanel
@@ -102,7 +103,7 @@ export default async function CourseWorkspace({ params, searchParams }: { params
         quizzes: { where: { archivedAt: null }, take: 1, include: { questions: { where: { archivedAt: null }, orderBy: { sortOrder: "asc" } } } },
       },
     });
-    if (!lesson) notFound();
+    if (!lesson) redirect(`/admin/content/courses/${id}`);
     const [allModules, images, banks, audio, documents] = await Promise.all([
       prisma.module.findMany({
         where: { state: { not: "ARCHIVED" }, program: { status: { notIn: ["ARCHIVED", "ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED"] } } },

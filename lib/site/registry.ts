@@ -20,11 +20,13 @@ import { legalPrivacyPage } from "./pages/legal-privacy";
 import { legalRefundPage } from "./pages/legal-refund";
 import { legalDisclaimerPage } from "./pages/legal-disclaimer";
 import { legalContentGovernancePage } from "./pages/legal-content-governance";
+import { withPageStyle } from "./style";
 
 /**
  * Every built-in page whose copy can be edited from /admin/site. Adding a page here (with its
  * definition in lib/site/pages) is what makes it editable; the page reads its copy through
- * getPageContent in lib/site/content.ts.
+ * getPageContent in lib/site/content.ts. Every page but the theme and navigation also gets a
+ * "Page style" section (lib/site/style.ts).
  */
 export const BUILT_IN_PAGES: PageDef[] = [
   sitePage,
@@ -48,7 +50,7 @@ export const BUILT_IN_PAGES: PageDef[] = [
   legalRefundPage,
   legalDisclaimerPage,
   legalContentGovernancePage,
-];
+].map(withPageStyle);
 
 export function builtInPage(key: string): PageDef | undefined {
   return BUILT_IN_PAGES.find((p) => p.key === key);

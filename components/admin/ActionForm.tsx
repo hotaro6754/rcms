@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,10 @@ export type FormResult = { ok: true; data?: unknown; message?: string } | { ok: 
  * for destructive actions, and a refresh on success so server components re-read.
  *
  * It works without JavaScript too (the form still posts); the enhancements are on top.
+ *
+ * With JavaScript the submit is sent by hand rather than through the form's action, because
+ * React clears a form after every action: a refused save would wipe what was typed. Here the
+ * fields are cleared only after a successful submit, and kept when the server says no.
  */
 export function ActionForm({
   action,
@@ -21,7 +25,7 @@ export function ActionForm({
   className,
   confirm,
   success,
-  resetOnSuccess = false,
+  resetOnSuccess = true,
   onSuccess,
   redirectTo,
 }: {
@@ -32,6 +36,7 @@ export function ActionForm({
   confirm?: string;
   /** Shown after a successful submit. */
   success?: string;
+  /** Clear the fields after a successful submit (the default). Fields are never cleared on an error. */
   resetOnSuccess?: boolean;
   onSuccess?: (result: FormResult) => void;
   redirectTo?: string;
@@ -61,6 +66,9 @@ export function ActionForm({
           return;
         }
         carrySubmitter(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        startTransition(() => formAction(fd));
       }}
       className={cn("relative", className)}
       aria-busy={pending}

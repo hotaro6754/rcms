@@ -43,7 +43,9 @@ export function SiteEditor(props: {
 
   // A fresh server render (after publish, restore or another save) replaces the local copy.
   const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
   useEffect(() => {
     setValue(props.initial);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { requirePagePermission } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { ServiceError } from "@/lib/errors";
@@ -14,7 +14,8 @@ export default async function EditSitePage({ params }: { params: Promise<{ key: 
   const actor = await requirePagePermission("site.edit");
   const { key } = await params;
   const page = await pageForEditor(actor, key).catch((e) => {
-    if (e instanceof ServiceError) notFound();
+    // Deleted (a custom page, just now or by someone else) or unknown: back to the list.
+    if (e instanceof ServiceError) redirect("/admin/site");
     throw e;
   });
   const media = await prisma.mediaAsset.findMany({ where: { kind: "IMAGE", isPublic: true, archivedAt: null }, orderBy: { createdAt: "desc" }, take: 200, select: { id: true, title: true, altText: true } });

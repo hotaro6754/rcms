@@ -5,10 +5,11 @@ import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { assertCan, type Actor } from "@/lib/actor";
 import { ServiceError } from "@/lib/errors";
-import { resolvePage, validatePage, type Fields, type PageDef } from "@/lib/site/fields";
+import { defaultOf, resolvePage, validatePage, type Fields, type PageDef } from "@/lib/site/fields";
 import { builtInPage, BUILT_IN_PAGES, SLUG_PATTERN } from "@/lib/site/registry";
 import { customPage } from "@/lib/site/pages/custom";
 import { PAGE_CHECKS } from "@/lib/site/checks";
+import { checkPageStyle } from "@/lib/site/style";
 import { designMediaIds, type Design } from "@/lib/design/schema";
 
 /**
@@ -89,6 +90,12 @@ export async function pageForEditor(actor: Actor, key: string) {
   };
 }
 
+/** Content saved before pages had a style section (or sent without one) gets the default: off. */
+function withStyleDefaults(def: PageDef, content: unknown) {
+  if (!("pageStyle" in def.fields) || !content || typeof content !== "object" || Array.isArray(content) || "pageStyle" in content) return content;
+  return { ...content, pageStyle: defaultOf(def.fields.pageStyle) };
+}
+
 /** Images on a page must be public, current media-library images (or files shipped with the site). */
 async function checkImages(fields: Fields, value: unknown) {
   const ids = new Set<string>();
@@ -111,9 +118,9 @@ async function checkImages(fields: Fields, value: unknown) {
 }
 
 function checked(def: PageDef, content: unknown) {
-  const r = validatePage(def, content);
+  const r = validatePage(def, withStyleDefaults(def, content));
   if (!r.ok) throw new ServiceError(r.error, r.path);
-  const extra = PAGE_CHECKS[def.key]?.(r.value);
+  const extra = PAGE_CHECKS[def.key]?.(r.value) ?? checkPageStyle(r.value);
   if (extra) throw new ServiceError(extra);
   return r.value;
 }
