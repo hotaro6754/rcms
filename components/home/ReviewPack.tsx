@@ -26,7 +26,7 @@ const STATUS: Record<Health, { label: string; className: string }> = {
 
 /**
  * The homepage's monthly review, set as the first page of a board pack rather than as a
- * dashboard: one sheet of paper, the KPI ledger on the left, and on the right the reason
+ * dashboard: one card, the KPI ledger on the left, and on the right the reason
  * behind whichever line the reader points at, then the decisions the month forces.
  *
  * The Operations Lab has already walked the five whys, so this page does not repeat them.
@@ -43,14 +43,13 @@ export function ReviewPack({ content: c }: { content: PageContent<typeof homePag
 
   return (
     <figure>
-      <div className="env-paper relative overflow-hidden rounded-[6px] border border-border bg-[#fcfaf5] text-foreground shadow-[0_1px_2px_rgb(22_21_19/0.05),0_28px_56px_-28px_rgb(22_21_19/0.35)]">
-        <div aria-hidden="true" className="grain absolute inset-0 !opacity-[0.08]" />
+      <div className="site-card relative overflow-hidden text-foreground">
 
-        <header className="relative flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-foreground/15 px-5 py-3.5 sm:px-8">
-          <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">
+        <header className="relative flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-border bg-muted px-5 py-3.5 sm:px-8">
+          <p className="text-data text-[11.5px] tracking-[0.14em] text-subtle">
             MONTHLY OPERATING REVIEW · {CLIENT.reviewPeriod.toUpperCase()}
           </p>
-          <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">
+          <p className="text-data text-[11.5px] tracking-[0.14em] text-subtle">
             {CLIENT.specialty.toUpperCase()} · {CLIENT.providers} PROVIDERS · PAGE 1 OF 7
           </p>
         </header>
@@ -67,7 +66,7 @@ export function ReviewPack({ content: c }: { content: PageContent<typeof homePag
             <div>
               <div
                 aria-hidden="true"
-                className="text-data grid grid-cols-[minmax(0,1fr)_auto_4.5rem] gap-x-4 border-b-2 border-foreground pb-2 text-[10.5px] tracking-[0.12em] text-subtle sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_6.5rem_4.5rem]"
+                className="text-data grid grid-cols-[minmax(0,1fr)_auto_4.5rem] gap-x-4 border-b-2 border-foreground pb-2 text-[11.5px] tracking-[0.12em] text-subtle sm:grid-cols-[minmax(0,1fr)_4.5rem_4.5rem_6.5rem_4.5rem]"
               >
                 <span>MEASURE</span>
                 <span className="hidden text-right sm:block">TARGET</span>
@@ -112,7 +111,7 @@ export function ReviewPack({ content: c }: { content: PageContent<typeof homePag
 
             <div className="flex flex-col gap-9">
               <section aria-live="polite">
-                <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">
+                <p className="text-data text-[11.5px] tracking-[0.14em] text-subtle">
                   {c.whyLabel} · {m.label.toUpperCase()}
                 </p>
                 <p className="font-serif-display mt-3 text-[1.35rem] leading-snug">{m.narrative.driver}.</p>
@@ -136,12 +135,12 @@ export function ReviewPack({ content: c }: { content: PageContent<typeof homePag
                 </dl>
               </section>
 
-              <section className="border-t border-foreground/15 pt-6">
-                <p className="text-data text-[10.5px] tracking-[0.14em] text-subtle">{c.decisionsLabel}</p>
+              <section className="border-t border-border pt-6">
+                <p className="text-data text-[11.5px] tracking-[0.14em] text-subtle">{c.decisionsLabel}</p>
                 <ol className="mt-4 flex flex-col gap-4">
                   {decisions.map((a) => (
                     <li key={a.id} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3">
-                      <span className="text-data pt-0.5 text-[11px] text-subtle">{a.id}</span>
+                      <span className="text-data pt-0.5 text-[12px] text-subtle">{a.id}</span>
                       <span>
                         <span className="block text-[14px] leading-snug">{a.action}</span>
                         <span className="text-data mt-1 block text-[11.5px] text-subtle">

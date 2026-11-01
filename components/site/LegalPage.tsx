@@ -11,9 +11,9 @@ export function legalMetadata(c: LegalContent, path: string): Metadata {
 export function LegalPage({ content: c }: { content: LegalContent }) {
   return (
     <>
-      <PageHeader eyebrow={c.header.eyebrow} title={c.header.title} lead={c.header.lead} />
+      <PageHeader eyebrow={c.header.eyebrow} title={c.header.title} lead={c.header.lead} crumbs={[{ label: "Legal" }, { label: c.header.title }]} />
       <section>
-        <div className="mx-auto max-w-[1320px] px-6 py-16">
+        <div className="mx-auto max-w-[1280px] px-4 py-14 sm:px-6">
           <p className="text-data text-micro text-muted-foreground">{c.header.updated}</p>
           <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,16rem)_minmax(0,44rem)]">
             <nav aria-label="On this page" className="hidden lg:block">

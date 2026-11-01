@@ -29,7 +29,7 @@ export default async function EntryPage({ params }: { params: Promise<{ section:
   const sectionTitle = shared.sections[e.kind].title;
   return (
     <>
-      <PageHeader eyebrow={sectionTitle} title={e.title} lead={e.summary} />
+      <PageHeader eyebrow={sectionTitle} title={e.title} lead={e.summary} crumbs={[{ label: "Resources", href: "/resources" }, { label: sectionTitle, href: `/resources/${section}` }, { label: e.title }]} />
       <Section>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <article className="max-w-[68ch]">
@@ -37,7 +37,7 @@ export default async function EntryPage({ params }: { params: Promise<{ section:
             {e.kind === "CASE_STUDY" && <p className="mt-6 border-l-2 border-brand pl-3 text-[13px] text-muted-foreground">{c.caseStudy.note}</p>}
           </article>
           <aside className="flex flex-col gap-5 text-[13px]">
-            <div className="rounded-[var(--radius)] border border-border bg-card p-4">
+            <div className="site-card p-4">
               <p className="label-caps">{c.review.label}</p>
               <p className="mt-2">{e.lastReviewedAt ? `${c.review.reviewed} ${DATE.format(e.lastReviewedAt)}` : c.review.notRecorded}</p>
               {e.nextReviewAt && (
@@ -47,7 +47,7 @@ export default async function EntryPage({ params }: { params: Promise<{ section:
               )}
             </div>
             {e.sources.length > 0 && (
-              <div className="rounded-[var(--radius)] border border-border bg-card p-4">
+              <div className="site-card p-4">
                 <p className="label-caps">{c.sources.label}</p>
                 <ul className="mt-2 flex flex-col gap-1.5">
                   {e.sources.map((src) => (

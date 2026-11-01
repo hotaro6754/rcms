@@ -29,23 +29,23 @@ export default async function SectionPage({ params, searchParams }: { params: Pr
 
   return (
     <>
-      <PageHeader eyebrow={c.header.eyebrow} title={title} lead={lead} />
+      <PageHeader eyebrow={c.header.eyebrow} title={title} lead={lead} crumbs={[{ label: shared.header.eyebrow || "Resources", href: "/resources" }, { label: title }]} />
       <Section>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <form role="search" className="flex max-w-md flex-1 gap-2">
-            <input name="q" defaultValue={q} placeholder={`${c.search.placeholder} ${title.toLowerCase()}`} aria-label={`Search ${title}`} className="min-h-11 flex-1 border-b border-input bg-transparent text-[15px] outline-none focus:border-foreground" />
-            <button className="min-h-11 rounded-[3px] border border-input px-4 text-[14px]">{c.search.button}</button>
+            <input name="q" defaultValue={q} placeholder={`${c.search.placeholder} ${title.toLowerCase()}`} aria-label={`Search ${title}`} className="min-h-11 flex-1 rounded-md border border-input bg-background px-3 text-[15px] outline-none focus:border-foreground" />
+            <button className="min-h-11 rounded-md bg-primary px-5 text-[14px] font-semibold text-primary-foreground hover:bg-primary-hover">{c.search.button}</button>
           </form>
           <SiteLink link={c.search.back} className="text-[13px] underline underline-offset-4" />
         </div>
 
         {items.length === 0 ? (
-          <p className="mt-10 text-[14.5px] text-muted-foreground">{q ? c.empty.noMatches : c.empty.noEntries}</p>
+          <p className="mt-10 rounded-xl border border-dashed border-input bg-[var(--surface-tint)] px-6 py-10 text-center text-[15px] text-muted-foreground">{q ? c.empty.noMatches : c.empty.noEntries}</p>
         ) : glossary ? (
           <>
             <nav aria-label="Letters" className="mt-8 flex flex-wrap gap-2 text-[13px]">
               {groups.map(([letter]) => (
-                <a key={letter} href={`#letter-${letter}`} className="text-data rounded-[3px] border border-border px-2 py-1 hover:border-foreground">
+                <a key={letter} href={`#letter-${letter}`} className="tabular flex h-9 min-w-9 items-center justify-center rounded-md border border-border bg-card px-2 font-semibold hover:border-brand hover:text-brand">
                   {letter}
                 </a>
               ))}
@@ -53,7 +53,7 @@ export default async function SectionPage({ params, searchParams }: { params: Pr
             <div className="mt-8 flex flex-col gap-8">
               {groups.map(([letter, list]) => (
                 <section key={letter} id={`letter-${letter}`} aria-label={letter}>
-                  <h2 className="font-serif-display text-[2rem] leading-none">{letter}</h2>
+                  <h2 className="text-[1.75rem] leading-none text-brand">{letter}</h2>
                   <dl className="mt-3 divide-y divide-border border-t border-border">
                     {list!.map((t) => (
                       <div key={t.slug} className="grid gap-1 py-3 sm:grid-cols-[16rem_minmax(0,1fr)] sm:gap-6">
@@ -74,10 +74,10 @@ export default async function SectionPage({ params, searchParams }: { params: Pr
           <ul className="mt-8 grid gap-4 md:grid-cols-2">
             {items.map((i) => (
               <li key={i.slug}>
-                <Link href={`/resources/${s.path}/${i.slug}`} className="flex h-full flex-col rounded-[var(--radius)] border border-border bg-card p-5 transition-colors hover:border-foreground">
-                  <span className="text-[1.1rem] leading-snug">{i.title}</span>
+                <Link href={`/resources/${s.path}/${i.slug}`} data-interactive className="site-card flex h-full flex-col p-5">
+                  <span className="text-[1.1rem] font-bold leading-snug">{i.title}</span>
                   <span className="mt-2 text-[13.5px] text-muted-foreground">{i.summary}</span>
-                  {i.tags.length > 0 && <span className="text-data mt-3 text-[11px] text-subtle">{i.tags.join(" · ")}</span>}
+                  {i.tags.length > 0 && <span className="mt-3 flex flex-wrap gap-1.5">{i.tags.map((t) => <span key={t} className="rounded-full bg-muted px-2 py-0.5 text-[12px] text-subtle">{t}</span>)}</span>}
                 </Link>
               </li>
             ))}

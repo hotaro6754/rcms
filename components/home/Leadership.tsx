@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { gsap, useGSAP, SplitText } from "@/lib/gsap/register";
+import Image from "next/image";
+import { gsap, useGSAP } from "@/lib/gsap/register";
+import progression from "@/public/images/figma/career-progression-guidance.webp";
 import { METRICS, PERIODS, formatValue } from "@/lib/data/telemetry";
 import type { PageContent } from "@/lib/site/fields";
 import type { homePage } from "@/lib/site/pages/home";
@@ -21,17 +23,14 @@ function spark(series: number[]) {
 }
 
 /**
- * THE CLAIM REVEALS THE PEOPLE BEHIND IT. Every number on the claim belongs to someone.
+ * THE PEOPLE BEHIND EVERY NUMBER. Six levels of career progression, set as a table: level,
+ * role, what the role owns, the measure it answers for (from the same teaching data the rest
+ * of the page uses) and its current value. Pointing at or tabbing to a row turns it navy and
+ * draws that measure's trend, so a reader sees what changes as you climb: the number you
+ * answer for. An illustration of the climb (made with Figma) sits beside the statement.
  *
- * The statement is set large and plain; its second sentence steps back in tone rather than
- * switching colour. Below it, the ladder as a ledger: six rows on one left edge. Point at (or tab to) a role and its
- * row turns to ink and draws the metric that role is trusted to own, from the same teaching
- * data the rest of the page uses, with its current value. A reader sees what changes as you
- * climb: the number you answer for.
- *
- * GSAP owns the entrances: the second sentence of the statement inks in word by word as it
- * is read (scrubbed), the rows rise in turn, each resting trend line draws itself and each
- * value counts up once. CSS owns the hover and focus states, on different properties.
+ * GSAP owns the one-time entrance: the rows rise in turn, each resting trend line draws itself
+ * and each value counts up once. CSS owns hover and focus. Nothing is tied to scroll position.
  */
 export function Leadership({ content: c }: { content: PageContent<typeof homePage>["people"] }) {
   const roles = c.roles;
@@ -42,18 +41,6 @@ export function Leadership({ content: c }: { content: PageContent<typeof homePag
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const q = gsap.utils.selector(root);
-        const split = SplitText.create(q(".second")[0], { type: "words", aria: "none" });
-        gsap.fromTo(
-          split.words,
-          { opacity: 0.6 },
-          {
-            opacity: 1,
-            ease: "none",
-            stagger: 0.12,
-            scrollTrigger: { trigger: q(".statement")[0], start: "top 70%", end: "bottom 38%", scrub: 0.5 },
-          },
-        );
-
         const tl = gsap.timeline({ scrollTrigger: { trigger: q(".ledger")[0], start: "top 90%", once: true } });
         tl.from(q(".ledger-rule"), { scaleX: 0, transformOrigin: "left center", duration: 0.7, ease: "power3.inOut" })
           .from(q(".row"), { y: 22, opacity: 0, duration: 0.7, ease: "power3.out", stagger: 0.08 }, "-=0.45")
@@ -63,7 +50,6 @@ export function Leadership({ content: c }: { content: PageContent<typeof homePag
           const box = { v: 0 };
           tl.to(box, { v: m.current, duration: 1.2, ease: "power2.out", onUpdate: () => void (el.textContent = formatValue(m, box.v)) }, 0.35 + i * 0.08);
         });
-        return () => split.revert();
       });
       return () => mm.revert();
     },
@@ -71,16 +57,20 @@ export function Leadership({ content: c }: { content: PageContent<typeof homePag
   );
 
   return (
-    <Chapter folio="06" title={c.runningHead}>
+    <Chapter id="people" folio="06" title={c.runningHead}>
       <div ref={root} data-gsap-scope>
-      <h2 className="statement max-w-[24ch] text-[clamp(2.4rem,5vw,4.6rem)] leading-[1.02]">
-        {c.statement}{" "}
-        <span className="second text-muted-foreground motion-safe:text-foreground">{c.statementSecond}</span>
-      </h2>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center lg:gap-16">
+        <h2 data-reveal className="statement max-w-[24ch] text-[clamp(1.9rem,3.2vw,2.75rem)] leading-[1.1]">
+          {c.statement} <span className="second text-muted-foreground">{c.statementSecond}</span>
+        </h2>
+        <figure data-reveal className="overflow-hidden rounded-xl border border-border bg-[#f6f8fb]">
+          <Image src={progression} alt="" sizes="(min-width: 1024px) 40vw, 100vw" className="h-auto w-full" />
+        </figure>
+      </div>
 
-      <div className="ledger relative mt-16">
-        <span aria-hidden="true" className="ledger-rule absolute inset-x-0 top-0 h-0.5 bg-foreground" />
-        <div className="text-data hidden grid-cols-[3rem_minmax(0,1.3fr)_minmax(0,1fr)_9rem_6rem] gap-6 border-b border-border px-2 py-3 text-[10.5px] tracking-[0.12em] text-subtle md:grid">
+      <div className="ledger site-card relative mt-12 overflow-hidden">
+        <span aria-hidden="true" className="ledger-rule absolute inset-x-0 top-0 h-1 bg-brand" />
+        <div className="hidden grid-cols-[3rem_minmax(0,1.3fr)_minmax(0,1fr)_9rem_6rem] gap-6 border-b border-border bg-muted px-5 py-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-subtle md:grid">
           <span>LEVEL</span>
           <span>ROLE</span>
           <span>OWNS</span>
@@ -95,17 +85,17 @@ export function Leadership({ content: c }: { content: PageContent<typeof homePag
               <li
                 key={i}
                 tabIndex={0}
-                className="row group grid grid-cols-[2.25rem_minmax(0,1fr)_5.5rem] items-center gap-x-4 gap-y-2 border-b border-border px-2 py-5 outline-none transition-colors duration-[var(--dur-med)] hover:bg-[#161513] hover:text-[#f4efe6] focus-visible:bg-[#161513] focus-visible:text-[#f4efe6] md:grid-cols-[3rem_minmax(0,1.3fr)_minmax(0,1fr)_9rem_6rem] md:gap-x-6"
+                className="row group grid grid-cols-[2.25rem_minmax(0,1fr)_5.5rem] items-center gap-x-4 gap-y-2 border-b border-border px-5 py-5 outline-none transition-colors duration-[var(--dur-med)] hover:bg-[#13235b] hover:text-white focus-visible:bg-[#13235b] focus-visible:text-white md:grid-cols-[3rem_minmax(0,1.3fr)_minmax(0,1fr)_9rem_6rem] md:gap-x-6"
               >
-                <span className="text-data text-[12px] text-subtle transition-colors group-hover:text-[#9cc3b2] group-focus-visible:text-[#9cc3b2]">
+                <span className="text-data text-[12px] text-subtle transition-colors group-hover:text-[#6fd3c9] group-focus-visible:text-[#6fd3c9]">
                   {r.level}
                 </span>
-                <span className="font-serif-display text-[clamp(1.5rem,2.2vw,2rem)] leading-tight">
+                <span className="text-[clamp(1.15rem,1.6vw,1.4rem)] font-bold leading-tight tracking-[-0.015em]">
                   {r.role}
                 </span>
-                <span className="col-start-2 row-start-2 text-[14px] leading-snug text-muted-foreground transition-colors group-hover:text-[#b9b2a7] group-focus-visible:text-[#b9b2a7] md:col-start-auto md:row-start-auto">
+                <span className="col-start-2 row-start-2 text-[14px] leading-snug text-muted-foreground transition-colors group-hover:text-[#cdd6e6] group-focus-visible:text-[#cdd6e6] md:col-start-auto md:row-start-auto">
                   {r.owns}
-                  <span className="text-data mt-1 block text-[11px] text-subtle group-hover:text-[#8f887e] group-focus-visible:text-[#8f887e]">{m.label}</span>
+                  <span className="text-data mt-1 block text-[12px] text-subtle group-hover:text-[#a9b5cb] group-focus-visible:text-[#a9b5cb]">{m.label}</span>
                 </span>
                 <svg
                   viewBox={`-2 -2 ${W + 4} ${H + 4}`}
@@ -117,7 +107,7 @@ export function Leadership({ content: c }: { content: PageContent<typeof homePag
                   <path
                     d={d}
                     fill="none"
-                    stroke="#9cc3b2"
+                    stroke="#6fd3c9"
                     strokeWidth={2}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -133,7 +123,7 @@ export function Leadership({ content: c }: { content: PageContent<typeof homePag
             );
           })}
         </ol>
-        <p className="text-data mt-4 text-[11px] text-subtle">Teaching data, one engagement, {PERIODS[0]} to {PERIODS[PERIODS.length - 1]}.</p>
+        <p className="border-t border-border px-5 py-3 text-[12.5px] text-subtle">Teaching data, one engagement, {PERIODS[0]} to {PERIODS[PERIODS.length - 1]}.</p>
       </div>
       </div>
     </Chapter>

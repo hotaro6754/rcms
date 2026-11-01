@@ -5,9 +5,9 @@ import { PreviewBar } from "@/components/site/PreviewBar";
 import { ThemeStyle } from "@/components/site/ThemeStyle";
 import { PageStyles } from "@/components/site/PageStyles";
 import { SiteScope } from "@/components/site/SiteScope";
-import { Preloader } from "@/components/site/Preloader";
 import { PageReveals } from "@/components/site/PageReveals";
-import { Chapter } from "@/components/home/Chapter";
+import { Chapter, SectionIntro } from "@/components/home/Chapter";
+import levelsFigure from "@/public/images/figma/learning-levels-progression.webp";
 import { OpeningStatement } from "@/components/home/OpeningStatement";
 import { SystemFlow } from "@/components/home/SystemFlow";
 import { LearningPath } from "@/components/home/LearningPath";
@@ -16,7 +16,11 @@ import { Leadership } from "@/components/home/Leadership";
 import { Mentoring } from "@/components/home/Mentoring";
 import { Founder } from "@/components/home/Founder";
 import { ReviewPack } from "@/components/home/ReviewPack";
-import { LottieView } from "@/components/illustration/LottieView";
+import Image from "next/image";
+import { AtAGlance } from "@/components/home/AtAGlance";
+import { SYSTEM } from "@/lib/data/system";
+import { MENTORING } from "@/lib/data/catalog";
+import reviewPhoto from "@/public/images/photos/operating-review-meeting.webp";
 import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { homePage } from "@/lib/site/pages/home";
@@ -24,19 +28,20 @@ import { jsonLd, organisationLd, pageMeta, siteUrl } from "@/lib/seo";
 import { BRAND } from "@/lib/brand";
 
 /**
- * The homepage is one case file: the claim, at a different moment in each chapter, on a
- * surface chosen for that moment.
+ * The homepage follows one case — Claim #20481 — through the revenue cycle, as a sequence of
+ * clearly bounded sections a professional reader can scan or jump between (every section is
+ * also reachable from the top bar's Practice menu):
  *
- *   hero        the claim is written                 desk, the claim as the one warm object
- *   01 problem  RCM isn't one process                ink, type across the viewport
- *   02 cycle    the claim moves through a system     desk, a ledger spread
- *   03 path     the claim, decoded level by level    white sheet, a prospectus
- *   04 lab      the claim, investigated              charcoal desk, papers on it
- *   05 review   the claim becomes data               desk, one page of the board pack
- *   06 people   the people behind every number       desk, a ledger that draws on hover
- *   07 advice   someone who has run the floor        charcoal, a paper calendar on it
- *   08 author   who wrote the curriculum             desk, set like a colophon
- *   close       the file closes                      ink
+ *   hero        what RCMExcel is, and the claim filled in stage by stage
+ *   glance      the four parts of the page, as counts taken from the content
+ *   01 problem  RCM isn't one process: six facts in a grid
+ *   02 cycle    the ten stages, explored stage by stage, plus the full table
+ *   03 path     the learning levels as three cards, with live courses and prices
+ *   04 lab      the denial investigation: the first question, then the five whys
+ *   05 review   the month's operating review, one page of the board pack
+ *   06 people   six levels of career progression and the number each one owns
+ *   07 advice   one-to-one mentoring sessions
+ *   08 author   who wrote the curriculum
  *
  * Copy is edited from the website editor (lib/site/pages/home.ts, defaults drawn from lib/data);
  * these components only present it.
@@ -74,7 +79,6 @@ export default async function Home() {
   const [c, levels, mentoringPrices] = await Promise.all([getPageContent(homePage), loadPaths(), loadMentoringPrices()]);
   return (
     <>
-      <Preloader />
       <PageReveals />
       <SiteScope>
         <SiteNav />
@@ -82,21 +86,37 @@ export default async function Home() {
         <main id="top" className="editorial">
           <HeroSequence content={c.hero} />
 
+          {c.glance.show && (
+            <AtAGlance
+              caption={c.glance.caption}
+              items={[
+                { count: SYSTEM.length, label: c.glance.stages, href: "#system" },
+                { count: levels.length, label: c.glance.levels, href: "#tracks" },
+                { count: c.people.show ? c.people.roles.length : 0, label: c.glance.roles, href: "#people" },
+                { count: c.mentoring.show ? MENTORING.filter((m) => mentoringPrices[`mentoring-${m.id}`] !== undefined).length : 0, label: c.glance.sessions, href: "#mentoring" },
+              ]}
+            />
+          )}
+
           {c.problem.show && <OpeningStatement content={c.problem} />}
 
           {c.system.show && (
-            <Chapter id="system" folio="02" title={c.system.runningHead}>
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-end">
-                <h2 data-reveal className="text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
-                  {c.system.title}
-                </h2>
-                <p data-reveal className="max-w-[40ch] text-[15px] leading-relaxed text-muted-foreground">
-                  {c.system.lead}
-                </p>
-              </div>
-              <div className="mt-14">
+            <Chapter id="system" folio="02" title={c.system.runningHead} surface="white">
+              <SectionIntro title={c.system.title} lead={c.system.lead} />
+              <div className="mt-12">
                 <SystemFlow content={c.system} />
               </div>
+              <figure data-reveal className="mt-12 rounded-xl border border-border bg-card p-4 sm:p-6">
+                <figcaption className="mb-2 text-[17px] font-bold">{c.system.levelsFigureTitle}</figcaption>
+                <div className="overflow-x-auto">
+                  <Image
+                    src={levelsFigure}
+                    alt={`Where each stage is taught. ${c.system.levelNames.trainee}: Registration and Eligibility. ${c.system.levelNames.professional}: Authorization, Charge capture, Coding, Claim submission, Remittance, Payment posting, A/R follow-up, and Denials and recovery. ${c.system.levelNames.leadership}: the monthly operating review, and escalations, risk, capacity and actions.`}
+                    sizes="(min-width: 1280px) 1200px, 100vw"
+                    className="h-auto w-full min-w-[40rem]"
+                  />
+                </div>
+              </figure>
             </Chapter>
           )}
 
@@ -106,24 +126,26 @@ export default async function Home() {
 
           {/* The month's review, as the first page of the board pack. */}
           {c.review.show && (
-            <Chapter id="governance" folio="05" title={c.review.runningHead}>
-              <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
+            <Chapter id="governance" folio="05" title={c.review.runningHead} surface="tint">
+              <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
                 <div>
-                  <h2 data-reveal className="max-w-[18ch] text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
+                  <h2 data-reveal className="max-w-[24ch] text-[clamp(1.9rem,3.2vw,2.75rem)] leading-[1.1]">
                     {c.review.title}
                   </h2>
-                  <p data-reveal className="mt-6 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">
+                  <p data-reveal className="mt-5 max-w-[56ch] text-[16px] leading-relaxed text-muted-foreground">
                     {c.review.lead}
                   </p>
                 </div>
-                <LottieView name="reporting" className="hidden w-full max-w-[17rem] lg:block" />
+                <figure data-reveal className="relative aspect-[16/9] overflow-hidden rounded-xl bg-muted">
+                  <Image src={reviewPhoto} alt="Three colleagues reviewing documents together at a meeting table" fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" placeholder="blur" />
+                </figure>
               </div>
-              <div className="mt-14">
+              <div className="mt-12">
                 <ReviewPack content={c.review} />
               </div>
               <SiteLink
                 link={c.review.cta}
-                className="mt-10 inline-flex min-h-11 items-center gap-2 text-[14px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
+                className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md border border-input bg-background px-5 text-[15px] font-semibold transition-colors hover:bg-muted"
               />
             </Chapter>
           )}

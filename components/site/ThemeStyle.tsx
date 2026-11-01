@@ -38,5 +38,5 @@ export async function ThemeStyle() {
   if (t.type.body !== d.type.body) vars.push(`--font-sans:${FONTS[t.type.body]}`);
   if (t.shape.corners !== d.shape.corners) vars.push(`--radius:${RADIUS[t.shape.corners]}`);
   if (!vars.length) return null;
-  return <style>{`:root{${vars.join(";")}}`}</style>;
+  return <style>{`:root,.site-scope{${vars.join(";")}}`}</style>;
 }

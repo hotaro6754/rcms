@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  * The revenue cycle, told through its one real artefact: a claim, filled in as it moves.
  * Registration writes the patient line, eligibility verifies the member ID, authorisation
  * is left empty (the payer changed its code set and nobody mapped it), the service is
- * coded, the claim goes out. The payer stamps it DENIED · CO-50. A margin note finds the
+ * coded, the claim goes out. The payer marks it Denied · CO-50. A margin note finds the
  * cause, the authorisation is obtained and written in, the claim is resubmitted, and it
  * comes back PAID. Thirteen stages, one sheet of paper, no paragraph needed.
  *
@@ -68,15 +68,12 @@ export function ClaimDocument({ className }: { className?: string }) {
         };
         const type = { clipPath: "inset(0 0% 0 0)", duration: 0.55, ease: "power1.inOut" };
         const note = { autoAlpha: 1, x: 0, duration: 0.45, ease: EASE.exec };
-        const thunk = (rot: number) => [
-          { autoAlpha: 0, scale: 1.45, rotate: rot - 6 },
-          { autoAlpha: 1, scale: 1, rotate: rot, duration: 0.22, ease: "power4.in" },
-        ] as const;
+        const badgeIn = [{ autoAlpha: 0, y: 4 }, { autoAlpha: 1, y: 0, duration: 0.3 }] as const;
 
         // Blank claim.
         gsap.set(q(".cd-value"), { clipPath: "inset(0 100% 0 0)" });
         gsap.set(q(".cd-note"), { autoAlpha: 0, x: 8 });
-        gsap.set(q(".cd-stamp"), { autoAlpha: 0 });
+        gsap.set(q(".cd-badge"), { autoAlpha: 0 });
         gsap.set(q(".cd-auth-fixed"), { clipPath: "inset(0 100% 0 0)" });
         gsap.set(q(".cd-highlight"), { scaleX: 0, transformOrigin: "left center" });
         gsap.set(q(".cd-flag"), { scaleX: 0, transformOrigin: "left center" });
@@ -116,13 +113,11 @@ export function ClaimDocument({ className }: { className?: string }) {
           .to(q(".cd-v-charges"), type, t + 0.3)
           // 06 Submitted
           .call(stage(5, "Submitted · 837 sent to the payer"), undefined, (t += step))
-          .to(q(".cd-paper"), { y: -6, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.out" }, t)
           // 07 Payer
           .call(stage(6, "Adjudicating…"), undefined, (t += step))
           // 08 Denied
           .call(stage(7, "Denied · 835 received"), undefined, (t += step))
-          .fromTo(q(".cd-stamp-denied"), ...thunk(-9), t)
-          .to(q(".cd-paper"), { x: 3, duration: 0.05, yoyo: true, repeat: 3, ease: "none" }, t + 0.22)
+          .fromTo(q(".cd-badge-denied"), ...badgeIn, t)
           .to(q(".cd-flag"), { scaleX: 1, duration: 0.4 }, t + 0.3)
           .to(q(".cd-n-auth-risk"), { autoAlpha: 0, duration: 0.2 }, t + 0.3)
           .to(q(".cd-n-denied"), note, t + 0.45)
@@ -140,11 +135,10 @@ export function ClaimDocument({ className }: { className?: string }) {
           .to(q(".cd-n-fixed"), note, t + 0.35)
           // 11 Resubmitted
           .call(stage(10, "Resubmitted · corrected claim"), undefined, (t += step))
-          .to(q(".cd-stamp-denied"), { autoAlpha: 0.18, duration: 0.4 }, t)
-          .to(q(".cd-paper"), { y: -6, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.out" }, t)
+          .to(q(".cd-badge-denied"), { autoAlpha: 0, duration: 0.25 }, t)
           // 12 Paid
           .call(stage(11, "Paid · $986.40 · 835 received"), undefined, (t += step))
-          .fromTo(q(".cd-stamp-paid"), ...thunk(7), t)
+          .fromTo(q(".cd-badge-paid"), ...badgeIn, t)
           // 13 Reconciled
           .call(stage(12, "Posted and reconciled. Cycle closed."), undefined, (t += step));
 
@@ -173,20 +167,19 @@ export function ClaimDocument({ className }: { className?: string }) {
         <span className="relative h-px flex-1 overflow-hidden bg-input">
           <span className="cd-bar absolute inset-0 origin-left bg-brand transition-transform duration-[var(--dur-med)]" />
         </span>
-        <span className="cd-stage-name label-caps text-[11px]">Reconciled</span>
+        <span className="cd-stage-name label-caps text-[12px]">Reconciled</span>
       </div>
 
       {/* The claim. Margin notes live inside their row, so each one sits beside its line. */}
       <div className="sm:mr-[10.5rem]">
-        <div className="cd-paper env-paper relative -rotate-[0.8deg] rounded-[6px] border border-border bg-[#fcfaf5] shadow-[0_1px_2px_rgb(22_21_19/0.05),0_24px_48px_-24px_rgb(22_21_19/0.35)]">
-          <div aria-hidden="true" className="grain absolute inset-0 rounded-[6px] !opacity-[0.1]" />
+        <div className="cd-paper env-paper relative rounded-[10px] border border-border bg-[var(--paper)] shadow-[var(--shadow-card-hover)]">
 
-          <header className="relative flex items-start justify-between gap-4 border-b border-foreground/15 px-5 pb-3 pt-4">
+          <header className="relative flex items-start justify-between gap-4 border-b border-border px-5 pb-3 pt-4">
             <div>
-              <p className="text-data text-[10px] tracking-[0.14em] text-muted-foreground">HEALTH INSURANCE CLAIM</p>
-              <p className="font-serif-display mt-1 text-[1.4rem] leading-none">Claim #20481</p>
+              <p className="text-data text-[11.5px] tracking-[0.14em] text-muted-foreground">HEALTH INSURANCE CLAIM</p>
+              <p className="mt-1 text-[1.35rem] font-bold leading-none tracking-[-0.015em]">Claim #20481</p>
             </div>
-            <p className="text-data text-right text-[10px] leading-relaxed tracking-[0.06em] text-muted-foreground">
+            <p className="text-data text-right text-[11.5px] leading-relaxed tracking-[0.06em] text-muted-foreground">
               FORM 837P
               <br />
               TRAINING RECORD
@@ -254,20 +247,21 @@ export function ClaimDocument({ className }: { className?: string }) {
             </Field>
           </dl>
 
-          <footer className="relative flex items-center gap-2 border-t border-foreground/15 px-5 py-3">
-            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand" />
-            <span className="cd-status text-data text-[11px] tracking-[0.04em] text-muted-foreground">
-              Posted and reconciled. Cycle closed.
+          <footer className="relative flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border px-5 py-3">
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+              <span className="cd-status text-[12px] text-muted-foreground">Posted and reconciled. Cycle closed.</span>
+            </span>
+            {/* The payer's decision, as a status badge: denied first, then paid after the correction. */}
+            <span className="relative inline-grid text-[12px] font-semibold">
+              <span className="cd-badge cd-badge-denied invisible col-start-1 row-start-1 rounded-full bg-danger-bg px-2.5 py-1 text-danger">
+                Denied · CO-50 · RARC N706
+              </span>
+              <span className="cd-badge cd-badge-paid col-start-1 row-start-1 justify-self-end rounded-full bg-accent px-2.5 py-1 text-accent-foreground">
+                Paid · $986.40 · 835
+              </span>
             </span>
           </footer>
-
-          {/* Stamps */}
-          <Stamp className="cd-stamp cd-stamp-denied right-[5%] top-[26%] -rotate-[9deg] border-danger text-danger opacity-[0.18]" line2="CO-50 · RARC N706">
-            Denied
-          </Stamp>
-          <Stamp className="cd-stamp cd-stamp-paid right-[7%] top-[63%] rotate-[6deg] border-brand text-brand" line2="$986.40 · 835">
-            Paid
-          </Stamp>
         </div>
       </div>
 
@@ -310,7 +304,7 @@ function Field({
         !last && "border-b border-dashed border-foreground/12",
       )}
     >
-      <dt className={cn("text-data text-[10px] uppercase tracking-[0.1em]", danger ? "text-muted-foreground" : "text-subtle")}>{label}</dt>
+      <dt className={cn("text-data text-[11.5px] uppercase tracking-[0.1em]", danger ? "text-muted-foreground" : "text-subtle")}>{label}</dt>
       <dd className="text-data relative truncate text-[13.5px] text-foreground">{children}</dd>
       {notes && (
         <dd className="relative col-span-2 min-h-[2.5em] sm:absolute sm:left-[calc(100%+1.25rem)] sm:top-[0.45rem] sm:min-h-0 sm:w-[9.25rem]">
@@ -337,7 +331,7 @@ function Note({
   return (
     <p
       className={cn(
-        "cd-note font-serif-display absolute inset-x-0 top-0 flex gap-2 text-[13.5px] italic leading-snug",
+        "cd-note absolute inset-x-0 top-0 flex gap-2 text-[13px] font-medium leading-snug",
         tone === "good" ? "text-brand" : tone === "danger" ? "text-danger" : "text-muted-foreground",
         hidden && "invisible",
         className,
@@ -346,20 +340,5 @@ function Note({
       <span aria-hidden="true" className="mt-[0.6em] h-px w-3 shrink-0 bg-current opacity-60" />
       <span>{children}</span>
     </p>
-  );
-}
-
-function Stamp({ children, line2, className }: { children: React.ReactNode; line2: string; className?: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "stamp pointer-events-none absolute flex flex-col items-center rounded-[6px] border-[3px] px-4 pb-1.5 pt-2 leading-none",
-        className,
-      )}
-    >
-      <span className="text-data text-[30px] font-semibold uppercase tracking-[0.16em]">{children}</span>
-      <span className="text-data mt-1.5 text-[10.5px] tracking-[0.12em]">{line2}</span>
-    </div>
   );
 }

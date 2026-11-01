@@ -1,59 +1,61 @@
 import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import { SiteLink } from "@/components/site/SiteLink";
 import type { PageContent } from "@/lib/site/fields";
 import type { homePage } from "@/lib/site/pages/home";
 import { Chapter } from "./Chapter";
 
 /**
- * WHO WROTE IT. Set like a colophon at the back of a book: the years in a large numeral on
- * the page itself (no panel behind it), the author's name and focus, one paragraph in their
- * voice, and the experience as a ruled list. Verified facts only (defaults from
- * lib/data/founder.ts). When a portrait is chosen in the website editor it sits above the
- * numeral; until then the type carries the section on its own.
+ * WHO WROTE IT. A profile card on the left — the portrait when one is chosen in the website
+ * editor, the years in a large figure, the name and focus — and on the right the heading, the
+ * author's paragraphs and the experience as a structured list. Verified facts only (defaults
+ * from lib/data/founder.ts); no photograph stands in for the author.
  */
 export function Founder({ content: c }: { content: PageContent<typeof homePage>["founder"] }) {
   return (
-    <Chapter folio="08" title={c.runningHead} className="border-t border-border">
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
-        {/* The numeral travels with the reading column, so the left half is never a void. */}
-        <div className="lg:sticky lg:top-24 lg:self-start">
+    <Chapter id="author" folio="08" title={c.runningHead}>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
+        <aside data-reveal className="site-card self-start overflow-hidden lg:sticky lg:top-24">
           {c.portrait.src && (
-            <figure className="photo mb-8 aspect-[4/5] w-full max-w-[20rem] rounded-[4px]">
+            <figure className="relative aspect-[4/3] w-full bg-muted">
               {/* Media-library images are served (and access-checked) by /api/media, so they load as they are. */}
-              <Image src={c.portrait.src} alt={c.portrait.alt} fill sizes="20rem" unoptimized={c.portrait.src.startsWith("/api/")} className="object-cover" />
+              <Image src={c.portrait.src} alt={c.portrait.alt} fill sizes="(min-width: 1024px) 30vw, 100vw" unoptimized={c.portrait.src.startsWith("/api/")} className="object-cover" />
             </figure>
           )}
-          <p className="font-serif-display text-[clamp(8rem,16vw,14rem)] leading-[0.8] tracking-[-0.04em]">{c.years}</p>
-          <p className="text-data mt-5 max-w-[22ch] text-[11px] leading-relaxed tracking-[0.1em] text-subtle">
-            {c.yearsCaption}
-          </p>
-        </div>
+          <div className="p-6 sm:p-7">
+            <p className="tabular text-[clamp(4rem,8vw,5.5rem)] font-bold leading-none tracking-[-0.04em] text-primary">{c.years}</p>
+            <p className="mt-3 max-w-[30ch] text-[12.5px] font-semibold uppercase leading-relaxed tracking-[0.06em] text-subtle">{c.yearsCaption}</p>
+            <div className="mt-6 border-t border-border pt-5">
+              <p className="text-[19px] font-bold">{c.name}</p>
+              <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">{c.focus}</p>
+            </div>
+          </div>
+        </aside>
 
         <div>
-          <h2 data-reveal className="max-w-[20ch] text-[clamp(2rem,3.2vw,2.9rem)] leading-[1.06]">
+          <h2 data-reveal className="max-w-[24ch] text-[clamp(1.9rem,3.2vw,2.75rem)] leading-[1.1]">
             {c.title}
           </h2>
-          <p className="mt-8 font-serif-display text-[1.35rem] leading-none">{c.name}</p>
-          <p className="text-data mt-2 text-[11px] tracking-[0.06em] text-subtle">{c.focus.toUpperCase()}</p>
           {c.body.map((p, i) => (
-            <p key={i} className={`${i ? "mt-4" : "mt-6"} max-w-[58ch] text-[15.5px] leading-relaxed text-secondary-foreground`}>
+            <p key={i} className={`${i ? "mt-4" : "mt-6"} max-w-[62ch] text-[16px] leading-relaxed text-secondary-foreground`}>
               {p}
             </p>
           ))}
-
-          <dl className="mt-10 border-t-2 border-foreground">
+          <dl data-reveal-group className="mt-10 grid gap-3 sm:grid-cols-2">
             {c.career.map((item, i) => (
-              <div key={i} className="grid gap-1 border-b border-border py-4 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-6">
-                <dt className="text-[14px] font-medium">{item.title}</dt>
-                <dd className="text-[14px] leading-relaxed text-muted-foreground">{item.body}</dd>
+              <div key={i} data-reveal-item className="rounded-lg border border-border bg-card p-5">
+                <dt className="text-[15px] font-bold">{item.title}</dt>
+                <dd className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">{item.body}</dd>
               </div>
             ))}
           </dl>
-
           <SiteLink
             link={c.cta}
-            className="mt-8 inline-flex min-h-11 items-center text-[14px] underline decoration-input underline-offset-[6px] hover:decoration-foreground"
-          />
+            className="group mt-8 inline-flex min-h-11 items-center gap-1.5 rounded-md border border-input px-5 text-[15px] font-semibold transition-colors hover:bg-muted"
+          >
+            {c.cta.label}
+            <ArrowRight aria-hidden className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </SiteLink>
         </div>
       </div>
     </Chapter>

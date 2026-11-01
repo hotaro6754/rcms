@@ -48,7 +48,8 @@ export function finishIntro() {
 }
 
 /**
- * Runs in <head> before first paint. Decides whether this load plays the intro, so the
- * curtain is either there from the first frame or never there at all.
+ * Runs in <head> before first paint. The homepage no longer opens behind a preloader (content
+ * should never wait for an animation), so every load is marked "seen": the curtain is never
+ * shown, the page keeps its scroll and introDone() resolves at once.
  */
-export const INTRO_BOOT_SCRIPT = `(function(){try{var d=document.documentElement;var seen=sessionStorage.getItem("${INTRO_KEY}");var rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;var home=location.pathname==="/";d.dataset.intro=(!seen&&!rm&&home)?"play":"seen";}catch(e){document.documentElement.dataset.intro="seen";}})();`;
+export const INTRO_BOOT_SCRIPT = `document.documentElement.dataset.intro="seen";`;

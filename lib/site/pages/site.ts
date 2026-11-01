@@ -2,6 +2,88 @@ import { area, definePage, group, link, list, text, texts, toggle, type PageCont
 import { BRAND } from "@/lib/brand";
 
 const navLink = { link: link("Link", { label: "", href: "/" }) };
+
+type MenuItem = { group: string; link: { label: string; href: string }; description: string };
+const item = (group: string, label: string, href: string, description: string): MenuItem => ({ group, link: { label, href }, description });
+
+/** The menus' items: a column heading (optional), the link, and one line under it. */
+const menuItem = {
+  group: text("Column heading", "", { max: 40, optional: true, help: "Items with the same heading are listed together." }),
+  link: link("Link", { label: "", href: "/" }),
+  description: text("Line under the link", "", { max: 120, optional: true }),
+};
+
+/**
+ * The top bar's menus. Every default points at a page or section that exists today; nothing
+ * here describes an offering the site does not have. A menu with no items is a plain link.
+ */
+const MENUS = [
+  {
+    label: "Learning",
+    overview: { label: "Compare the levels", href: "/learning-paths" },
+    intro: "Three levels, each built on the one before. Start where you actually work today; every course ends with assessed work you can show.",
+    items: [
+      item("Learning levels", "Trainee — Foundation", "/catalog?level=trainee", "Your first revenue cycle role"),
+      item("Learning levels", "Professional — Execution", "/catalog?level=professional", "Working the claim on the floor"),
+      item("Learning levels", "Leadership — Governance", "/catalog?level=leadership", "Running the operation"),
+      item("Programs", "Course catalogue", "/catalog", "Every released course and its price"),
+      item("Programs", "Learning paths", "/learning-paths", "The levels side by side"),
+      item("Programs", "Practice tests", "/resources/tests", "Check yourself against a level"),
+    ],
+  },
+  {
+    label: "Practice",
+    overview: { label: "How the claim is taught", href: "/#system" },
+    intro: "You learn it the way it is worked: one claim, every stage it passes through, and every decision that can stop it.",
+    items: [
+      item("On this site", "Claim #20481 walkthrough", "/#top", "One claim, filled in stage by stage"),
+      item("On this site", "The ten revenue-cycle stages", "/#system", "Front end, middle and back end"),
+      item("On this site", "Denial investigation", "/#lab", "Root cause analysis, five whys"),
+      item("On this site", "Monthly operating review", "/#governance", "The month's measures, explained upward"),
+      item("On this site", "Career progression", "/#people", "Six levels, and the number each one owns"),
+      item("Operations console", "Operations console", "/overview", "A worked example practice"),
+      item("Operations console", "Governance Room", "/governance", "The full seven-stage review"),
+      item("Operations console", "Denial inventory", "/queues", "Denials by reason and owner"),
+      item("Operations console", "KPI library", "/metrics", "What each measure means"),
+      item("Operations console", "Capacity and roster", "/roster", "Who is working what"),
+    ],
+  },
+  {
+    label: "Mentoring",
+    overview: { label: "All mentoring sessions", href: "/mentoring" },
+    intro: "One-to-one sessions, chosen by the length of the problem. Send a request and we confirm a time by email.",
+    items: [
+      item("Sessions", "Career consultation", "/mentoring#career", "30 minutes, one-to-one"),
+      item("Sessions", "Professional guidance", "/mentoring#professional", "45 minutes, one-to-one"),
+      item("Sessions", "Leadership mentoring", "/mentoring#leadership", "60 minutes, one-to-one"),
+      item("Sessions", "Executive career roadmap", "/mentoring#roadmap", "90 minutes, one-to-one"),
+    ],
+  },
+  {
+    label: "Resources",
+    overview: { label: "All resources", href: "/resources" },
+    intro: "Reference material, practice tests and writing from the floor.",
+    items: [
+      item("", "Resources library", "/resources", "Reference material by topic"),
+      item("", "Practice tests", "/resources/tests", "Self-checks for each level"),
+      item("", "Writing", "/blog", "Articles from the floor"),
+      item("", "Floor Notes", "/#floor-notes", "The monthly letter"),
+      item("", "Community", "/community", "Channels for learners"),
+    ],
+  },
+  {
+    label: "About",
+    overview: { label: "About the author", href: "/about" },
+    intro: "The curriculum was written by someone who ran the floor it describes.",
+    items: [
+      item("", "About the author", "/about", "Experience and approach"),
+      item("", "Contact", "/contact", "Write to us"),
+      item("", "Content governance", "/legal/content-governance", "How the material is kept accurate"),
+      item("", "Disclaimer", "/legal/disclaimer", "Teaching data and its limits"),
+    ],
+  },
+  { label: "Pricing", overview: { label: "Pricing", href: "/pricing" }, intro: "", items: [] as MenuItem[] },
+];
 const footerRow = {
   title: text("Row title", "", { max: 40, help: "Shown in capitals." }),
   links: list("Links", { link: link("Link", { label: "", href: "/" }) }, [], { max: 12 }),
@@ -20,6 +102,17 @@ export const sitePage = definePage({
     nav: group("Navigation bar", {
       brandShort: text("Wordmark", BRAND.markShort, { max: 40 }),
       brandName: text("Name beside the wordmark", BRAND.markRest, { max: 60 }),
+      menus: list(
+        "Menus",
+        {
+          label: text("Menu name", "", { max: 30 }),
+          overview: link("Main link", { label: "", href: "/" }, { help: "Shown at the top of the open menu. A menu with no items is this link on its own." }),
+          intro: area("Introduction", "", { max: 240, optional: true }),
+          items: list("Items", menuItem, [], { max: 14, titleField: "group" }),
+        },
+        MENUS,
+        { max: 7, titleField: "label", help: "The menus across the top bar. On phones they open one at a time." },
+      ),
       links: list(
         "Links",
         navLink,
@@ -30,7 +123,7 @@ export const sitePage = definePage({
           { link: { label: "Resources", href: "/resources" } },
           { link: { label: "About", href: "/about" } },
         ],
-        { max: 8 },
+        { max: 8, help: "Used only when there are no menus." },
       ),
       signIn: link("Account link for visitors", { label: "Sign in", href: "/sign-in" }),
       account: link("Account link for signed-in learners", { label: "My academy", href: "/academy" }),
@@ -131,7 +224,7 @@ export const sitePage = definePage({
     }),
     colophon: group("Footer: colophon", {
       name: text("Name", BRAND.name, { max: 80 }),
-      line: text("Line under the name", "© 2026. Set in Newsreader and Satoshi.", { max: 120 }),
+      line: text("Line under the name", "© 2026. Set in Satoshi.", { max: 120 }),
       disclaimer: area(
         "Disclaimer",
         "Every claim, console and review figure on this site is illustrative teaching data; no real patient, provider or payer information is used. Benchmarks referenced from HFMA MAP Keys, no affiliation. Training content does not replace payer, CMS, HIPAA, legal, compliance or employer-specific guidance.",

@@ -2,19 +2,17 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A chapter of the homepage, laid out like a page of a technical publication: a narrow
- * gutter carrying the running folio ("02 / The cycle"), which stays in the margin while
- * the chapter is read, and the chapter's own composition in the measure beside it.
+ * A section of the homepage: one consistent container, a numbered label above the content
+ * ("02 · The cycle") and a surface chosen from a small set, so the page reads as a sequence of
+ * clearly bounded sections rather than one long scroll.
  *
- * Headings are deliberately NOT part of this component. Each chapter sets its own, at its
- * own scale and position; the folio is the only thing that repeats, the way a running head
- * repeats in a book.
+ * Headings stay with each section, which sets its own layout under the label.
  */
 export function Chapter({
   id,
   folio,
   title,
-  surface = "desk",
+  surface = "white",
   className,
   innerClassName,
   children,
@@ -23,25 +21,40 @@ export function Chapter({
   id?: string;
   folio: string;
   title: string;
-  surface?: "desk" | "sheet" | "charcoal" | "ink";
+  surface?: "white" | "tint" | "navy";
   className?: string;
   innerClassName?: string;
   children: ReactNode;
   "data-env"?: string;
 }) {
-  const env = surface === "sheet" ? "env-sheet" : surface === "charcoal" ? "env-charcoal" : surface === "ink" ? "env-ink" : "";
+  const env = surface === "tint" ? "env-tint" : surface === "navy" ? "env-ink" : "";
   return (
-    <section id={id} data-env={dataEnv} className={cn("relative bg-background", env, className)}>
-      <div className={cn("mx-auto grid max-w-[1320px] gap-x-10 gap-y-8 px-6 py-24 lg:grid-cols-[9.5rem_minmax(0,1fr)] lg:py-32", innerClassName)}>
-        <div className="lg:relative">
-          <p className="text-data text-[11px] tracking-[0.12em] text-subtle lg:sticky lg:top-24">
-            <span className="text-foreground">{folio}</span>
-            <span aria-hidden="true" className="mx-1.5">/</span>
-            {title.toUpperCase()}
-          </p>
-        </div>
-        <div className="min-w-0">{children}</div>
+    <section id={id} data-env={dataEnv} aria-label={title} className={cn("relative border-t border-border bg-background", env, className)}>
+      <div className={cn("mx-auto max-w-[1280px] px-4 py-20 sm:px-6 lg:py-24", innerClassName)}>
+        <p className="eyebrow mb-5 flex items-center gap-2">
+          <span className="tabular text-subtle">{folio}</span>
+          <span aria-hidden="true" className="h-px w-6 bg-current opacity-40" />
+          {title}
+        </p>
+        {children}
       </div>
     </section>
+  );
+}
+
+/** A section's heading row: the heading on the left, its introduction on the right on wide screens. */
+export function SectionIntro({ title, lead, children, className }: { title: ReactNode; lead?: ReactNode; children?: ReactNode; className?: string }) {
+  return (
+    <div className={cn("grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end lg:gap-16", className)}>
+      <h2 data-reveal className="max-w-[22ch] text-[clamp(1.9rem,3.2vw,2.75rem)] leading-[1.1]">
+        {title}
+      </h2>
+      {(lead || children) && (
+        <div data-reveal className="max-w-[56ch] text-[16px] leading-relaxed text-muted-foreground">
+          {lead && <p>{lead}</p>}
+          {children}
+        </div>
+      )}
+    </div>
   );
 }

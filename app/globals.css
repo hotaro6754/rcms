@@ -442,21 +442,149 @@
    not carry .editorial and keep the grotesk.
    --------------------------------------------------------------------------- */
 .editorial :is(h1, h2) {
-  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  letter-spacing: -0.022em;
-  font-optical-sizing: auto;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.028em;
 }
 
-/* Emphasis inside an editorial headline: italic, in the brand accent. */
+/* Emphasis inside a public-site headline: the brand accent, upright. */
 .editorial :is(h1, h2) em {
-  font-style: italic;
+  font-style: normal;
   color: var(--brand);
 }
 .font-serif-display {
   font-family: var(--font-serif), Georgia, "Times New Roman", serif;
   font-weight: 400;
   letter-spacing: -0.02em;
+}
+
+/* ===========================================================================
+   Public site (everything inside .site-scope: the bar, the pages, the footer).
+
+   A professional healthcare-business presentation in the logo's own colours:
+   white and cool light-grey surfaces, navy type and buttons, teal for links and
+   emphasis. The product, portal and admin keep the token contract above.
+   Contrast measured on #ffffff and on the tint #f5f7fa; all text AA or better.
+   The website editor's Theme writes over these (components/site/ThemeStyle.tsx),
+   so lib/site/pages/theme.ts carries the same defaults.
+   =========================================================================== */
+.site-scope,
+.site-scope .env-paper {
+  --background: #ffffff;
+  --foreground: #0e1a33;            /* navy ink, 17.3:1 */
+  --card: #ffffff;
+  --card-foreground: #0e1a33;
+  --popover: #ffffff;
+  --popover-foreground: #0e1a33;
+  --muted: #f1f4f8;
+  --muted-foreground: #475467;      /* 7.7:1 */
+  --subtle: #5d6b82;                /* 5.4:1, 5.0:1 on tint */
+  --primary: #13235b;               /* logo navy: buttons */
+  --primary-hover: #1d3478;
+  --primary-foreground: #ffffff;
+  --brand: #0b7470;                 /* logo teal, darkened for text: 5.6:1 */
+  --signal: #10a39b;                /* marks only, never text */
+  --secondary: #eef2f7;
+  --secondary-foreground: #1f2a40;
+  --accent: #e6f4f2;
+  --accent-foreground: #0a5c58;
+  --border: #e2e7ef;
+  --input: #c6cfdc;
+  --ring: #0b7470;
+  --radius: 0.6rem;
+  --paper: #fbfcfe;
+  --surface-tint: #f5f7fa;
+  --shadow-card: 0 1px 2px rgb(14 26 51 / 0.04), 0 8px 24px -16px rgb(14 26 51 / 0.18);
+  --shadow-card-hover: 0 2px 4px rgb(14 26 51 / 0.05), 0 18px 36px -18px rgb(14 26 51 / 0.28);
+  --font-display: "Satoshi", "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Satoshi", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+}
+
+/* Section surfaces on the public site. */
+.site-scope .env-tint {
+  --background: #f5f7fa;
+  --card: #ffffff;
+}
+.site-scope .env-sheet {
+  --background: #ffffff;
+  --border: #e2e7ef;
+  --input: #c6cfdc;
+}
+
+/* Navy band: the footer and the occasional emphasis panel. */
+.site-scope .env-ink,
+.site-scope .env-charcoal {
+  --background: #0e1a33;
+  --foreground: #f3f6fb;
+  --card: #16254a;
+  --card-foreground: #f3f6fb;
+  --popover: #16254a;
+  --popover-foreground: #f3f6fb;
+  --muted: #1b2b52;
+  --muted-foreground: #bcc6d8;      /* 10.0:1 */
+  --subtle: #97a3ba;                /* 6.8:1 */
+  --primary: #ffffff;
+  --primary-hover: #e6ecf5;
+  --primary-foreground: #0e1a33;
+  --brand: #6fd3c9;                 /* 9.8:1 */
+  --signal: #6fd3c9;
+  --secondary: #1b2b52;
+  --secondary-foreground: #dfe5ef;
+  --accent: rgb(111 211 201 / 0.14);
+  --accent-foreground: #b6ebe5;
+  --border: rgb(243 246 251 / 0.12);
+  --input: rgb(243 246 251 / 0.24);
+  --ring: #6fd3c9;
+  color: var(--foreground);
+  color-scheme: dark;
+}
+
+/* Inside the public site the display face is the sans: one family, set firmly. */
+.site-scope .font-serif-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+
+/* Labels and cards live in the components layer so utility classes (a different colour, a
+   sticky position) can still override them. */
+@layer components {
+  /* Small capital labels above headings and inside cards. */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  /* The public site's card: a white surface, a hairline, a soft shadow. Hover lifts it a few
+     pixels and tints the border; the motion is CSS so it costs nothing and works without JS. */
+  .site-card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.4);
+    box-shadow: var(--shadow-card);
+    transition:
+      transform 200ms var(--ease-exec),
+      box-shadow 200ms var(--ease-exec),
+      border-color 200ms var(--ease-exec);
+  }
+  .site-card[data-interactive]:hover,
+  .site-card[data-interactive]:focus-within {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: color-mix(in srgb, var(--brand) 40%, var(--border));
+  }
+  @media (hover: none) {
+    .site-card[data-interactive]:hover {
+      transform: none;
+    }
+  }
+
 }
 
 /* Rubber stamp: ink that did not take evenly. A speckled noise mask knocks small gaps out
@@ -496,4 +624,16 @@
 @media print {
   .protected-content > *:not(.protected-print-note) { display: none !important; }
   .protected-content .protected-print-note { display: block !important; visibility: visible !important; position: fixed; inset: 0; padding: 2rem; font-size: 14pt; }
+}
+
+/* Older public pages use these utility names. Inside the public site they take the sans label
+   style instead of the monospace one, and nothing drops below 12px. Unlayered so they win over
+   the utilities above; colour is left to the utilities. */
+.site-scope .label-caps {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.site-scope .text-micro {
+  font-size: 12.5px;
 }

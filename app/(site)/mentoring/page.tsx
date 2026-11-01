@@ -48,7 +48,7 @@ export default async function MentoringPage() {
             </ol>
 
             {c.notFor.show && (
-              <div className="mt-8 rounded-[var(--radius)] border border-border bg-card p-5">
+              <div className="mt-8 site-card p-5">
                 <h2 className="text-[14px] font-semibold">{c.notFor.title}</h2>
                 <ul className="mt-3 flex flex-col gap-2">
                   {c.notFor.items.map((n, i) => (
