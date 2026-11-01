@@ -48,7 +48,7 @@ export default async function PricingPage() {
         <Section title={c.allAccess.title} lead={c.allAccess.lead}>
           <div className="grid gap-4 md:grid-cols-2">
             {subscriptions.map((p) => (
-              <article key={p.sku} className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-6">
+              <article key={p.sku} className="flex flex-col site-card p-6">
                 <h3 className="text-[1.4rem] leading-tight">{p.name}</h3>
                 {p.description && <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{p.description}</p>}
                 <p className="text-data mt-5 border-t border-border pt-5 text-[1.75rem] font-medium leading-none">
@@ -71,7 +71,7 @@ export default async function PricingPage() {
           {courses.length === 0 ? (
             <p className="text-[14px] text-muted-foreground">{c.courses.empty}</p>
           ) : (
-            <div className="overflow-x-auto rounded-[var(--radius)] border border-border bg-card">
+            <div className="overflow-x-auto site-card">
               <table className="w-full min-w-[40rem] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-border">
@@ -108,7 +108,7 @@ export default async function PricingPage() {
         <Section title={c.tracks.title} lead={c.tracks.lead}>
           <div className="grid gap-4 md:grid-cols-3">
             {tracks.map((t) => (
-              <article key={t.sku} className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-6">
+              <article key={t.sku} className="flex flex-col site-card p-6">
                 <h3 className="text-[1.3rem] leading-tight">{t.name}</h3>
                 {t.description && <p className="mt-2 text-micro leading-relaxed text-muted-foreground">{t.description}</p>}
                 <p className="text-data mt-5 border-t border-border pt-5 text-2xl font-medium leading-none">{inr(t.amount)}</p>
@@ -130,7 +130,7 @@ export default async function PricingPage() {
 
       {c.mentoring.show && mentoring.length > 0 && (
         <Section tint title={c.mentoring.title} lead={c.mentoring.lead}>
-          <div className="overflow-x-auto rounded-[var(--radius)] border border-border bg-card">
+          <div className="overflow-x-auto site-card">
             <table className="w-full min-w-[46rem] border-collapse text-left">
               <thead>
                 <tr className="border-b border-border">
@@ -167,12 +167,12 @@ export default async function PricingPage() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
             <ul className="grid gap-3 sm:grid-cols-2">
               {c.corporate.includes.map((item, i) => (
-                <li key={i} className="rounded-[var(--radius)] border border-border bg-card px-4 py-3.5 text-[13.5px] leading-snug">
+                <li key={i} className="site-card px-4 py-3.5 text-[13.5px] leading-snug">
                   {item}
                 </li>
               ))}
             </ul>
-            <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+            <div className="site-card p-6">
               <p className="label-caps">{c.corporate.cardLabel}</p>
               <p className="mt-3 text-[1.4rem] leading-tight">{c.corporate.cardTitle}</p>
               <p className="mt-3 text-micro leading-relaxed text-muted-foreground">{c.corporate.cardBody}</p>
@@ -189,7 +189,7 @@ export default async function PricingPage() {
         <Section tint title={c.faq.title}>
           <div className="grid gap-4 md:grid-cols-2">
             {c.faq.items.map((f, i) => (
-              <details key={i} className="group rounded-[var(--radius)] border border-border bg-card p-5 open:bg-card">
+              <details key={i} className="group site-card p-5 open:bg-card">
                 <summary className="cursor-pointer list-none text-[14px] font-semibold marker:hidden">
                   <span className="flex items-start justify-between gap-4">
                     {f.q}

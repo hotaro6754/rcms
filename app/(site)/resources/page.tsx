@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, BookOpen, ClipboardCheck, FileText, GitBranch, Library, Wrench } from "lucide-react";
 import { PageHeader, Section } from "@/components/site/PageHeader";
 import { publicCounts, publicEntries } from "@/lib/services/cms/library";
 import { SECTIONS } from "@/lib/library-sections";
@@ -21,9 +22,9 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
     <>
       <PageHeader eyebrow={c.header.eyebrow} title={c.header.title} lead={c.header.lead} />
       <Section>
-        <form role="search" className="flex max-w-xl gap-2">
-          <input name="q" defaultValue={q} placeholder={c.search.placeholder} aria-label="Search the library" className="min-h-11 flex-1 border-b border-input bg-transparent text-[15px] outline-none focus:border-foreground" />
-          <button className="min-h-11 rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground">{c.search.button}</button>
+        <form role="search" className="flex max-w-xl flex-col gap-2 sm:flex-row">
+          <input name="q" defaultValue={q} placeholder={c.search.placeholder} aria-label="Search the library" className="min-h-12 flex-1 rounded-md border border-input bg-background px-4 text-[15px] outline-none focus:border-foreground" />
+          <button className="min-h-12 rounded-md bg-primary px-6 text-[15px] font-semibold text-primary-foreground hover:bg-primary-hover">{c.search.button}</button>
         </form>
         {results && (
           <div className="mt-8">
@@ -44,19 +45,26 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
         <ul className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {SECTIONS.map((s) => (
             <li key={s.path}>
-              <Link href={`/resources/${s.path}`} className="flex h-full flex-col rounded-[var(--radius)] border border-border bg-card p-6 transition-colors hover:border-foreground">
-                <span className="text-[1.2rem] leading-tight">{c.sections[s.kind].title}</span>
+              <Link href={`/resources/${s.path}`} data-interactive className="site-card group flex h-full flex-col p-6">
+                <SectionIcon kind={s.kind} />
+                <span className="mt-4 text-[1.15rem] font-bold leading-tight">{c.sections[s.kind].title}</span>
                 <span className="mt-2 text-[13.5px] text-muted-foreground">{c.sections[s.kind].lead}</span>
-                <span className="text-data mt-4 text-micro text-subtle">
-                  {counts[s.kind] ?? 0} {c.sections.entriesLabel}
+                <span className="mt-auto flex items-center justify-between pt-5 text-[13px]">
+                  <span className="tabular text-subtle">
+                    {counts[s.kind] ?? 0} {c.sections.entriesLabel}
+                  </span>
+                  <ArrowRight aria-hidden className="h-4 w-4 text-brand transition-transform group-hover:translate-x-1" />
                 </span>
               </Link>
             </li>
           ))}
           {c.tests.show && (
             <li>
-              <SiteLink link={c.tests.link} className="flex h-full flex-col rounded-[var(--radius)] border border-border bg-card p-6 transition-colors hover:border-foreground">
-                <span className="text-[1.2rem] leading-tight">{c.tests.link.label}</span>
+              <SiteLink link={c.tests.link} data-interactive className="site-card group flex h-full flex-col p-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                  <ClipboardCheck aria-hidden className="h-5 w-5" />
+                </span>
+                <span className="mt-4 text-[1.15rem] font-bold leading-tight">{c.tests.link.label}</span>
                 <span className="mt-2 text-[13.5px] text-muted-foreground">{c.tests.body}</span>
               </SiteLink>
             </li>
@@ -70,5 +78,16 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
         )}
       </Section>
     </>
+  );
+}
+
+/** One icon per library section, so the sections can be told apart at a glance. */
+const ICONS: Record<string, typeof BookOpen> = { GLOSSARY: BookOpen, PROCESS: GitBranch, CASE_STUDY: FileText, TOOLKIT: Wrench };
+function SectionIcon({ kind }: { kind: string }) {
+  const Icon = ICONS[kind] ?? Library;
+  return (
+    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+      <Icon aria-hidden className="h-5 w-5" />
+    </span>
   );
 }

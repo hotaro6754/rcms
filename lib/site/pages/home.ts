@@ -40,6 +40,7 @@ export const homePage = definePage({
     }),
 
     hero: group("Hero", {
+      eyebrow: text("Label above the headline", "US healthcare revenue cycle · Training and mentoring", { max: 80, optional: true }),
       line1: text("Headline, line 1", "From RCM", { max: 40 }),
       line2: text("Headline, line 2 (accented)", "beginner.", { max: 40 }),
       line3: text("Headline, line 3", "To operations", { max: 40 }),
@@ -62,6 +63,15 @@ export const homePage = definePage({
         { max: 3, titleField: "label" },
       ),
       scrollCue: link("Scroll prompt", { label: "FOLLOW THE CLAIM", href: "#problem" }),
+    }),
+
+    glance: group("At a glance (under the hero)", {
+      show: toggle("Show this section", true),
+      caption: text("Caption beside the figures", "One case, followed from the claim to the remittance to the month-end report.", { max: 160 }),
+      stages: text("Stages label", "revenue-cycle stages, front end to back end", { max: 80, help: "Shown after the number of stages." }),
+      levels: text("Levels label", "learning levels, each built on the one before", { max: 80, help: "Shown after the number of published levels." }),
+      roles: text("Career label", "levels of career progression", { max: 80, help: "Shown after the number of roles in the role ladder." }),
+      sessions: text("Mentoring label", "one-to-one mentoring sessions", { max: 80, help: "Shown after the number of sessions on sale." }),
     }),
 
     problem: group("01 The problem", {
@@ -92,7 +102,7 @@ export const homePage = definePage({
       title: text("Heading", "Ten stages, and a claim has to clear every one of them.", { max: 120 }),
       lead: area(
         "Introduction",
-        "Scroll through them in order: what each stage does, how it usually breaks, the number that gives it away, and where RCMExcel teaches it.",
+        "Go through them in order: what each stage does, how it usually breaks, the number that gives it away, and where RCMExcel teaches it.",
         { max: 400 },
       ),
       phases: group("Phase names", {
@@ -103,6 +113,7 @@ export const homePage = definePage({
       breaksLabel: text("“How it breaks” label", "HOW IT BREAKS", { max: 40 }),
       numberLabel: text("“The number” label", "THE NUMBER", { max: 40 }),
       learnLabel: text("“Where you learn it” label", "WHERE YOU LEARN IT", { max: 40 }),
+      levelsFigureTitle: text("Figure under the stages: heading", "Where each stage is taught", { max: 80 }),
       levelNames: group("Level names", {
         trainee: text("Foundation level", "Trainee — Foundation", { max: 60 }),
         professional: text("Execution level", "Professional — Execution", { max: 60 }),

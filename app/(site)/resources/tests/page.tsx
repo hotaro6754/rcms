@@ -22,7 +22,7 @@ export default async function TestsPage() {
   const detail = await Promise.all(courses.map(async (c) => ({ c, course: await getPublishedCourse(c.slug) })));
   return (
     <>
-      <PageHeader eyebrow={content.header.eyebrow} title={content.header.title} lead={content.header.lead} />
+      <PageHeader eyebrow={content.header.eyebrow} title={content.header.title} lead={content.header.lead} crumbs={[{ label: "Resources", href: "/resources" }, { label: content.header.title }]} />
       <Section>
         {levels.map((l) => {
           const inLevel = detail.filter((d) => d.c.levelId === l.id && d.course);
@@ -30,7 +30,7 @@ export default async function TestsPage() {
           return (
             <section key={l.id} className="mb-10">
               <h2 className="text-[1.4rem] leading-tight">{l.displayTitle}</h2>
-              <div className="mt-4 overflow-x-auto rounded-[var(--radius)] border border-border bg-card">
+              <div className="mt-4 overflow-x-auto site-card">
                 <table className="w-full min-w-[46rem] border-collapse text-left text-[13.5px]">
                   <thead>
                     <tr className="border-b border-border">

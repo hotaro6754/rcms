@@ -45,7 +45,7 @@ export default async function LearningPathsPage() {
               </div>
 
               <div className="flex flex-col gap-5">
-                <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+                <div className="site-card p-6">
                   <p className="label-caps">{t.topicsLabel}</p>
                   <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
                     {level.coreTopics.map((m) => (

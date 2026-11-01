@@ -29,12 +29,12 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
       />
 
       <Section>
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
           <ContactForm options={options} defaultInterest={interest?.slice(0, 120) ?? ""} copy={c.form} />
 
           <aside className="flex flex-col gap-4">
             {c.whatsapp.show && wa && (
-              <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+              <div className="site-card p-6">
                 <h2 className="text-[15px] font-semibold">{c.whatsapp.title}</h2>
                 <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
                   {c.whatsapp.body}
@@ -46,7 +46,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
             )}
 
             {c.corporate.show && (
-              <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+              <div className="site-card p-6">
                 <h2 className="text-[15px] font-semibold">{c.corporate.title}</h2>
                 <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
                   {c.corporate.body}
@@ -55,7 +55,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
             )}
 
             {c.response.show && (
-              <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+              <div className="site-card p-6">
                 <h2 className="text-[15px] font-semibold">{c.response.title}</h2>
                 <p className="mt-2 text-micro leading-relaxed text-muted-foreground">
                   {c.response.body}

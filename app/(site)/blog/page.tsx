@@ -16,7 +16,7 @@ export default async function BlogPage() {
       <Section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {c.posts.items.map((p, i) => (
-            <article key={i} className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-6 transition-colors hover:border-input">
+            <article key={i} className="site-card flex flex-col p-6">
               <p className="text-data text-micro font-medium uppercase tracking-[0.06em] text-primary">{p.kind}</p>
               <h2 className="mt-3 text-[1.35rem] leading-tight">{p.title}</h2>
               <p className="mt-3 flex-1 text-[13.5px] leading-relaxed text-muted-foreground">{p.lead}</p>

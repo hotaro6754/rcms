@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, Clock } from "lucide-react";
 import { MENTORING } from "@/lib/data/catalog";
 import { AdvisoryWeek } from "@/components/illustration/AdvisoryWeek";
 import type { PageContent } from "@/lib/site/fields";
 import type { homePage } from "@/lib/site/pages/home";
+import mentoringPhoto from "@/public/images/photos/one-to-one-mentoring.webp";
 import { Chapter } from "./Chapter";
 
 /**
- * From system to person. Mentoring is presented as time in someone's advisory calendar,
- * not a pricing table: each session is a line with its length, who it is for and what you
- * walk out holding. The drawn week shows when sessions actually run; the rows carry the facts.
- * Pointing at (or tabbing to) a session shows it on the calendar: its slot, and its length.
+ * One-to-one mentoring, presented as sessions chosen by the length of the problem: each card
+ * carries its length, who it is for, what you leave with, its live price and the way to
+ * request a time. Beside them, a photograph of the work and the drawn week that shows when
+ * sessions usually run; pointing at (or tabbing to) a session marks its slot on that week.
  */
 const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
 
@@ -20,60 +23,54 @@ const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("e
 export function Mentoring({ prices, content: c }: { prices: Record<string, number>; content: PageContent<typeof homePage>["mentoring"] }) {
   const sessions = MENTORING.filter((m) => prices[`mentoring-${m.id}`] !== undefined);
   const [focus, setFocus] = useState<number | null>(null);
-  return (
-    <Chapter id="mentoring" folio="07" title={c.runningHead} surface="charcoal" data-env="ink">
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-16">
-        <div className="order-2 lg:sticky lg:top-28 lg:self-start">
-          <div className="env-paper relative -rotate-[0.5deg] overflow-hidden rounded-[6px] border border-border bg-[#fcfaf5] p-5 text-foreground shadow-[0_1px_2px_rgb(22_21_19/0.05),0_24px_48px_-24px_rgb(22_21_19/0.35)]">
-            <div aria-hidden="true" className="grain absolute inset-0 !opacity-[0.1]" />
-            <p className="text-data relative text-[10.5px] tracking-[0.14em] text-muted-foreground">{c.calendarLabel}</p>
-            <AdvisoryWeek className="mt-3" focus={focus} />
-          </div>
-          <p className="text-data mt-4 max-w-[40ch] text-[11px] leading-relaxed text-subtle">
-            {c.calendarNote}
-          </p>
-        </div>
 
-        <div className="order-1">
-          <h2 data-reveal className="max-w-[16ch] text-[clamp(2.2rem,3.8vw,3.4rem)] leading-[1.04]">
+  return (
+    <Chapter id="mentoring" folio="07" title={c.runningHead} surface="tint">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-14">
+        <div>
+          <h2 data-reveal className="max-w-[22ch] text-[clamp(1.9rem,3.2vw,2.75rem)] leading-[1.1]">
             {c.title}
           </h2>
-          <p data-reveal className="mt-5 max-w-[48ch] text-[15px] leading-relaxed text-muted-foreground">
+          <p data-reveal className="mt-5 max-w-[56ch] text-[16px] leading-relaxed text-muted-foreground">
             {c.lead}
           </p>
 
-          <ul className="mt-12 border-t border-border" onMouseLeave={() => setFocus(null)}>
+          <ul data-reveal-group className="mt-10 grid gap-4 sm:grid-cols-2" onMouseLeave={() => setFocus(null)}>
             {sessions.map((m, i) => (
-              <li key={m.id} className="border-b border-border" onMouseEnter={() => setFocus(i)} onFocus={() => setFocus(i)} onBlur={() => setFocus(null)}>
-                <Link
-                  href={`/mentoring#${m.id}`}
-                  className={`group grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-5 gap-y-3 py-7 transition-colors duration-[var(--dur-med)] sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] sm:px-3 ${focus === i ? "bg-foreground/[0.06]" : ""}`}
-                >
-                  <span className="flex flex-col">
-                    <span className={`font-serif-display text-[2.6rem] leading-none transition-colors duration-[var(--dur-med)] ${focus === i ? "text-brand" : "text-foreground/85"}`}>{m.minutes}</span>
-                    <span className="label-caps mt-1 text-[11px]">{c.minutesLabel}</span>
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="text-[17px] font-medium">{m.name}</span>
-                    <span className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{m.who}</span>
-                    <span className="mt-3 text-[13px] leading-relaxed text-secondary-foreground">
-                      <span className="text-data mr-2 text-[10.5px] tracking-[0.1em] text-subtle">{c.leaveWithLabel}</span>
-                      {m.leaveWith}.
+              <li key={m.id} data-reveal-item onMouseEnter={() => setFocus(i)} onFocus={() => setFocus(i)} onBlur={() => setFocus(null)}>
+                <Link href={`/mentoring#${m.id}`} data-interactive className="site-card group flex h-full flex-col p-6">
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[12.5px] font-semibold text-accent-foreground">
+                      <Clock aria-hidden className="h-3.5 w-3.5" />
+                      {m.minutes} {c.minutesLabel}
                     </span>
+                    <span className="tabular text-[17px] font-bold">{inr(prices[`mentoring-${m.id}`])}</span>
                   </span>
-                  <span className="col-start-2 flex items-center gap-3 sm:col-start-auto sm:flex-col sm:items-end sm:justify-between">
-                    <span className="text-data text-[15px] font-medium">{inr(prices[`mentoring-${m.id}`])}</span>
-                    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground">
-                      {c.requestLabel}
-                      <span aria-hidden="true" className="transition-transform duration-[var(--dur-med)] group-hover:translate-x-1">
-                        →
-                      </span>
-                    </span>
+                  <span className="mt-4 text-[18px] font-bold tracking-[-0.01em]">{m.name}</span>
+                  <span className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">{m.who}</span>
+                  <span className="mt-4 border-t border-border pt-4 text-[14px] leading-relaxed text-secondary-foreground">
+                    <span className="mb-1 block text-[11.5px] font-bold uppercase tracking-[0.06em] text-subtle">{c.leaveWithLabel}</span>
+                    {m.leaveWith}.
+                  </span>
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[14.5px] font-semibold text-brand">
+                    {c.requestLabel}
+                    <ArrowRight aria-hidden className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start">
+          <figure data-reveal className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted">
+            <Image src={mentoringPhoto} alt="Two colleagues working through a problem together at a laptop" fill sizes="(min-width: 1024px) 30vw, 100vw" className="object-cover" placeholder="blur" />
+          </figure>
+          <div className="site-card env-paper p-5">
+            <p className="text-[12px] font-bold uppercase tracking-[0.06em] text-subtle">{c.calendarLabel}</p>
+            <AdvisoryWeek className="mt-3" focus={focus} />
+            <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">{c.calendarNote}</p>
+          </div>
         </div>
       </div>
     </Chapter>

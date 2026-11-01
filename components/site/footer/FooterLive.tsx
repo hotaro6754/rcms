@@ -22,18 +22,18 @@ export function FooterLive({ content: c }: { content: SiteContent["live"] }) {
   return (
     <dl className="grid grid-cols-2 gap-x-8 gap-y-6 text-[14px] sm:grid-cols-[repeat(3,auto)] sm:justify-start sm:gap-x-14">
       <div>
-        <dt className="text-data text-[10.5px] tracking-[0.12em] text-subtle">{c.timeLabel}</dt>
-        <dd className="text-data mt-2 text-[1.6rem] leading-none tabular-nums" suppressHydrationWarning>
+        <dt className="text-[12px] font-semibold uppercase tracking-[0.06em] text-subtle">{c.timeLabel}</dt>
+        <dd className="tabular mt-2 text-[1.6rem] font-bold leading-none" suppressHydrationWarning>
           {now ? IST.format(now) : "--:--"}
           <span className="ml-1.5 text-[11px] text-subtle">{c.timeZone}</span>
         </dd>
       </div>
       <div>
-        <dt className="text-data text-[10.5px] tracking-[0.12em] text-subtle">{c.coursesLabel}</dt>
+        <dt className="text-[12px] font-semibold uppercase tracking-[0.06em] text-subtle">{c.coursesLabel}</dt>
         <dd className="mt-2 leading-snug text-foreground/85">{c.courses}</dd>
       </div>
       <div className="col-span-2 sm:col-span-1">
-        <dt className="text-data text-[10.5px] tracking-[0.12em] text-subtle">{c.sessionsLabel}</dt>
+        <dt className="text-[12px] font-semibold uppercase tracking-[0.06em] text-subtle">{c.sessionsLabel}</dt>
         <dd className="mt-2 leading-snug text-foreground/85">{c.sessions}</dd>
       </div>
     </dl>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { SiteLink } from "@/components/site/SiteLink";
@@ -26,22 +26,34 @@ const inr = (paise: number) => "₹" + Math.round(paise / 100).toLocaleString("e
  */
 export function BookingPanel({ options, copy }: { options: MentoringOptionView[]; copy: BookingPanelCopy }) {
   const [sku, setSku] = useState(options[0]?.sku ?? "");
+
+  // Links such as /mentoring#leadership (the homepage and the top bar) arrive with that session chosen.
+  useEffect(() => {
+    const pick = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      if (id && options.some((o) => o.sku === `mentoring-${id}`)) setSku(`mentoring-${id}`);
+    };
+    pick();
+    window.addEventListener("hashchange", pick);
+    return () => window.removeEventListener("hashchange", pick);
+  }, [options]);
   const chosen = options.find((o) => o.sku === sku);
   if (!options.length) {
     return (
-      <div className="rounded-[var(--radius)] border border-border bg-card p-5 text-[14px] text-muted-foreground">
+      <div className="site-card p-5 text-[14px] text-muted-foreground">
         {copy.closed} <SiteLink link={copy.closedLink} className="underline underline-offset-4" /> {copy.closedAfter}
       </div>
     );
   }
   return (
-    <div className="rounded-[var(--radius)] border border-border bg-card">
+    <div className="site-card">
       <fieldset className="border-b border-border p-5">
         <legend className="label-caps">{copy.legend}</legend>
         <div className="mt-4 flex flex-col gap-2">
           {options.map((o) => (
             <label
               key={o.sku}
+              id={o.sku.replace(/^mentoring-/, "")}
               className={cn("flex cursor-pointer items-start justify-between gap-4 rounded-md border px-4 py-3 transition-colors", sku === o.sku ? "border-primary bg-accent" : "border-border hover:border-primary")}
             >
               <span className="flex items-start gap-3">

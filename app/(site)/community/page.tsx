@@ -18,7 +18,7 @@ export default async function CommunityPage() {
         <Section title={c.channels.title}>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {c.channels.items.map((ch, i) => (
-              <article key={i} className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-5">
+              <article key={i} className="flex flex-col site-card p-5">
                 <h2 className="text-data text-[15px] font-semibold text-primary">{ch.name}</h2>
                 <p className="mt-1 text-micro text-muted-foreground">{ch.who}</p>
                 <p className="mt-3 flex-1 text-[13.5px] leading-relaxed text-secondary-foreground">{ch.about}</p>
@@ -34,7 +34,7 @@ export default async function CommunityPage() {
 
       {c.threads.show && (
         <Section tint title={c.threads.title} lead={c.threads.lead}>
-          <ul className="divide-y divide-border overflow-hidden rounded-[var(--radius)] border border-border bg-card">
+          <ul className="divide-y divide-border overflow-hidden site-card">
             {c.threads.items.map((t, i) => (
               <li key={i} className="flex items-center gap-5 p-4">
                 <span className="text-data hidden w-28 shrink-0 text-micro text-primary sm:block">{t.channel}</span>

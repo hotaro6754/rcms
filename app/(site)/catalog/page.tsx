@@ -34,17 +34,18 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   );
 
   return (
-    <div className="mx-auto max-w-[1320px] px-6 pb-24">
+    <>
       <PageHeader eyebrow={t.header.eyebrow} title={t.header.title} lead={t.header.lead} />
+      <div className="mx-auto max-w-[1280px] px-4 pb-24 sm:px-6">
 
-      <form role="search" className="mt-10 flex flex-wrap items-end gap-3 border-b border-border pb-6">
-        <label className="flex min-w-[16rem] flex-1 flex-col gap-1.5 text-[12px] text-subtle">
+      <form role="search" className="site-card -mt-8 relative z-10 flex flex-wrap items-end gap-3 p-5">
+        <label className="flex min-w-[14rem] flex-1 flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-subtle">
           {t.search.searchLabel}
-          <input name="q" defaultValue={sp.q} placeholder={t.search.placeholder || undefined} className="min-h-11 border-b border-input bg-transparent text-[16px] text-foreground outline-none focus:border-foreground" />
+          <input name="q" defaultValue={sp.q} placeholder={t.search.placeholder || undefined} className="min-h-11 rounded-md border border-input bg-background px-3 text-[16px] font-normal normal-case tracking-normal text-foreground outline-none focus:border-foreground" />
         </label>
-        <label className="flex flex-col gap-1.5 text-[12px] text-subtle">
+        <label className="flex flex-col gap-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-subtle">
           {t.search.levelLabel}
-          <select name="level" defaultValue={sp.level ?? ""} className="min-h-11 border-b border-input bg-transparent text-[15px] text-foreground">
+          <select name="level" defaultValue={sp.level ?? ""} className="min-h-11 rounded-md border border-input bg-background px-3 text-[15px] font-normal normal-case tracking-normal text-foreground">
             <option value="">{t.search.allLevels}</option>
             {levels.map((l) => (
               <option key={l.id} value={l.slug}>
@@ -56,19 +57,19 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
         <label className="flex items-center gap-2 pb-3 text-[14px]">
           <input type="checkbox" name="free" value="1" defaultChecked={!!sp.free} /> {t.search.freeLabel}
         </label>
-        <button className="min-h-11 rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover">{t.search.button}</button>
+        <button className="min-h-11 rounded-md bg-primary px-6 text-[14.5px] font-semibold text-primary-foreground hover:bg-primary-hover">{t.search.button}</button>
       </form>
 
       {courses.length === 0 && <p className="mt-10 text-[15px] text-muted-foreground">{t.search.empty}</p>}
 
-      <div className="mt-10 flex flex-col gap-14">
+      <div className="mt-14 flex flex-col gap-16">
         {levels.map((l) => {
           const inLevel = courses.filter((c) => c.levelId === l.id);
           if (!inLevel.length) return null;
           return (
             <section key={l.id} aria-labelledby={`level-${l.slug}`}>
               <div className={cn("border-t-4 pt-4", ACCENT[l.accent] ?? "border-foreground")}>
-                <p className="text-data text-[11px] tracking-[0.14em] text-subtle">{t.levels.levelPrefix} {l.sequence}</p>
+                <p className="eyebrow text-subtle">{t.levels.levelPrefix} {l.sequence}</p>
                 <h2 id={`level-${l.slug}`} className="mt-1 text-[clamp(1.6rem,3vw,2.3rem)] leading-tight">
                   {l.displayTitle}
                 </h2>
@@ -79,23 +80,26 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               </div>
               <ul className="mt-6 grid gap-5 md:grid-cols-2">
                 {inLevel.map((c) => (
-                  <li key={c.id} className="flex flex-col rounded-[var(--radius)] border border-border bg-card p-5">
-                    <h3 className="text-[1.2rem] leading-snug">
+                  <li key={c.id} data-interactive className="site-card flex flex-col p-6">
+                    <h3 className="text-[1.2rem] font-bold leading-snug tracking-[-0.01em]">
                       <Link href={`/catalog/${c.slug}`} className="hover:underline hover:underline-offset-4">
                         {c.name}
                       </Link>
                     </h3>
                     {c.description && <p className="mt-2 line-clamp-3 text-[14px] text-muted-foreground">{c.description}</p>}
-                    <p className="text-data mt-4 text-[11px] tracking-[0.08em] text-subtle">
-                      {c.modules} {t.cards.modules} · {c.lessons} {t.cards.lessons} · {Math.round(c.minutes / 60) || "<1"} {t.cards.hours} · {c.assessments} {t.cards.assessments}
-                      {c.difficulty ? ` · ${c.difficulty.toUpperCase()}` : ""}
-                    </p>
-                    <div className="mt-auto flex flex-wrap items-center gap-3 pt-5 text-[14px]">
-                      <span className="font-medium">{c.isFree ? t.cards.free : c.price ? `₹${(c.price.amount / 100).toLocaleString("en-IN")}` : t.cards.noPrice}</span>
+                    <ul className="mb-5 mt-4 flex flex-wrap gap-1.5 text-[12.5px] text-subtle">
+                      <li className="rounded-full bg-muted px-2.5 py-0.5">{c.modules} {t.cards.modules}</li>
+                      <li className="rounded-full bg-muted px-2.5 py-0.5">{c.lessons} {t.cards.lessons}</li>
+                      <li className="rounded-full bg-muted px-2.5 py-0.5">{Math.round(c.minutes / 60) || "<1"} {t.cards.hours}</li>
+                      <li className="rounded-full bg-muted px-2.5 py-0.5">{c.assessments} {t.cards.assessments}</li>
+                      {c.difficulty && <li className="rounded-full bg-muted px-2.5 py-0.5 capitalize">{c.difficulty.toLowerCase()}</li>}
+                    </ul>
+                    <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-border pt-4 text-[14px]">
+                      <span className="tabular text-[17px] font-bold">{c.isFree ? t.cards.free : c.price ? `₹${(c.price.amount / 100).toLocaleString("en-IN")}` : t.cards.noPrice}</span>
                       {c.includedInSubscription && !c.isFree && <span className="text-[12.5px] text-muted-foreground">{t.cards.subscription}</span>}
                       {c.previews > 0 && <span className="text-[12.5px] text-brand">{c.previews} {c.previews === 1 ? t.cards.previewOne : t.cards.previewMany}</span>}
-                      <Link href={`/catalog/${c.slug}`} className="ml-auto underline underline-offset-4">
-                        {t.cards.details}
+                      <Link href={`/catalog/${c.slug}`} className="ml-auto inline-flex min-h-10 items-center gap-1 font-semibold text-brand hover:underline hover:underline-offset-4">
+                        {t.cards.details} <span aria-hidden>→</span>
                       </Link>
                     </div>
                   </li>
@@ -109,6 +113,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
         {t.disclaimer.text} <SiteLink link={t.disclaimer.link} className="underline" />
         {t.disclaimer.after}
       </p>
-    </div>
+      </div>
+    </>
   );
 }

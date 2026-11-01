@@ -5,8 +5,8 @@ import { subscribeNotes, type ContactResult } from "@/lib/actions/leads";
 import type { SiteContent } from "@/lib/site/pages/site";
 
 /**
- * The monthly letter. One field, one button, a ruled line under the input rather than a
- * box. The result replaces the form in place.
+ * Floor Notes, the monthly letter. One labelled field and one button; the result replaces the
+ * form in place. Anchored as #floor-notes so the top bar's Resources menu can link to it.
  */
 export function FooterNotes({ content: c }: { content: SiteContent["notes"] }) {
   const [state, action, pending] = useActionState<ContactResult | null, FormData>(
@@ -15,16 +15,16 @@ export function FooterNotes({ content: c }: { content: SiteContent["notes"] }) {
   );
 
   return (
-    <div>
-      <p className="text-data text-[10.5px] tracking-[0.12em] text-subtle">{c.eyebrow}</p>
-      <p className="font-serif-display mt-3 max-w-[30ch] text-[1.5rem] leading-snug">{c.title}</p>
+    <div id="floor-notes">
+      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-brand">{c.eyebrow}</p>
+      <p className="mt-3 max-w-[36ch] text-[1.25rem] font-semibold leading-snug">{c.title}</p>
       {state?.ok ? (
-        <p role="status" className="mt-6 border-b border-foreground pb-3 text-[15px]">
+        <p role="status" className="mt-6 rounded-md border border-border px-4 py-3 text-[15px]">
           {c.success}
         </p>
       ) : (
         <form action={action} className="mt-6">
-          <div className="flex items-end gap-4 border-b border-foreground/60 focus-within:border-foreground">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <label className="min-w-0 flex-1">
               <span className="sr-only">{c.emailLabel}</span>
               <input
@@ -35,13 +35,13 @@ export function FooterNotes({ content: c }: { content: SiteContent["notes"] }) {
                 placeholder={c.placeholder}
                 aria-invalid={state?.ok === false || undefined}
                 aria-describedby={state?.ok === false ? "notes-error" : undefined}
-                className="w-full bg-transparent pb-3 text-[16px] outline-none placeholder:text-foreground/35"
+                className="h-12 w-full rounded-md border border-input bg-background/5 px-4 text-[16px] outline-none placeholder:text-foreground/45 focus:border-foreground"
               />
             </label>
             <button
               type="submit"
               disabled={pending}
-              className="text-data mb-2 shrink-0 text-[12px] tracking-[0.12em] transition-opacity hover:opacity-70 disabled:opacity-40"
+              className="h-12 shrink-0 rounded-md bg-primary px-5 text-[14px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-50"
             >
               {pending ? c.sending : c.button}
             </button>

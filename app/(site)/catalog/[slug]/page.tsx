@@ -8,7 +8,7 @@ import { ActionForm } from "@/components/admin/ActionForm";
 import { enrolFreeAction } from "@/lib/actions/learning";
 import { paymentsConfigured } from "@/lib/payments/razorpay";
 import { when } from "@/components/admin/kit";
-import { SiteLink } from "@/components/site/SiteLink";
+import { Breadcrumbs } from "@/components/site/PageHeader";
 import { getPageContent } from "@/lib/site/content";
 import { coursePage } from "@/lib/site/pages/course";
 import { jsonLd, organisationLd, pageMeta, siteUrl } from "@/lib/seo";
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return c ? pageMeta({ title: c.snapshot.course.name, description: c.snapshot.course.description, path: `/catalog/${c.slug}` }) : { title: "Course" };
 }
 
-const BTN = "inline-flex min-h-12 items-center rounded-[3px] bg-primary px-6 text-[15px] font-medium text-primary-foreground hover:bg-primary-hover";
+const BTN = "inline-flex min-h-12 items-center rounded-md bg-primary px-6 text-[15px] font-medium text-primary-foreground hover:bg-primary-hover";
 
 /**
  * A course's public page: outcomes, prerequisites, effort, module and lesson list, the
@@ -87,22 +87,22 @@ export default async function CourseDetail({ params }: { params: Promise<{ slug:
   });
 
   return (
-    <div className="mx-auto max-w-[1320px] px-6 pb-24">
+    <div className="mx-auto max-w-[1280px] px-4 pb-24 pt-4 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
-      <SiteLink link={t.nav.back} className="text-[13px] text-muted-foreground hover:text-foreground" />
-      <div className="mt-6 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <Breadcrumbs items={[{ label: t.nav.back.label.replace(/^←\s*/, "") || "Catalogue", href: t.nav.back.href }, { label: s.course.name }]} />
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div>
-          <p className="text-data text-[11px] tracking-[0.14em] text-subtle">{level ? `${t.intro.levelPrefix} ${level.sequence} · ${level.displayTitle.toUpperCase()}` : t.intro.noLevel}</p>
-          <h1 className="mt-3 text-[clamp(2.2rem,4.5vw,3.6rem)] leading-[1.02]">{s.course.name}</h1>
+          <p className="eyebrow">{level ? `${t.intro.levelPrefix} ${level.sequence} · ${level.displayTitle.toUpperCase()}` : t.intro.noLevel}</p>
+          <h1 className="mt-3 text-[clamp(2rem,4vw,3.25rem)] leading-[1.08]">{s.course.name}</h1>
           {s.course.description && <p className="mt-5 max-w-[65ch] text-[17px] leading-relaxed text-muted-foreground">{s.course.description}</p>}
           {s.course.who && <p className="mt-4 text-[15px]">{t.intro.forLabel} {s.course.who}</p>}
 
           {s.course.outcomes.length > 0 && (
             <section className="mt-10">
               <h2 className="text-[1.4rem]">{t.intro.outcomesTitle}</h2>
-              <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[15px]">
+              <ul className="mt-4 grid gap-2.5 text-[15px] sm:grid-cols-2">
                 {s.course.outcomes.map((o) => (
-                  <li key={o}>{o}</li>
+                  <li key={o} className="flex gap-2.5 rounded-lg border border-border bg-card px-4 py-3"><span aria-hidden className="mt-0.5 text-brand">✓</span>{o}</li>
                 ))}
               </ul>
             </section>
@@ -112,9 +112,9 @@ export default async function CourseDetail({ params }: { params: Promise<{ slug:
             <h2 className="text-[1.4rem]">{t.intro.curriculumTitle}</h2>
             <ol className="mt-4 flex flex-col gap-3">
               {s.modules.map((m, i) => (
-                <li key={m.id} className="rounded-[var(--radius)] border border-border bg-card px-5 py-4">
+                <li key={m.id} className="site-card px-5 py-4">
                   <p className="text-[15px] font-medium">
-                    <span className="text-data mr-2 text-[11px] text-subtle">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="text-data mr-2 text-[12px] text-subtle">{String(i + 1).padStart(2, "0")}</span>
                     {m.title}
                   </p>
                   <ul className="mt-2 flex flex-col gap-1 text-[13.5px] text-muted-foreground">
@@ -130,7 +130,7 @@ export default async function CourseDetail({ params }: { params: Promise<{ slug:
                             {l.freePreview && ` — ${t.intro.previewSignIn}`}
                           </span>
                         )}
-                        <span className="text-data shrink-0 text-[11px]">{l.minutes} {t.intro.minutes}</span>
+                        <span className="text-data shrink-0 text-[12px]">{l.minutes} {t.intro.minutes}</span>
                       </li>
                     ))}
                   </ul>
@@ -140,7 +140,7 @@ export default async function CourseDetail({ params }: { params: Promise<{ slug:
           </section>
         </div>
 
-        <aside className="flex h-fit flex-col gap-5 rounded-[var(--radius)] border border-border bg-card p-6 lg:sticky lg:top-28">
+        <aside className="flex h-fit flex-col gap-5 site-card p-6 lg:sticky lg:top-28">
           <p className="font-serif-display text-[2rem] leading-none">{s.course.isFree ? t.facts.free : product ? `₹${(product.amount / 100).toLocaleString("en-IN")}` : "—"}</p>
           {s.course.includedInSubscription && !s.course.isFree && <p className="-mt-3 text-[13px] text-muted-foreground">{t.facts.included}</p>}
           {cta}

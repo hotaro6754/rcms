@@ -22,7 +22,7 @@ export default async function AboutPage() {
       <Section tint>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
           <div>
-            <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+            <div className="site-card p-6">
               <p className="label-caps">{c.founder.label}</p>
               <h2 className="mt-3 text-[1.6rem] leading-tight">
                 {c.founder.name}
@@ -56,7 +56,7 @@ export default async function AboutPage() {
           <div className="flex flex-col gap-8">
             <div>
               <h2 className="text-[1.6rem] leading-tight">{c.career.title}</h2>
-              <dl className="mt-6 grid gap-px overflow-hidden rounded-[var(--radius)] border border-border bg-border sm:grid-cols-2">
+              <dl className="mt-6 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2">
                 {c.career.items.map((item, i) => (
                   <div key={i} className="bg-card p-5">
                     <dt className="text-[14px] font-semibold">{item.title}</dt>
@@ -68,7 +68,7 @@ export default async function AboutPage() {
               </dl>
             </div>
 
-            <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+            <div className="site-card p-6">
               <h3 className="text-[15px] font-semibold">{c.why.title}</h3>
               {c.why.paragraphs.map((p, i) => (
                 <p
@@ -89,7 +89,7 @@ export default async function AboutPage() {
             {c.beliefs.items.map((b, i) => (
               <article
                 key={i}
-                className="rounded-[var(--radius)] border border-border bg-card p-6"
+                className="site-card p-6"
               >
                 <span className="text-data text-micro font-semibold text-primary">
                   {String(i + 1).padStart(2, "0")}

@@ -27,24 +27,24 @@ export const themePage = definePage({
   description: "Colours, fonts, text sizes and corner style for the whole public website. Each page can also have its own style (at the bottom of its editor). Text must stay readable: publishing is refused if a text colour has less than 4.5:1 contrast with its background.",
   fields: {
     colours: group("Colours", {
-      background: color("Page background", "#f3f2ee"),
-      foreground: color("Main text", "#161513"),
+      background: color("Page background", "#ffffff"),
+      foreground: color("Main text", "#0e1a33"),
       card: color("Cards and panels", "#ffffff"),
-      muted: color("Secondary text", "#57534c"),
-      primary: color("Buttons", "#161513"),
-      primaryText: color("Button text", "#f7f3ec"),
-      brand: color("Accent (links, highlights)", "#3f6e5e"),
-      border: color("Lines and borders", "#dddbd4"),
+      muted: color("Secondary text", "#475467"),
+      primary: color("Buttons", "#13235b"),
+      primaryText: color("Button text", "#ffffff"),
+      brand: color("Accent (links, highlights)", "#0b7470"),
+      border: color("Lines and borders", "#e2e7ef"),
     }),
     type: group("Fonts", {
       headings: choice(
         "Headings",
         [
-          { value: "display", label: "Cabinet Grotesk (current)" },
-          { value: "sans", label: "Satoshi" },
+          { value: "sans", label: "Satoshi (current)" },
+          { value: "display", label: "Cabinet Grotesk" },
           { value: "serif", label: "Georgia (serif)" },
         ] as const,
-        "display",
+        "sans",
       ),
       body: choice(
         "Body text",
@@ -64,11 +64,11 @@ export const themePage = definePage({
       corners: choice(
         "Corners",
         [
-          { value: "square", label: "Nearly square (current)" },
-          { value: "soft", label: "Soft" },
+          { value: "soft", label: "Soft (current)" },
+          { value: "square", label: "Nearly square" },
           { value: "round", label: "Round" },
         ] as const,
-        "square",
+        "soft",
       ),
     }),
   },
