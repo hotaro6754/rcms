@@ -5,12 +5,12 @@ import { downloadHeaders, isAvailable, isLink, readStored } from "@/lib/storage"
 import { resourceAccess } from "@/lib/services/learning/resource-access";
 
 /**
- * Download a course material. A learner must be signed in, verified, active and have live
- * access to a released course whose snapshot lists this resource (or the resource belongs to
- * a free-preview lesson of it), and the course team must have allowed downloading it. Staff
- * who can view content can open anything. Every download is audited.
+ * The stored file of a course material, for staff only. Learners never receive files: every
+ * material is view-only and read in the lesson as page images (spec LMS-14). Staff who can view
+ * content may fetch the learner-facing PDF, or with ?source=1 the original upload (.pptx/.docx).
+ * Every fetch is audited.
  */
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const actor = await getActor();
   if (!actor?.emailVerified || BLOCKED_STATUSES.includes(actor.status)) return new NextResponse("Sign in to download course materials.", { status: 401 });
 
@@ -19,8 +19,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!access.ok) return new NextResponse(access.message, { status: access.status });
   const { res, staff } = access;
 
-  // View-only materials are never handed to learners as files (PDFs are read in the lesson).
-  if (!staff && !res.downloadable) return new NextResponse("This material is view-only. Open it in the lesson to read it.", { status: 403 });
+  // Learners are never handed files: materials are read in the lesson.
+  if (!staff) return new NextResponse("This material is view-only. Open it in the lesson.", { status: 403 });
+  const source = new URL(req.url).searchParams.get("source") === "1" && res.sourceKey && res.sourceMime;
+  if (source) {
+    if (!isAvailable(res.sourceKey!)) return new NextResponse("The original upload is missing from storage.", { status: 404 });
+    await audit({ actorId: actor.id, action: "download", entity: "Resource", entityId: res.id, after: { title: res.title, original: true } });
+    const body = await readStored(res.sourceKey!);
+    const ext = res.sourceKey!.split(".").pop();
+    const name = `${res.title.replace(/[^\w\- ]+/g, "").trim() || "material"}${ext ? `.${ext}` : ""}`;
+    return new NextResponse(new Uint8Array(body), { headers: downloadHeaders(res.sourceMime!, body.length, name) });
+  }
   if (!isAvailable(res.fileKey)) return new NextResponse("This material is listed but has not been uploaded yet.", { status: 404 });
 
   await audit({ actorId: actor.id, action: "download", entity: "Resource", entityId: res.id, after: { title: res.title } });

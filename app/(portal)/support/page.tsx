@@ -22,7 +22,7 @@ export default async function SupportHome() {
         title="How can we help?"
         lede={`We help with enrolment, course access, navigation, assessments, certificates, payments and general educational questions. Support hours: ${hours}. Outside them, your message waits in the queue and we reply in the same thread.`}
         actions={
-          <Link href="/support/new" className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover">
+          <Link href="/support/new" className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover">
             Start a conversation
           </Link>
         }

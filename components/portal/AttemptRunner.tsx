@@ -129,7 +129,7 @@ export function AttemptRunner({
                 <span className="text-data mr-2 text-micro text-subtle">{i + 1}.</span>
                 {q.prompt} <span className="text-data ml-1 text-[10.5px] text-subtle">({q.points} pt)</span>
               </legend>
-              {q.scenario && <p className="mt-2 whitespace-pre-line rounded-[3px] bg-secondary/60 px-3 py-2 text-[13.5px]">{q.scenario}</p>}
+              {q.scenario && <p className="mt-2 whitespace-pre-line rounded-xl bg-secondary/60 px-3 py-2 text-[13.5px]">{q.scenario}</p>}
               <div className="mt-3">
                 {(q.type === "SINGLE" || q.type === "TRUE_FALSE") && (
                   <div className="flex flex-col gap-2">
@@ -159,7 +159,7 @@ export function AttemptRunner({
                   <ol className="flex flex-col gap-1.5">
                     <p className="text-[12px] text-muted-foreground">Put these in the correct order using the arrows.</p>
                     {((answers[q.id] as string[]) ?? []).map((t, j, arr) => (
-                      <li key={t} className="flex items-center gap-2 rounded-[3px] border border-border px-3 py-2 text-[14px]">
+                      <li key={t} className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-[14px]">
                         <span className="text-data w-5 text-[11px] text-subtle">{j + 1}</span>
                         <span className="flex-1">{q.options.find((o) => o.token === t)?.text}</span>
                         <button type="button" disabled={j === 0} onClick={() => set(q.id, arr.map((x, k) => (k === j - 1 ? t : k === j ? arr[j - 1] : x)))} aria-label="Move up" className="rounded p-1 hover:bg-secondary disabled:opacity-30">
@@ -179,7 +179,7 @@ export function AttemptRunner({
                       return (
                         <label key={o.token} className="grid items-center gap-2 text-[14px] sm:grid-cols-[1fr_1fr]">
                           <span>{o.text}</span>
-                          <select value={cur[o.token] ?? ""} onChange={(e) => set(q.id, { ...cur, [o.token]: e.target.value })} className="min-h-10 rounded-[3px] border border-input bg-card px-2 text-[14px]">
+                          <select value={cur[o.token] ?? ""} onChange={(e) => set(q.id, { ...cur, [o.token]: e.target.value })} className="min-h-10 rounded-xl border border-input bg-card px-2 text-[14px]">
                             <option value="">Choose…</option>
                             {q.targets.map((t) => (
                               <option key={t.token} value={t.token}>
@@ -194,7 +194,7 @@ export function AttemptRunner({
                 )}
                 {q.type === "SHORT_ANSWER" && (
                   <div>
-                    <textarea value={(answers[q.id] as string) ?? ""} onChange={(e) => set(q.id, e.target.value)} rows={6} className="w-full rounded-[3px] border border-input bg-card px-3 py-2 text-[14px]" aria-label="Your answer" />
+                    <textarea value={(answers[q.id] as string) ?? ""} onChange={(e) => set(q.id, e.target.value)} rows={6} className="w-full rounded-xl border border-input bg-card px-3 py-2 text-[14px]" aria-label="Your answer" />
                     <p className="mt-1 text-[12px] text-muted-foreground">
                       {String((answers[q.id] as string) ?? "").trim().split(/\s+/).filter(Boolean).length} words{q.maxWords ? ` of ${q.maxWords}` : ""}. Marked by a reviewer. Do not include patient or client identifiers.
                     </p>
@@ -219,7 +219,7 @@ export function AttemptRunner({
                     }}
                   >
                     <input type="file" name="file" required accept=".pdf,.docx,.xlsx,.pptx,.csv,.txt,image/png,image/jpeg" className="text-[13px]" />
-                    <button className="min-h-9 rounded-[3px] border border-input px-3 text-[13px] hover:bg-secondary">Upload</button>
+                    <button className="min-h-9 rounded-xl border border-input px-3 text-[13px] hover:bg-secondary">Upload</button>
                     {files[q.id] && <span className="text-[13px] text-success">Uploaded: {files[q.id]}</span>}
                     <p className="w-full text-[12px] text-muted-foreground">PDF, Office, CSV, text or image, up to 25 MB. Synthetic data only.</p>
                   </form>
@@ -236,7 +236,7 @@ export function AttemptRunner({
         </p>
       )}
       <div className="flex items-center gap-3">
-        <button type="button" disabled={pending} onClick={() => submit(false)} className="inline-flex min-h-11 items-center gap-2 rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
+        <button type="button" disabled={pending} onClick={() => submit(false)} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
           {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           Submit answers
         </button>

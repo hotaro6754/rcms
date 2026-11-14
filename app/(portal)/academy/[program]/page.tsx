@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Check, Circle, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Award, BookOpen, Check, ClipboardCheck, Clock, Layers, Lock, MonitorPlay, Play, Presentation } from "lucide-react";
 import { requireActor } from "@/lib/actor";
 import { courseAccess, getPublishedCourse } from "@/lib/services/learning/catalog";
 import { progressFor } from "@/lib/services/learning/progress";
-import { PageHead } from "@/components/platform/PlatformShell";
+import { eligibility } from "@/lib/certificates";
+import { prisma } from "@/lib/db";
 import { when } from "@/components/admin/kit";
+import { FOUNDER } from "@/lib/data/founder";
+import s from "./course.module.css";
 
-/** A course's curriculum from its released version, with the learner's progress on it. */
+const hours = (min: number) => (min >= 60 ? `${Math.floor(min / 60)} h ${min % 60 ? `${min % 60} min` : ""}`.trim() : `${min} min`);
+
+/**
+ * A course workspace: the course at the top with one "continue" action, the contents as modules
+ * that open into lessons (formats, length and status on every row), and a sticky progress card
+ * with what the certificate still needs. Everything comes from the released version and the
+ * learner's stored progress.
+ */
 export default async function CoursePage({ params }: { params: Promise<{ program: string }> }) {
   const { program: slug } = await params;
   const actor = await requireActor();
@@ -15,66 +25,245 @@ export default async function CoursePage({ params }: { params: Promise<{ program
   if (!course) notFound();
   const access = await courseAccess(actor, course);
   if (!access.full) redirect(`/catalog/${slug}`);
-  const s = course.snapshot;
-  const progress = access.tracked ? await progressFor(actor.id, s) : null;
+  const snap = course.snapshot;
+  const progress = access.tracked ? await progressFor(actor.id, snap) : null;
+  const [elig, cert] = access.tracked
+    ? await Promise.all([eligibility(actor.id, course.id), prisma.certificate.findFirst({ where: { userId: actor.id, programId: course.id, revokedAt: null }, select: { serial: true } })])
+    : [null, null];
+
+  const lessons = snap.modules.flatMap((m) => m.lessons);
+  const totalMin = lessons.reduce((n, l) => n + (l.minutes || 0), 0);
+  const assessments = lessons.filter((l) => l.assessment).length;
+  const doneSet = progress?.done ?? new Set<string>();
+  const next = lessons.find((l) => !doneSet.has(l.id)) ?? lessons[0];
+  const nextModuleId = snap.modules.find((m) => m.lessons.some((l) => l.id === next?.id))?.id;
+  const pct = progress?.percent ?? 0;
+  const started = (progress?.lessonsDone ?? 0) > 0;
+  const C = 2 * Math.PI * 44;
 
   return (
-    <div className="mx-auto max-w-[1320px] px-6 py-12">
-      <Link href="/academy" className="text-micro text-muted-foreground hover:text-foreground">
-        ← My academy
+    <div className={s.page}>
+      <Link href="/academy" className={s.back}>
+        <ArrowLeft aria-hidden /> My learning
       </Link>
-      <PageHead
-        kicker={`${s.course.tier || "Course"} · version ${course.version}`}
-        title={s.course.name}
-        lede={
-          <>
-            {s.course.who}
-            {access.reason === "staff_preview" && <span className="mt-2 block text-warning">Staff view: progress is not recorded.</span>}
-          </>
-        }
-      />
-      {progress && (
-        <p className="text-data mt-6 text-[11px] tracking-[0.12em] text-subtle">
-          {progress.lessonsDone} OF {progress.lessonsTotal} LESSONS COMPLETE · {progress.percent}%
-        </p>
-      )}
-      <div className="mt-8 flex flex-col gap-4">
-        {s.modules.map((m, i) => (
-          <section key={m.id} className="rounded-[var(--radius)] border border-border bg-card">
-            <header className="flex items-baseline gap-3 border-b border-border px-6 py-4">
-              <span className="text-data text-micro font-semibold text-primary">{String(i + 1).padStart(2, "0")}</span>
-              <h2 className="text-[1.05rem] leading-snug">{m.title}</h2>
-              {(() => {
-                const pre = m.prerequisiteModuleId ? s.modules.find((x) => x.id === m.prerequisiteModuleId) : null;
-                const locked = !!(progress && pre && pre.lessons.some((l) => !progress.done.has(l.id)));
-                return locked ? <span className="text-micro text-warning">Opens after “{pre!.title}”</span> : null;
-              })()}
-              {progress && (
-                <span className="text-data ml-auto shrink-0 text-micro text-muted-foreground">
-                  {m.lessons.filter((l) => progress.done.has(l.id)).length}/{m.lessons.length}
-                </span>
-              )}
-            </header>
-            {m.summary && <p className="px-6 pt-3 text-[13px] text-muted-foreground">{m.summary}</p>}
-            <ul className="divide-y divide-border">
-              {m.lessons.map((l) => (
-                <li key={l.id}>
-                  <Link href={`/academy/${slug}/${l.id}`} className="flex items-center gap-4 px-6 py-3.5 transition-colors hover:bg-secondary/60">
-                    {progress?.done.has(l.id) ? <Check className="h-4 w-4 shrink-0 text-success" aria-label="Complete" /> : <Circle className="h-4 w-4 shrink-0 text-input" aria-hidden />}
-                    <span className="min-w-0 flex-1 text-[13.5px]">{l.title}</span>
-                    {l.assessment && <ClipboardCheck className="h-4 w-4 shrink-0 text-subtle" aria-label="Has an assessment" />}
-                    <span className="text-data shrink-0 text-micro text-muted-foreground">{l.minutes} min</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+
+      {/* ---------- hero ---------- */}
+      <header className={s.hero}>
+        <div className={s.heroCopy}>
+          <p className="x-kicker">
+            {snap.course.tier || "Course"} · version {course.version}
+          </p>
+          <h1 className={`x-display ${s.title}`}>{snap.course.name}</h1>
+          {snap.course.who && <p className={s.who}>{snap.course.who}</p>}
+          {access.reason === "staff_preview" && <p className={s.staff}>Staff view: progress is not recorded.</p>}
+          <ul className={s.meta}>
+            <li>
+              <Layers aria-hidden /> {snap.modules.length} modules
+            </li>
+            <li>
+              <BookOpen aria-hidden /> {lessons.length} lessons
+            </li>
+            <li>
+              <Clock aria-hidden /> {hours(totalMin)}
+            </li>
+            {assessments > 0 && (
+              <li>
+                <ClipboardCheck aria-hidden /> {assessments} assessment{assessments > 1 ? "s" : ""}
+              </li>
+            )}
+          </ul>
+          {next && (
+            <div className={s.ctaRow}>
+              <Link href={`/academy/${slug}/${next.id}`} className={s.cta}>
+                <Play aria-hidden /> {started ? "Continue" : "Start the course"}
+              </Link>
+              <span className={s.nextLine}>
+                {started ? "Next" : "First"}: <b>{next.title}</b>
+              </span>
+            </div>
+          )}
+        </div>
+        <div className={s.heroArt} aria-hidden>
+          <svg viewBox="0 0 220 160">
+            {snap.modules.slice(0, 10).map((m, i, arr) => {
+              const w = 200 / arr.length;
+              const total = m.lessons.length || 1;
+              const done = m.lessons.filter((l) => doneSet.has(l.id)).length;
+              const h = 24 + (i / Math.max(1, arr.length - 1)) * 110;
+              return (
+                <g key={m.id}>
+                  <rect x={10 + i * w + 3} y={150 - h} width={w - 6} height={h} rx="7" className={s.artBar} />
+                  <rect x={10 + i * w + 3} y={150 - h * (done / total)} width={w - 6} height={h * (done / total)} rx="7" className={s.artFill} />
+                </g>
+              );
+            })}
+          </svg>
+          <span className="x-lab">Your progress by module</span>
+        </div>
+      </header>
+
+      <div className={s.layout}>
+        {/* ---------- contents ---------- */}
+        <section className={s.contents} aria-labelledby="contents-title">
+          <div className={s.contentsHead}>
+            <h2 id="contents-title" className={`x-display ${s.h2}`}>
+              Course contents
+            </h2>
+            <span className={s.contentsMeta}>
+              {snap.modules.length} modules · {lessons.length} lessons · {hours(totalMin)}
+            </span>
+          </div>
+          <div className={s.modules}>
+            {snap.modules.map((m, i) => {
+              const pre = m.prerequisiteModuleId ? snap.modules.find((x) => x.id === m.prerequisiteModuleId) : null;
+              const locked = !!(progress && pre && pre.lessons.some((l) => !doneSet.has(l.id)));
+              const done = m.lessons.filter((l) => doneSet.has(l.id)).length;
+              const mins = m.lessons.reduce((n, l) => n + (l.minutes || 0), 0);
+              const complete = m.lessons.length > 0 && done === m.lessons.length;
+              return (
+                <details key={m.id} className={s.module} open={m.id === nextModuleId} data-state={complete ? "done" : locked ? "locked" : done ? "part" : undefined}>
+                  <summary>
+                    <span className={s.modNum}>{complete ? <Check aria-hidden /> : locked ? <Lock aria-hidden /> : String(i + 1).padStart(2, "0")}</span>
+                    <span className={s.modText}>
+                      <span className={s.modTitle}>{m.title.replace(/^\d+\.\s*/, "")}</span>
+                      <span className={s.modMeta}>
+                        {m.lessons.length} lessons · {hours(mins)}
+                        {locked && pre ? ` · opens after “${pre.title.replace(/^\d+\.\s*/, "")}”` : ""}
+                      </span>
+                    </span>
+                    {progress && (
+                      <span className={s.modProg}>
+                        <span className={s.modTrack}>
+                          <i style={{ width: `${m.lessons.length ? (done / m.lessons.length) * 100 : 0}%` }} />
+                        </span>
+                        <span className={s.modCount}>
+                          {done}/{m.lessons.length}
+                        </span>
+                      </span>
+                    )}
+                    <span className={s.chev} aria-hidden />
+                  </summary>
+                  {m.summary && <p className={s.modSummary}>{m.summary}</p>}
+                  <ol className={s.lessons}>
+                    {m.lessons.map((l, j) => {
+                      const isDone = doneSet.has(l.id);
+                      const isNext = l.id === next?.id;
+                      const video = l.blocks.some((b) => b.kind === "VIDEO");
+                      const slides = l.resources.some((r) => r.format === "SLIDES");
+                      const reading = l.resources.some((r) => r.format === "READING");
+                      return (
+                        <li key={l.id}>
+                          <Link href={`/academy/${slug}/${l.id}`} className={s.lesson} data-state={isDone ? "done" : isNext ? "next" : undefined}>
+                            <span className={s.status}>{isDone ? <Check aria-hidden /> : isNext ? <Play aria-hidden /> : <span>{j + 1}</span>}</span>
+                            <span className={s.lessonTitle}>
+                              {l.title}
+                              {isNext && <em>{started ? "Up next" : "Start here"}</em>}
+                            </span>
+                            <span className={s.formats} aria-label="Formats">
+                              {video && <MonitorPlay aria-label="Video" />}
+                              {slides && <Presentation aria-label="Slides" />}
+                              {reading && <BookOpen aria-label="Reading" />}
+                              {l.assessment && <ClipboardCheck aria-label="Assessment" />}
+                            </span>
+                            <span className={s.mins}>{l.minutes} min</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </details>
+              );
+            })}
+          </div>
+          <p className={s.fine}>
+            Educational content, effective {when(snap.course.effectiveDate)}; next scheduled review {when(snap.course.reviewDate)}. It does not replace legal, coding, clinical, contractual or payer-specific guidance.
+            Validate against current official sources and your organisation&apos;s procedures.
+            {snap.course.disclaimer ? ` ${snap.course.disclaimer}` : ""}
+          </p>
+        </section>
+
+        {/* ---------- side ---------- */}
+        <aside className={s.side}>
+          <section className={`x-slab x-night ${s.progressCard}`} aria-label="Your progress">
+            <span className="x-lab">Your progress</span>
+            <div className={s.ringRow}>
+              <svg viewBox="0 0 100 100" className={s.ring} role="img" aria-label={`${pct}% complete`}>
+                <circle cx="50" cy="50" r="44" className={s.ringTrack} />
+                <circle cx="50" cy="50" r="44" className={s.ringFill} strokeDasharray={`${(pct / 100) * C} ${C}`} transform="rotate(-90 50 50)" />
+                <text x="50" y="56" textAnchor="middle" className={s.ringN}>
+                  {pct}%
+                </text>
+              </svg>
+              <div className={s.ringText}>
+                <b>
+                  {progress?.lessonsDone ?? 0} of {lessons.length}
+                </b>
+                <span>lessons completed</span>
+              </div>
+            </div>
+            {next && (
+              <Link href={`/academy/${slug}/${next.id}`} className={s.sideCta}>
+                <Play aria-hidden /> {started ? "Continue learning" : "Start learning"}
+              </Link>
+            )}
           </section>
-        ))}
+
+          <section className={`x-slab x-sand ${s.certCard}`} aria-label="Certificate">
+            <span className={s.certHead}>
+              <Award aria-hidden />
+              <span className="x-lab">Certificate</span>
+            </span>
+            {cert ? (
+              <>
+                <p className={s.certLine}>Earned. Share it with your manager or on your profile.</p>
+                <Link href={`/certificates/${cert.serial}`} className={s.certBtn}>
+                  View certificate
+                </Link>
+              </>
+            ) : elig ? (
+              <>
+                <ul className={s.reqs}>
+                  <li data-ok={elig.lessonsDone >= elig.lessonsTotal || undefined}>
+                    <Check aria-hidden /> All lessons complete
+                    <span>
+                      {elig.lessonsDone}/{elig.lessonsTotal}
+                    </span>
+                  </li>
+                  {elig.quizzesTotal > 0 && (
+                    <li data-ok={elig.quizzesPassed >= elig.quizzesTotal || undefined}>
+                      <Check aria-hidden /> Assessments passed
+                      <span>
+                        {elig.quizzesPassed}/{elig.quizzesTotal}
+                      </span>
+                    </li>
+                  )}
+                </ul>
+                <p className={s.certLine}>{elig.eligible ? "You have met every requirement. Claim it from My learning." : "Verifiable, with its own serial and the course version you completed."}</p>
+              </>
+            ) : (
+              <p className={s.certLine}>Progress and certificates are recorded for enrolled learners.</p>
+            )}
+          </section>
+
+          <section className={`x-slab x-surface ${s.author}`} aria-label="Written by">
+            <span className="x-lab">Written by</span>
+            <div className={s.authorRow}>
+              <span className={s.avatar} aria-hidden>
+                {FOUNDER.name
+                  .split(" ")
+                  .filter((p) => /^[A-Z]/.test(p))
+                  .slice(-2)
+                  .map((p) => p[0])
+                  .join("")}
+              </span>
+              <span>
+                <b>{FOUNDER.name}</b>
+                <small>{FOUNDER.years} years in US healthcare revenue cycle operations</small>
+              </span>
+            </div>
+          </section>
+        </aside>
       </div>
-      <p className="mt-8 max-w-[70ch] text-[12.5px] leading-relaxed text-muted-foreground">
-        Educational content, effective {when(s.course.effectiveDate)}; next scheduled review {when(s.course.reviewDate)}. It does not replace legal, coding, clinical, contractual or payer-specific guidance. Validate against current official sources and your organisation&apos;s procedures.
-        {s.course.disclaimer ? ` ${s.course.disclaimer}` : ""}
-      </p>
     </div>
   );
 }

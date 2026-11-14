@@ -1,0 +1,98 @@
+/* Motivation layer: streak, goal ring, points, course path, badges. rcx tokens, light and dark. */
+
+/* ---------- streak ---------- */
+.streak { gap: 14px; }
+.streakTop { display: flex; align-items: center; gap: 14px; }
+.flameWrap { position: relative; display: grid; place-items: center; width: 64px; height: 64px; flex: none; border-radius: 20px; background: color-mix(in srgb, currentColor 10%, transparent); }
+.flame { position: absolute; width: 42px; height: 42px; color: color-mix(in srgb, currentColor 30%, transparent); }
+.flameWrap[data-hot] { background: var(--x-coral); color: #fff; animation: glow 2.4s ease-in-out infinite; }
+.flameWrap[data-hot] .flame { color: rgb(255 255 255 / 0.35); animation: flicker 1.4s ease-in-out infinite; transform-origin: bottom; }
+@keyframes flicker { 50% { transform: scale(1.08, 1.12) rotate(-3deg); } }
+@keyframes glow { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--x-coral) 22%, transparent); } }
+.streakN { position: relative; font-size: 30px; font-weight: 500; }
+.streakText { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.streakNote { font-size: 13px; line-height: 1.35; opacity: 0.85; }
+.goal { width: 84px; height: 84px; flex: none; }
+.goalTrack { fill: none; stroke: color-mix(in srgb, currentColor 14%, transparent); stroke-width: 9; }
+.goalFill { fill: none; stroke: var(--x-green); stroke-width: 9; stroke-linecap: round; animation: fill 1s 0.2s cubic-bezier(0.2, 0, 0.1, 1) both; }
+.goalFill[data-met] { stroke: var(--x-coral); }
+@keyframes fill { from { stroke-dasharray: 0 999; } }
+.goalN { fill: currentColor; font: 600 15px var(--x-fig); }
+.goalL { fill: currentColor; opacity: 0.6; font-family: var(--x-mono); font-size: 7px; letter-spacing: 0.1em; }
+.week { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.week li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: var(--x-mono); font-size: 10.5px; }
+.week i { display: grid; place-items: center; width: 100%; max-width: 40px; aspect-ratio: 1; border-radius: 12px; background: color-mix(in srgb, currentColor 11%, transparent); transition: transform 0.2s; }
+.week i svg { width: 18px; height: 18px; }
+.week li[data-on] i { background: var(--x-green); color: var(--x-on-green); animation: pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.week li[data-today] i { box-shadow: 0 0 0 2px var(--x-sand), 0 0 0 4px var(--x-coral); }
+.week li:hover i { transform: translateY(-2px); }
+@keyframes pop { from { transform: scale(0.4); } }
+.goalNote { font-size: 12.5px; opacity: 0.85; }
+
+/* ---------- stats ---------- */
+.stats { gap: 12px; }
+.points { font-size: clamp(48px, 5vw, 64px); }
+.statRows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.statLabel { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--x-on-night-2); }
+.statLabel b { font-family: var(--x-mono); font-weight: 500; color: var(--x-on-night); }
+.statBar { display: block; height: 8px; margin-top: 5px; border-radius: 999px; background: rgb(255 255 255 / 0.08); overflow: hidden; }
+.statBar i { display: block; height: 100%; border-radius: 999px; background: var(--x-night-accent); transform-origin: left; animation: growx 0.9s 0.2s cubic-bezier(0.2, 0, 0.1, 1) both; }
+.statBar[data-tone="sand"] i { background: #e6d2b3; }
+.statBar[data-tone="green"] i { background: #f2825f; }
+@keyframes growx { from { transform: scaleX(0); } }
+.rule { margin-top: auto; font-size: 11px; line-height: 1.45; color: var(--x-on-night-2); }
+
+/* ---------- path ---------- */
+.path { gap: 8px; overflow: hidden; }
+.pathHead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.pathTitle { margin-top: 6px; font-size: clamp(1.5rem, 2.4vw, 2rem); }
+.pathAll { font-size: 13px; font-weight: 600; color: var(--x-mint-ink); }
+.pathAll:hover { text-decoration: underline; text-underline-offset: 3px; }
+.nodes { position: relative; list-style: none; margin: 8px 0 0; padding: 4px 0 6px; display: flex; flex-direction: column; gap: 6px; }
+.nodes::before { content: ""; position: absolute; left: 25px; top: 24px; bottom: 24px; width: 2px; border-radius: 2px; background: var(--x-sunken); }
+.nodes li { position: relative; display: flex; align-items: center; gap: 16px; padding: 6px 10px 6px 0; border-radius: 16px; animation: nodeIn 0.45s cubic-bezier(0.2, 0, 0.1, 1) both; transition: background-color 0.15s; }
+.nodes li:hover { background: var(--x-surface-2); }
+.nodes li[data-state="now"] { background: var(--x-coral-tint); }
+@keyframes nodeIn { from { opacity: 0; transform: translateY(8px); } }
+.nodeLink { position: relative; display: inline-flex; border-radius: 50%; margin-left: 4px; }
+.nodeLink:focus-visible { outline: 3px solid var(--x-coral); outline-offset: 3px; }
+.node { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--x-surface); color: var(--x-ink-3); box-shadow: inset 0 0 0 2px var(--x-sunken); font: 600 13px var(--x-fig); transition: transform 0.15s; }
+.node svg { width: 18px; height: 18px; }
+.nodeLink:hover .node { transform: scale(1.06); }
+.nodeLink:active .node { transform: scale(0.94); }
+.node[data-state="done"] { background: var(--x-green); color: var(--x-on-green); box-shadow: none; }
+.node[data-state="part"] { background: var(--x-mint); color: var(--x-mint-ink); box-shadow: none; }
+.node[data-state="now"] { background: var(--x-coral); color: #fff; box-shadow: none; }
+.node[data-state="now"] svg { margin-left: 2px; }
+.ring { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--x-coral); opacity: 0.6; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes ping { 75%, 100% { transform: scale(1.3); opacity: 0; } }
+.nodeLabel, .nodeLabel[data-side] { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; font-size: 14px; line-height: 1.3; text-align: left; }
+.nodeLabel b { font-weight: 700; }
+.nodeLabel small { font-family: var(--x-mono); font-size: 10.5px; color: var(--x-ink-3); }
+.nodes li[data-state="ahead"] .nodeLabel { opacity: 0.6; }
+
+/* ---------- badges ---------- */
+.badges { gap: 12px; }
+.badgeHead { display: flex; align-items: center; justify-content: space-between; }
+.badgeCount { font: 600 12px var(--x-mono); padding: 3px 9px; border-radius: 999px; background: var(--x-mint); color: var(--x-mint-ink); }
+.badgeGrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; }
+.badgeGrid li { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; animation: pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.badge { position: relative; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 18px; transform: rotate(-4deg); transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.badge svg { width: 30px; height: 30px; }
+.badgeGrid li:hover .badge { transform: rotate(4deg) scale(1.08); }
+.badge[data-tone="mint"] { background: var(--x-mint); color: var(--x-mint-ink); }
+.badge[data-tone="sand"] { background: var(--x-sand); color: var(--x-sand-ink); }
+.badge[data-tone="green"] { background: var(--x-green); color: var(--x-on-green); }
+.badge[data-tone="night"] { background: var(--x-night); color: var(--x-on-night); }
+.badge[data-tone="coral"] { background: var(--x-coral); color: #fff; }
+.badgeGrid li[data-earned] .badge::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.45) 50%, transparent 65%); background-size: 250% 100%; animation: shine 3.6s ease-in-out infinite; pointer-events: none; }
+@keyframes shine { 0%, 60% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
+.badgeGrid li:not([data-earned]) .badge { background: var(--x-sunken); color: var(--x-ink-3); filter: grayscale(1); transform: none; }
+.lock { position: absolute; right: -4px; bottom: -4px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--x-surface); box-shadow: var(--x-shadow-sm); color: var(--x-ink-3); }
+.lock svg { width: 12px; height: 12px; }
+.badgeName { font-size: 11.5px; font-weight: 700; line-height: 1.2; }
+.badgeHint { font-size: 10.5px; line-height: 1.25; color: var(--x-ink-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .flameWrap, .flame, .goalFill, .week i, .statBar i, .nodes li, .ring, .badgeGrid li, .badge::after { animation: none !important; }
+}

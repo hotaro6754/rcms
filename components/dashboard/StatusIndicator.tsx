@@ -16,9 +16,9 @@ export function StatusDot({ status, className }: { status: Health; className?: s
   return (
     <span className={cn("relative inline-flex h-2 w-2 shrink-0", className)}>
       {degraded && (
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-[2px] bg-danger opacity-60" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-xl bg-danger opacity-60" />
       )}
-      <span className={cn("relative inline-flex h-2 w-2 rounded-[2px]", TONE[status].dot)} />
+      <span className={cn("relative inline-flex h-2 w-2 rounded-xl", TONE[status].dot)} />
     </span>
   );
 }

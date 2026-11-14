@@ -69,7 +69,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
               <textarea id="reply-body" name="body" required rows={4} aria-label="Reply" className={TEXTAREA} />
               <div className="flex flex-wrap items-center gap-3">
                 <Checkbox name="internal" label="Internal note (staff only)" />
-                <select name="status" defaultValue="" aria-label="Status after sending" className="min-h-9 rounded-[3px] border border-input bg-card px-2 text-[13px]">
+                <select name="status" defaultValue="" aria-label="Status after sending" className="min-h-9 rounded-xl border border-input bg-card px-2 text-[13px]">
                   <option value="">Then: waiting for learner</option>
                   {nextStatuses
                     .filter((s) => s !== "PENDING_SUBSCRIBER" && s !== "ESCALATED" && s !== "CLOSED")
@@ -99,14 +99,14 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
               {mine && open && (
                 <ActionForm action={declineAction} className="flex gap-1.5">
                   <input type="hidden" name="ticketId" value={t.id} />
-                  <input name="reason" required placeholder="Reason" aria-label="Reason for declining" className="min-h-8 flex-1 rounded-[3px] border border-input bg-card px-2 text-[12.5px]" />
-                  <button className="rounded-[3px] border border-input px-2 text-[12.5px]">Decline</button>
+                  <input name="reason" required placeholder="Reason" aria-label="Reason for declining" className="min-h-8 flex-1 rounded-xl border border-input bg-card px-2 text-[12.5px]" />
+                  <button className="rounded-xl border border-input px-2 text-[12.5px]">Decline</button>
                 </ActionForm>
               )}
               {can(actor, "support.assign") && (
                 <ActionForm action={assignAction} className="flex gap-1.5">
                   <input type="hidden" name="ticketId" value={t.id} />
-                  <select name="assigneeId" defaultValue={t.assigneeId ?? ""} aria-label="Assign to" className="min-h-8 flex-1 rounded-[3px] border border-input bg-card px-2 text-[12.5px]">
+                  <select name="assigneeId" defaultValue={t.assigneeId ?? ""} aria-label="Assign to" className="min-h-8 flex-1 rounded-xl border border-input bg-card px-2 text-[12.5px]">
                     <option value="">Unassigned</option>
                     {agents.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -114,7 +114,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
                       </option>
                     ))}
                   </select>
-                  <button className="rounded-[3px] border border-input px-2 text-[12.5px]">Assign</button>
+                  <button className="rounded-xl border border-input px-2 text-[12.5px]">Assign</button>
                 </ActionForm>
               )}
             </div>
@@ -123,7 +123,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
             <Panel title="Team">
               <ActionForm action={setTeamAction} className="flex gap-1.5">
                 <input type="hidden" name="ticketId" value={t.id} />
-                <select name="teamId" defaultValue={t.teamId ?? ""} aria-label="Team" className="min-h-8 flex-1 rounded-[3px] border border-input bg-card px-2 text-[12.5px]">
+                <select name="teamId" defaultValue={t.teamId ?? ""} aria-label="Team" className="min-h-8 flex-1 rounded-xl border border-input bg-card px-2 text-[12.5px]">
                   {!t.teamId && <option value="">No team</option>}
                   {teams.map((x) => (
                     <option key={x.id} value={x.id}>
@@ -131,7 +131,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
                     </option>
                   ))}
                 </select>
-                <button className="rounded-[3px] border border-input px-2 text-[12.5px]">Move</button>
+                <button className="rounded-xl border border-input px-2 text-[12.5px]">Move</button>
               </ActionForm>
             </Panel>
           )}
@@ -176,7 +176,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
               <ActionForm action={attachFileAction} className="mt-2 flex flex-col gap-1.5">
                 <input type="hidden" name="ticketId" value={t.id} />
                 <input name="attachment" type="file" required aria-label="File" className="text-[12px]" />
-                <button className="w-fit rounded-[3px] border border-input px-2 py-1 text-[12.5px]">Upload</button>
+                <button className="w-fit rounded-xl border border-input px-2 py-1 text-[12.5px]">Upload</button>
               </ActionForm>
             )}
           </Panel>
@@ -220,7 +220,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
                   <input id="tri-fu" name="followUpAt" type="date" defaultValue={t.followUpAt ? t.followUpAt.toISOString().slice(0, 10) : ""} className={FIELD} />
                 </Field>
                 <Checkbox name="isComplaint" label="This is a complaint" defaultChecked={t.isComplaint} />
-                <button className="w-fit rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Update</button>
+                <button className="w-fit rounded-xl border border-input px-3 py-1.5 text-[13px]">Update</button>
               </ActionForm>
             </Panel>
           )}
@@ -236,7 +236,7 @@ export default async function SupportCase({ params }: { params: Promise<{ id: st
                   ))}
                 </select>
                 <textarea name="note" required rows={2} placeholder="What do you need from them?" aria-label="Escalation note" className={TEXTAREA} />
-                <button className="w-fit rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Escalate</button>
+                <button className="w-fit rounded-xl border border-input px-3 py-1.5 text-[13px]">Escalate</button>
               </ActionForm>
             </Panel>
           )}

@@ -75,7 +75,7 @@ export const pricingPage = definePage({
         sessionColumn: text("Session column heading", "Session", { max: 40 }),
         whoColumn: text("Audience column heading", "Who it is for", { max: 60 }),
         priceColumn: text("Price column heading", "Price", { max: 40 }),
-        cta: link("Button", { label: "Request a session", href: "/mentoring" }),
+        cta: link("Button", { label: "Contact us", href: "/contact" }),
       },
       { help: "Shown when at least one mentoring session is on sale." },
     ),

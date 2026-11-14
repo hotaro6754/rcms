@@ -69,11 +69,11 @@ export default async function ProductsPage() {
                     <ActionForm action={requestPriceChangeAction} className="flex flex-col gap-1.5" success="Requested. An Academy Director will decide.">
                       <input type="hidden" name="id" value={p.id} />
                       <span className="flex gap-1.5">
-                        <input name="price" type="number" step="1" min="0" required placeholder="New ₹" aria-label="New price in rupees" className="min-h-8 w-24 rounded-[3px] border border-input bg-card px-2 text-[12.5px]" />
-                        <input name="effectiveFrom" type="date" required aria-label="Effective from" className="min-h-8 rounded-[3px] border border-input bg-card px-2 text-[12.5px]" />
+                        <input name="price" type="number" step="1" min="0" required placeholder="New ₹" aria-label="New price in rupees" className="min-h-8 w-24 rounded-xl border border-input bg-card px-2 text-[12.5px]" />
+                        <input name="effectiveFrom" type="date" required aria-label="Effective from" className="min-h-8 rounded-xl border border-input bg-card px-2 text-[12.5px]" />
                       </span>
-                      <input name="reason" required minLength={5} placeholder="Reason" aria-label="Reason for the price change" className="min-h-8 rounded-[3px] border border-input bg-card px-2 text-[12.5px]" />
-                      <button className="w-fit rounded-[3px] border border-input px-2 py-1 text-[12.5px]">Request change</button>
+                      <input name="reason" required minLength={5} placeholder="Reason" aria-label="Reason for the price change" className="min-h-8 rounded-xl border border-input bg-card px-2 text-[12.5px]" />
+                      <button className="w-fit rounded-xl border border-input px-2 py-1 text-[12.5px]">Request change</button>
                     </ActionForm>
                   ) : null}
                 </Td>

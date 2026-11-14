@@ -70,11 +70,11 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
           />
 
           <aside className="flex flex-col gap-8">
-            <div className={revoked ? "border-t-2 border-danger pt-5" : "border-t-2 border-foreground pt-5"}>
+            <div className={revoked ? "border-t-2 border-danger pt-5" : "rounded-[20px] bg-card px-4 pt-5"}>
               <p className={`text-data text-[11px] tracking-[0.14em] ${revoked ? "text-danger" : "text-brand"}`}>
                 {revoked ? "REVOKED" : "VERIFIED"}
               </p>
-              <p className="font-serif-display mt-3 text-[1.6rem] leading-snug">
+              <p className="x-display mt-3 text-[1.6rem] leading-snug">
                 {revoked
                   ? "This certificate was issued and has since been revoked."
                   : "This certificate is genuine and current."}
@@ -100,11 +100,11 @@ export default async function CertificatePage({ params }: { params: Promise<{ se
               ))}
             </dl>
 
-            <a href={`/certificates/${cert.serial}/pdf`} className="inline-flex min-h-11 w-fit items-center rounded-[3px] border border-input px-5 text-[14px] font-medium transition-colors hover:bg-secondary">
+            <a href={`/certificates/${cert.serial}/pdf`} className="inline-flex min-h-11 w-fit items-center rounded-xl border border-input px-5 text-[14px] font-medium transition-colors hover:bg-secondary">
               Download PDF
             </a>
             {!revoked && (
-              <PrintButton className="inline-flex min-h-11 w-fit items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover" />
+              <PrintButton className="inline-flex min-h-11 w-fit items-center rounded-xl bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover" />
             )}
 
             <p className="text-[13px] leading-relaxed text-subtle">

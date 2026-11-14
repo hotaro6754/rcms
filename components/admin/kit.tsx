@@ -7,13 +7,13 @@ import { cn } from "@/lib/utils";
  */
 
 export const FIELD =
-  "min-h-10 w-full rounded-[3px] border border-input bg-card px-3 text-[14px] outline-none transition-colors focus:border-foreground focus-visible:ring-2 focus-visible:ring-ring/40";
+  "min-h-11 w-full rounded-xl border border-transparent bg-secondary px-3.5 text-[14px] outline-none transition-colors focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/30";
 export const TEXTAREA =
-  "w-full rounded-[3px] border border-input bg-card px-3 py-2 text-[14px] leading-relaxed outline-none transition-colors focus:border-foreground focus-visible:ring-2 focus-visible:ring-ring/40";
+  "w-full rounded-xl border border-transparent bg-secondary px-3.5 py-2.5 text-[14px] leading-relaxed outline-none transition-colors focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/30";
 export const BTN =
-  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-50";
+  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-primary px-5 text-[13.5px] font-semibold text-primary-foreground transition-[transform,background-color] hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50";
 export const BTN_OUTLINE =
-  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[3px] border border-input bg-card px-4 text-[13.5px] font-medium transition-colors hover:bg-secondary disabled:opacity-50";
+  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-secondary px-5 text-[13.5px] font-semibold transition-colors hover:bg-muted disabled:opacity-50";
 export const LINK = "underline decoration-input underline-offset-4 hover:decoration-foreground";
 
 export function Field({ label, hint, children, htmlFor, className }: { label: string; hint?: ReactNode; children: ReactNode; htmlFor?: string; className?: string }) {
@@ -50,7 +50,7 @@ const TONES: Record<string, string> = {
 };
 
 export function Pill({ children, tone = "grey", className }: { children: ReactNode; tone?: keyof typeof TONES | string; className?: string }) {
-  return <span className={cn("text-data inline-flex items-center rounded-[2px] px-1.5 py-0.5 text-[10.5px] uppercase tracking-[0.06em]", TONES[tone] ?? TONES.grey, className)}>{children}</span>;
+  return <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize", TONES[tone] ?? TONES.grey, className)}>{children}</span>;
 }
 
 const STATUS_TONE: Record<string, string> = {
@@ -91,7 +91,7 @@ export function SubNav({ items, current }: { items: { href: string; label: strin
   const shown = items.filter((i) => i.show !== false);
   if (shown.length < 2) return null;
   return (
-    <nav aria-label="Section pages" className="mb-8 flex flex-wrap gap-x-1 gap-y-1 border-b border-border">
+    <nav aria-label="Section pages" className="mb-8 flex flex-wrap gap-1.5">
       {shown.map((i) => {
         const on = current === i.href;
         return (
@@ -99,7 +99,7 @@ export function SubNav({ items, current }: { items: { href: string; label: strin
             key={i.href}
             href={i.href}
             aria-current={on ? "page" : undefined}
-            className={cn("-mb-px border-b-2 px-3 py-2.5 text-[13px] transition-colors", on ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}
+            className={cn("rounded-full px-4 py-2 text-[13px] font-semibold transition-colors", on ? "bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground")}
           >
             {i.label}
           </Link>
@@ -111,7 +111,7 @@ export function SubNav({ items, current }: { items: { href: string; label: strin
 
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-[var(--radius)] border border-dashed border-input bg-card px-5 py-8 text-center">
+    <div className="rounded-[20px] bg-card px-5 py-10 text-center">
       <p className="text-[14px] font-medium">{title}</p>
       {children && <div className="mx-auto mt-2 max-w-[56ch] text-micro leading-relaxed text-muted-foreground">{children}</div>}
     </div>
@@ -120,10 +120,10 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
 
 export function Panel({ title, aside, children, className }: { title?: string; aside?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-[var(--radius)] border border-border bg-card", className)}>
+    <section className={cn("rounded-[20px] bg-card", className)}>
       {title && (
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
-          <h2 className="text-[14px] font-semibold">{title}</h2>
+        <header className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
+          <h2 className="x-lab">{title}</h2>
           {aside}
         </header>
       )}
@@ -135,20 +135,20 @@ export function Panel({ title, aside, children, className }: { title?: string; a
 export function Stat({ label, value, note, href }: { label: string; value: ReactNode; note?: ReactNode; href?: string }) {
   const body = (
     <>
-      <dt className="text-data text-[10.5px] tracking-[0.12em] text-subtle">{label.toUpperCase()}</dt>
-      <dd className="font-serif-display mt-2 text-[clamp(1.9rem,3vw,2.6rem)] leading-none">{value}</dd>
+      <dt className="x-lab text-muted-foreground">{label}</dt>
+      <dd className="x-fig mt-3 text-[clamp(2.2rem,3.4vw,3rem)]">{value}</dd>
       {note && <dd className="mt-1.5 text-[12.5px] text-muted-foreground">{note}</dd>}
     </>
   );
   const list = <dl>{body}</dl>;
-  return <div className="border-t-2 border-foreground pb-5 pr-4 pt-3">{href ? <Link href={href} className="block hover:opacity-80">{list}</Link> : list}</div>;
+  return <div className="rounded-[20px] bg-card p-4">{href ? <Link href={href} className="block hover:opacity-80">{list}</Link> : list}</div>;
 }
 
 export function Table({ head, children, empty, minWidth = "48rem" }: { head: ReactNode[]; children: ReactNode; empty?: ReactNode; minWidth?: string }) {
   return (
-    <div className="overflow-x-auto rounded-[var(--radius)] border border-border bg-card">
+    <div className="overflow-x-auto rounded-[20px] bg-card p-1.5">
       <table className="w-full text-left text-[13px]" style={{ minWidth }}>
-        <thead className="border-b border-border">
+        <thead>
           <tr>
             {head.map((h, i) => (
               <th key={i} scope="col" className="label-caps px-4 py-2.5 font-normal">
@@ -157,7 +157,7 @@ export function Table({ head, children, empty, minWidth = "48rem" }: { head: Rea
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">{children}</tbody>
+        <tbody className="[&>tr:hover]:bg-secondary/60 [&>tr]:border-t [&>tr]:border-border">{children}</tbody>
       </table>
       {empty}
     </div>

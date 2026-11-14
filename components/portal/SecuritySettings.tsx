@@ -91,12 +91,12 @@ export function SecuritySettings({ enabled, mustKeep }: { enabled: boolean; must
             <p className="text-[13px]">
               1. In your authenticator app, add an account using this key (or open the link on your phone):
             </p>
-            <code className="text-data block break-all rounded-[3px] bg-secondary px-3 py-2 text-[13px]">{setup.secret.replace(/(.{4})/g, "$1 ").trim()}</code>
+            <code className="text-data block break-all rounded-xl bg-secondary px-3 py-2 text-[13px]">{setup.secret.replace(/(.{4})/g, "$1 ").trim()}</code>
             <a href={setup.uri} className="text-micro underline">
               Open in authenticator app
             </a>
             <p className="text-[13px]">2. Save these backup codes somewhere safe. Each works once if you lose your phone. They are shown only now.</p>
-            <ul className="text-data grid grid-cols-2 gap-1 rounded-[3px] bg-secondary px-3 py-2 text-[13px]">
+            <ul className="text-data grid grid-cols-2 gap-1 rounded-xl bg-secondary px-3 py-2 text-[13px]">
               {setup.backupCodes.map((c) => (
                 <li key={c}>{c}</li>
               ))}

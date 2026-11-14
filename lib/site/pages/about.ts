@@ -23,7 +23,7 @@ export const aboutPage = definePage({
       experience: text("First fact", "21 years", { max: 40 }),
       focusLabel: text("Second fact: label", "Focus", { max: 40 }),
       focus: text("Second fact", "Operations leadership, governance, process improvement, people development", { max: 200 }),
-      cta: link("Button", { label: "Book a session", href: "/mentoring" }),
+      cta: link("Button", { label: "Contact us", href: "/contact" }),
     }),
     career: group("Experience", {
       title: text("Heading", "Where the experience comes from", { max: 120 }),

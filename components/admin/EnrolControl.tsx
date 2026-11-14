@@ -35,7 +35,7 @@ export function EnrolControl({
         size="sm"
         variant="outline"
         disabled={pending || !programId}
-        className="min-h-9 rounded-[3px]"
+        className="min-h-9 rounded-xl"
         onClick={() =>
           start(async () => {
             const fd = new FormData();

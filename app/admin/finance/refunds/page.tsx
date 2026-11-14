@@ -62,10 +62,10 @@ export default async function RefundsPage() {
                       <input type="hidden" name="id" value={r.id} />
                       <input name="note" placeholder="Note (required to reject)" aria-label="Decision note" className={FIELD} />
                       <span className="flex gap-1.5">
-                        <button name="decision" value="approve" className="rounded-[3px] bg-primary px-3 py-1.5 text-[12.5px] text-primary-foreground">
+                        <button name="decision" value="approve" className="rounded-xl bg-primary px-3 py-1.5 text-[12.5px] text-primary-foreground">
                           Approve
                         </button>
-                        <button name="decision" value="reject" className="rounded-[3px] border border-input px-3 py-1.5 text-[12.5px]">
+                        <button name="decision" value="reject" className="rounded-xl border border-input px-3 py-1.5 text-[12.5px]">
                           Reject
                         </button>
                       </span>
@@ -80,8 +80,8 @@ export default async function RefundsPage() {
                   {["APPROVED", "SUBMITTED"].includes(r.status) && can(actor, "payment.reconcile") && (
                     <ActionForm action={recordProviderRefundAction} className="mt-2 flex gap-1.5">
                       <input type="hidden" name="id" value={r.id} />
-                      <input name="providerRef" required placeholder="Provider refund id" aria-label="Provider refund reference" className="min-h-8 w-36 rounded-[3px] border border-input bg-card px-2 text-[12px]" />
-                      <button className="rounded-[3px] border border-input px-2 text-[12px]">Record</button>
+                      <input name="providerRef" required placeholder="Provider refund id" aria-label="Provider refund reference" className="min-h-8 w-36 rounded-xl border border-input bg-card px-2 text-[12px]" />
+                      <button className="rounded-xl border border-input px-2 text-[12px]">Record</button>
                     </ActionForm>
                   )}
                 </Td>

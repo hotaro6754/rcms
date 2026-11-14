@@ -8,6 +8,8 @@ process.env.DATABASE_POOL_MAX = process.env.DATABASE_POOL_MAX ?? "4";
 process.env.BETTER_AUTH_SECRET = "test-secret-test-secret-test-secret-0123456789";
 process.env.BETTER_AUTH_URL = "http://localhost:3000";
 process.env.AUTH_RATE_LIMIT = "off";
+// The suites exercise the open platform; the pre-launch lockdown has its own unit test.
+process.env.SITE_MODE = process.env.SITE_MODE ?? "live";
 process.env.ADMIN_MFA_REQUIRED = "false";
 process.env.RAZORPAY_KEY_ID = "rzp_test_dummykey";
 process.env.RAZORPAY_KEY_SECRET = "test_key_secret";

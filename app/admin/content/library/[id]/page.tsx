@@ -129,10 +129,10 @@ export default async function LibraryEntryAdmin({ params }: { params: Promise<{ 
                 <textarea name="note" rows={2} placeholder="Review note (required to request changes)" aria-label="Review note" className={TEXTAREA} />
                 <p className="text-[12px] text-muted-foreground">Check accuracy against the listed sources and that every example is synthetic.</p>
                 <span className="flex gap-2">
-                  <button name="op" value="approve" className="rounded-[3px] bg-primary px-3 py-1.5 text-[13px] text-primary-foreground">
+                  <button name="op" value="approve" className="rounded-xl bg-primary px-3 py-1.5 text-[13px] text-primary-foreground">
                     Approve and publish
                   </button>
-                  <button name="op" value="reject" className="rounded-[3px] border border-input px-3 py-1.5 text-[13px]">
+                  <button name="op" value="reject" className="rounded-xl border border-input px-3 py-1.5 text-[13px]">
                     Request changes
                   </button>
                 </span>

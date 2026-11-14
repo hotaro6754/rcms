@@ -42,12 +42,12 @@ export default async function GradeAttempt({ params }: { params: Promise<{ id: s
               <Panel key={m.id} title={m.prompt}>
                 {m.scenario && <p className="mb-3 whitespace-pre-line text-[13px] text-muted-foreground">{m.scenario}</p>}
                 {m.rubric && (
-                  <div className="mb-3 rounded-[3px] border border-border bg-secondary/40 px-3 py-2 text-[12.5px]">
+                  <div className="mb-3 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-[12.5px]">
                     <p className="font-semibold">Rubric</p>
                     <p className="whitespace-pre-line">{m.rubric}</p>
                   </div>
                 )}
-                <div className="mb-3 rounded-[3px] border border-border px-3 py-2 text-[14px] whitespace-pre-line">
+                <div className="mb-3 rounded-xl border border-border px-3 py-2 text-[14px] whitespace-pre-line">
                   {m.upload ? (
                     <a href={`/api/attempt-uploads/${m.upload.id}`} className="underline underline-offset-4">
                       Download {m.upload.fileName}

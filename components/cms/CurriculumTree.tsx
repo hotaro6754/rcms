@@ -100,7 +100,7 @@ export function CurriculumTree({ courseId, modules, selected, canEdit }: { cours
         <label htmlFor="tree-filter" className="sr-only">
           Filter the curriculum
         </label>
-        <input id="tree-filter" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter modules and lessons" className="min-h-9 w-full rounded-[3px] border border-input bg-card px-3 text-[13px]" />
+        <input id="tree-filter" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter modules and lessons" className="min-h-9 w-full rounded-xl border border-input bg-card px-3 text-[13px]" />
         <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
           <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} /> Show archived
         </label>
@@ -112,7 +112,7 @@ export function CurriculumTree({ courseId, modules, selected, canEdit }: { cours
         </p>
       )}
 
-      <Link href={`/admin/content/courses/${courseId}`} className={cn("rounded-[3px] px-2 py-1.5 text-[13px] font-semibold", selected === "course" ? "bg-secondary" : "hover:bg-secondary/60")}>
+      <Link href={`/admin/content/courses/${courseId}`} className={cn("rounded-xl px-2 py-1.5 text-[13px] font-semibold", selected === "course" ? "bg-secondary" : "hover:bg-secondary/60")}>
         Course details
       </Link>
 
@@ -121,7 +121,7 @@ export function CurriculumTree({ courseId, modules, selected, canEdit }: { cours
           const open = !collapsed.has(m.id) || !!filter;
           const sel = selected === `module:${m.id}`;
           return (
-            <li key={m.id} className={cn("rounded-[3px] border", over === m.id ? "border-foreground" : "border-border")}>
+            <li key={m.id} className={cn("rounded-xl border", over === m.id ? "border-foreground" : "border-border")}>
               <div
                 draggable={canEdit}
                 onDragStart={(e) => {
@@ -203,7 +203,7 @@ export function CurriculumTree({ courseId, modules, selected, canEdit }: { cours
                           setOver(null);
                           dropOnLesson(m.id, l.id);
                         }}
-                        className={cn("flex items-center gap-1 py-0.5 pl-5 pr-1.5", lsel ? "bg-secondary" : "", over === l.id ? "border-t-2 border-foreground" : "")}
+                        className={cn("flex items-center gap-1 py-0.5 pl-5 pr-1.5", lsel ? "bg-secondary" : "", over === l.id ? "rounded-[20px] bg-card px-4" : "")}
                       >
                         {canEdit && <GripVertical className="h-3 w-3 shrink-0 cursor-grab text-subtle" aria-hidden />}
                         <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATE_DOT[l.state])} title={STATE_WORD[l.state]} aria-hidden />
@@ -238,8 +238,8 @@ export function CurriculumTree({ courseId, modules, selected, canEdit }: { cours
                           }}
                           className="flex gap-1"
                         >
-                          <input name="title" autoFocus required minLength={3} placeholder="Lesson title" aria-label="New lesson title" className="min-h-8 min-w-0 flex-1 rounded-[3px] border border-input bg-card px-2 text-[12.5px]" />
-                          <button className="rounded-[3px] bg-primary px-2 text-[12px] text-primary-foreground">Add</button>
+                          <input name="title" autoFocus required minLength={3} placeholder="Lesson title" aria-label="New lesson title" className="min-h-8 min-w-0 flex-1 rounded-xl border border-input bg-card px-2 text-[12.5px]" />
+                          <button className="rounded-xl bg-primary px-2 text-[12px] text-primary-foreground">Add</button>
                         </form>
                       ) : (
                         <button type="button" onClick={() => setAdding(m.id)} className="inline-flex items-center gap-1 py-1 text-[12px] text-muted-foreground hover:text-foreground">
@@ -266,8 +266,8 @@ export function CurriculumTree({ courseId, modules, selected, canEdit }: { cours
           }}
           className="flex gap-1 border-t border-border pt-3"
         >
-          <input name="title" required minLength={3} placeholder="New module title" aria-label="New module title" className="min-h-9 min-w-0 flex-1 rounded-[3px] border border-input bg-card px-2.5 text-[13px]" />
-          <button disabled={pending} className="rounded-[3px] bg-primary px-3 text-[12.5px] font-medium text-primary-foreground">
+          <input name="title" required minLength={3} placeholder="New module title" aria-label="New module title" className="min-h-9 min-w-0 flex-1 rounded-xl border border-input bg-card px-2.5 text-[13px]" />
+          <button disabled={pending} className="rounded-xl bg-primary px-3 text-[12.5px] font-medium text-primary-foreground">
             Add module
           </button>
         </form>

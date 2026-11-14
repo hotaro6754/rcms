@@ -174,7 +174,7 @@ export async function buildSnapshot(tx: Tx, courseId: string): Promise<{ snapsho
         nextReviewAt: l.nextReviewAt?.toISOString() ?? null,
         sources: strings(l.sources),
         blocks: l.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown> })),
-        resources: l.resources.map((r) => ({ id: r.id, title: r.title, mimeType: r.mimeType, sizeBytes: r.sizeBytes })),
+        resources: l.resources.map((r) => ({ id: r.id, title: r.title, mimeType: r.mimeType, sizeBytes: r.sizeBytes, format: r.format })),
         assessment,
       };
     });
@@ -522,4 +522,63 @@ export async function backfillRelease(tx: Tx, courseId: string) {
   });
   await tx.program.update({ where: { id: courseId }, data: { publishedVersionId: version.id, status: "PUBLISHED" } });
   return version;
+}
+
+/**
+ * One-click publish for administrators: no reviewers, no review queue.
+ *
+ * Every lesson that has content (a video or other block, slides or reading, or an assessment)
+ * goes live with its module; empty lessons stay out until they have something in them. Missing
+ * compliance dates get defaults (effective today, review in twelve months) that the admin can
+ * change in the course details. Learners still read an immutable released version, so later
+ * edits reach them only when the admin publishes again.
+ */
+export async function publishNow(actor: Actor, courseId: string, note?: string) {
+  await assertCan(actor, "content.publish");
+  const { course, version, skipped } = await transaction(async (tx) => {
+    const c = await load(tx, courseId);
+    if (c.status === "ARCHIVED") throw new ServiceError("This course is archived. Restore it before publishing.");
+    if (c.isTemplate) throw new ServiceError("This is a template. Create a course from it and publish that instead.");
+    const modules = await tx.module.findMany({
+      where: { programId: courseId, state: { not: "ARCHIVED" } },
+      select: { id: true, lessons: { where: { state: { not: "ARCHIVED" } }, select: { id: true, title: true, _count: { select: { blocks: true, resources: { where: { archivedAt: null } }, quizzes: { where: { archivedAt: null } } } } } } },
+    });
+    const ready = new Set<string>();
+    const skipped: string[] = [];
+    for (const m of modules) for (const l of m.lessons) (l._count.blocks || l._count.resources || l._count.quizzes ? ready : { add: () => skipped.push(l.title) }).add(l.id);
+    if (!ready.size) throw new ServiceError("Nothing to publish yet: add a video, slides or reading to at least one lesson.");
+    await tx.lesson.updateMany({ where: { id: { in: [...ready] } }, data: { state: "PUBLISHED" } });
+    const live = modules.filter((m) => m.lessons.some((l) => ready.has(l.id))).map((m) => m.id);
+    await tx.module.updateMany({ where: { id: { in: live } }, data: { state: "PUBLISHED" } });
+    await tx.module.updateMany({ where: { programId: courseId, state: "PUBLISHED", id: { notIn: live } }, data: { state: "DRAFT" } });
+    const now = new Date();
+    await tx.program.update({
+      where: { id: courseId },
+      data: { effectiveDate: c.effectiveDate ?? now, reviewDate: c.reviewDate ?? new Date(now.getTime() + 365 * 86400_000) },
+    });
+    const { snapshot, mediaIds, problems } = await buildSnapshot(tx, courseId);
+    if (problems.length) throw new ServiceError(`Cannot publish yet: ${problems.join(" ")}`);
+    const last = await tx.courseVersion.findFirst({ where: { courseId }, orderBy: { version: "desc" }, select: { version: true } });
+    const version = await tx.courseVersion.create({
+      data: {
+        courseId,
+        version: (last?.version ?? 0) + 1,
+        snapshot: snapshot as never,
+        mediaIds,
+        changeSummary: note?.trim() || null,
+        submittedById: actor.id,
+        academicApproverId: actor.id,
+        complianceApproverId: c.complianceSensitive ? actor.id : null,
+        publishedById: actor.id,
+        publishedAt: now,
+        effectiveDate: c.effectiveDate ?? now,
+      },
+    });
+    await tx.program.update({ where: { id: courseId }, data: { status: "PUBLISHED", state: "PUBLISHED", publishedVersionId: version.id, scheduledFor: null, archivedAt: null } });
+    await decide(tx, courseId, "PUBLICATION", "published", actor.id, `Version ${version.version}${note?.trim() ? `: ${note.trim()}` : ""}`);
+    return { course: c, version, skipped };
+  });
+  await log(actor, "publish", courseId, { version: version.version, direct: true, skippedEmptyLessons: skipped.length }, { status: course.status });
+  await notifyEnrolled(courseId, course.name, version.version);
+  return { version: version.version, skipped };
 }

@@ -67,7 +67,7 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
           <h2 className="text-[1.1rem]">By competency</h2>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {r.competencies.map((c) => (
-              <li key={c.name} className="rounded-[3px] border border-border bg-card px-3 py-2 text-[13.5px]">
+              <li key={c.name} className="rounded-xl border border-border bg-card px-3 py-2 text-[13.5px]">
                 {c.name}
                 <span className="text-data float-right text-micro">
                   {c.awarded}/{c.possible}

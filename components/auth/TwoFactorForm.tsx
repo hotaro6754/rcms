@@ -6,7 +6,7 @@ import { twoFactor } from "@/lib/auth-client";
 const FIELD = "min-h-11 w-full border-b border-input bg-transparent text-[16px] outline-none transition-colors focus:border-foreground";
 
 /** Second step of sign-in: a code from the authenticator app, or a one-time backup code. */
-export function TwoFactorForm() {
+export function TwoFactorForm({ home = "/academy" }: { home?: string }) {
   const [mode, setMode] = useState<"totp" | "backup">("totp");
   const [code, setCode] = useState("");
   const [trust, setTrust] = useState(false);
@@ -23,7 +23,7 @@ export function TwoFactorForm() {
       setBusy(false);
       return;
     }
-    window.location.href = "/academy";
+    window.location.href = home;
   }
 
   return (

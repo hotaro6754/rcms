@@ -26,7 +26,6 @@ import {
 } from "@/lib/actions/cms";
 import { STATUS_LABEL } from "@/lib/services/cms/core";
 
-const STEPS: ContentStatus[] = ["DRAFT", "IN_DEVELOPMENT", "ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED", "PUBLISHED"];
 
 // ---------------------------------------------------------------------------
 // Workflow
@@ -48,93 +47,62 @@ export function WorkflowPanel({
   versions: number;
 }) {
   const s = course.status;
-  const editable = s === "DRAFT" || s === "IN_DEVELOPMENT" || s === "UNDER_REVISION";
-  const stepIndex = STEPS.indexOf(s === "UNDER_REVISION" ? "IN_DEVELOPMENT" : s);
+  const live = !!course.publishedVersionId && course.state === "PUBLISHED";
+  // Anything still in the old review states counts as "changes not yet live".
+  const pending = s !== "PUBLISHED" && s !== "ARCHIVED";
   return (
-    <section className="rounded-[var(--radius)] border border-border bg-card">
-      <header className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3">
-        <h2 className="text-[14px] font-semibold">Review and release</h2>
-        <StatusPill status={s} label={STATUS_LABEL[s]} />
-        {course.complianceSensitive ? <Pill tone="ink">Compliance review required</Pill> : <Pill>Academic review only</Pill>}
+    <section className="overflow-hidden rounded-[calc(var(--radius)+4px)] border border-border bg-card">
+      <header className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3.5">
+        <h2 className="text-[14px] font-semibold">Publishing</h2>
+        {s === "ARCHIVED" ? (
+          <Pill>Archived</Pill>
+        ) : live ? (
+          <Pill tone="green">Live · v{versions}</Pill>
+        ) : (
+          <Pill tone="amber">Not published</Pill>
+        )}
+        {live && pending && <Pill tone="blue">Unpublished changes</Pill>}
+        <Link href={`/admin/content/courses/${course.id}/preview`} className="ml-auto text-[12.5px] underline underline-offset-4">
+          Preview as student
+        </Link>
       </header>
       <div className="flex flex-col gap-4 px-5 py-4">
-        <ol aria-label="Workflow" className="flex flex-wrap gap-1.5">
-          {STEPS.filter((x) => course.complianceSensitive || x !== "COMPLIANCE_REVIEW").map((x) => {
-            const i = STEPS.indexOf(x);
-            return (
-              <li key={x} className={`text-data rounded-[2px] px-2 py-1 text-[10.5px] tracking-[0.06em] ${i === stepIndex ? "bg-foreground text-background" : i < stepIndex ? "bg-success-bg text-success" : "bg-secondary text-subtle"}`} aria-current={i === stepIndex ? "step" : undefined}>
-                {STATUS_LABEL[x].toUpperCase()}
-              </li>
-            );
-          })}
-        </ol>
-        {s === "UNDER_REVISION" && <p className="text-micro text-muted-foreground">Learners are reading the released version while this draft is revised.</p>}
-        {s === "SCHEDULED" && course.scheduledFor && <p className="text-[13.5px]">Scheduled to go live {when(course.scheduledFor, true)} IST.</p>}
-
-        {editable && problems.length > 0 && (
-          <div className="rounded-[3px] border border-warning/40 bg-warning-bg px-3 py-2.5">
-            <p className="text-micro font-semibold text-warning">Before this can be submitted</p>
+        {s !== "ARCHIVED" && can(actor, "content.publish") && (
+          <ActionForm
+            action={workflowAction}
+            className="flex flex-wrap items-end gap-2"
+            confirm={live ? "Publish your latest changes to students?" : "Publish this course to students?"}
+            success="Published. Students see it now."
+          >
+            <input type="hidden" name="id" value={course.id} />
+            <input type="hidden" name="op" value="publish-now" />
+            <Field label="What changed (optional, kept in the version history)" htmlFor="publish-note" className="min-w-[16rem] flex-1">
+              <input id="publish-note" name="comment" className={FIELD} placeholder={live ? "e.g. Added the slide deck for module 4" : "e.g. First release"} />
+            </Field>
+            <button className={BTN}>{live ? "Publish changes" : "Publish to students"}</button>
+          </ActionForm>
+        )}
+        {s !== "ARCHIVED" && (
+          <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+            Publishing makes every lesson that has a video, slides, reading or an assessment available to enrolled students. Empty lessons are left out until they have content. Students keep seeing the published version while you edit; your edits reach them when you publish again.
+          </p>
+        )}
+        {problems.filter((p) => !/effective date|next-review date|marked ready|has no lessons marked/i.test(p)).length > 0 && (
+          <div className="rounded-[10px] border border-warning/40 bg-warning-bg px-3 py-2.5">
+            <p className="text-micro font-semibold text-warning">Fix before publishing</p>
             <ul className="mt-1 list-disc pl-5 text-micro text-warning">
-              {problems.map((p) => (
-                <li key={p}>{p}</li>
-              ))}
+              {problems
+                .filter((p) => !/effective date|next-review date|marked ready|has no lessons marked/i.test(p))
+                .map((p) => (
+                  <li key={p}>{p}</li>
+                ))}
             </ul>
           </div>
         )}
 
         <div className="flex flex-col gap-3">
-          {editable && can(actor, "content.submit") && (
-            <ActionForm action={workflowAction} className="flex flex-wrap items-end gap-2">
-              <input type="hidden" name="id" value={course.id} />
-              <input type="hidden" name="op" value="submit" />
-              <Field label="What changed (shown to reviewers and kept in the release notes)" htmlFor="submit-note" className="min-w-[16rem] flex-1">
-                <input id="submit-note" name="comment" className={FIELD} />
-              </Field>
-              <button className={BTN} disabled={problems.length > 0}>
-                Submit for review
-              </button>
-            </ActionForm>
-          )}
-
-          {(s === "ACADEMIC_REVIEW" || s === "COMPLIANCE_REVIEW") && can(actor, s === "ACADEMIC_REVIEW" ? "content.review.academic" : "content.review.compliance") && (
-            <ActionForm action={workflowAction} className="flex flex-col gap-2">
-              <input type="hidden" name="id" value={course.id} />
-              <Field label={s === "ACADEMIC_REVIEW" ? "Academic review comment" : "Compliance review comment"} htmlFor="review-comment" hint="Required when requesting changes. Preview the course before deciding.">
-                <textarea id="review-comment" name="comment" rows={2} className={TEXTAREA} />
-              </Field>
-              <div className="flex flex-wrap gap-2">
-                <button name="op" value={s === "ACADEMIC_REVIEW" ? "academic-approve" : "compliance-approve"} className={BTN}>
-                  Approve
-                </button>
-                <button name="op" value={s === "ACADEMIC_REVIEW" ? "academic-reject" : "compliance-reject"} className={BTN_OUTLINE}>
-                  Request changes
-                </button>
-                <Link href={`/admin/content/courses/${course.id}/preview`} className={BTN_OUTLINE}>
-                  Preview as learner
-                </Link>
-              </div>
-            </ActionForm>
-          )}
-
-          {(s === "APPROVED" || s === "SCHEDULED") && can(actor, "content.publish") && (
-            <ActionForm action={workflowAction} className="flex flex-wrap items-end gap-2" confirm="Publish this version to learners?">
-              <input type="hidden" name="id" value={course.id} />
-              <input type="hidden" name="op" value="publish" />
-              <Field label="Schedule for (leave empty to publish now)" htmlFor="schedule">
-                <input id="schedule" name="scheduleFor" type="datetime-local" className={FIELD} />
-              </Field>
-              <button className={BTN}>Publish</button>
-            </ActionForm>
-          )}
-
-          {["ACADEMIC_REVIEW", "COMPLIANCE_REVIEW", "APPROVED", "SCHEDULED"].includes(s) && (can(actor, "content.submit") || can(actor, "content.publish")) && (
-            <ActionButton action={workflowAction} fields={{ id: course.id, op: "withdraw" }} confirm="Withdraw from review so it can be edited? Approvals given so far will need to be repeated.">
-              Withdraw from review to edit
-            </ActionButton>
-          )}
-
           {course.state === "PUBLISHED" && can(actor, "content.publish") && (
-            <details className="rounded-[3px] border border-border px-3 py-2">
+            <details className="rounded-xl border border-border px-3 py-2">
               <summary className="cursor-pointer text-[13px]">Take offline (unpublish)</summary>
               <ActionForm action={workflowAction} className="mt-2 flex flex-wrap items-end gap-2" confirm="Remove this course from the catalogue and from learners' access?">
                 <input type="hidden" name="id" value={course.id} />
@@ -157,7 +125,7 @@ export function WorkflowPanel({
                 </ActionButton>
               )
             : can(actor, "content.archive") && (
-                <details className="rounded-[3px] border border-border px-3 py-2">
+                <details className="rounded-xl border border-border px-3 py-2">
                   <summary className="cursor-pointer text-[13px]">Archive course</summary>
                   <p className="mt-2 text-[12px] text-muted-foreground">
                     Archiving removes the course from the catalogue and makes it read-only. Nothing is deleted. {impact.enrolled} enrolled, {impact.learnersWithProgress} with progress, {impact.certificates} certificates issued.
@@ -174,15 +142,15 @@ export function WorkflowPanel({
               )}
 
           {versions === 0 && impact.enrolled === 0 && can(actor, "content.delete") && (
-            <details className="rounded-[3px] border border-danger/30 px-3 py-2">
-              <summary className="cursor-pointer text-[13px] text-danger">Request permanent deletion</summary>
-              <p className="mt-2 text-[12px] text-muted-foreground">Only never-released drafts with no learners can be deleted, and a Super Administrator must approve it.</p>
-              <ActionForm action={requestCourseDeletionAction} className="mt-2 flex flex-wrap items-end gap-2" success="Deletion requested. A Super Administrator will decide.">
+            <details className="rounded-xl border border-danger/30 px-3 py-2">
+              <summary className="cursor-pointer text-[13px] text-danger">Delete permanently</summary>
+              <p className="mt-2 text-[12px] text-muted-foreground">Only courses that were never published and have no students can be deleted. This cannot be undone.</p>
+              <ActionForm action={requestCourseDeletionAction} className="mt-2 flex flex-wrap items-end gap-2" success="Course deleted.">
                 <input type="hidden" name="id" value={course.id} />
                 <Field label="Reason" htmlFor="del" className="min-w-[16rem] flex-1">
                   <input id="del" name="reason" required minLength={5} className={FIELD} />
                 </Field>
-                <button className={BTN_OUTLINE}>Request deletion</button>
+                <button className={BTN_OUTLINE}>Delete course</button>
               </ActionForm>
             </details>
           )}
@@ -472,7 +440,7 @@ export function ModulePanel({
               <option value="DRAFT">Back to draft</option>
               {can(actor, "content.archive") && <option value="ARCHIVED">Archive</option>}
             </select>
-            <button className="rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Apply to selected</button>
+            <button className="rounded-xl border border-input px-3 py-1.5 text-[13px]">Apply to selected</button>
           </span>
           <p className="text-[12px] text-muted-foreground">All or nothing: if one lesson cannot change, none do, and the message says which.</p>
         </ActionForm>

@@ -22,8 +22,8 @@ export interface QuestionValue {
   remediationLessonId?: string | null;
 }
 
-const IN = "min-h-9 w-full rounded-[3px] border border-input bg-card px-2.5 text-[13.5px]";
-const TA = "w-full rounded-[3px] border border-input bg-card px-2.5 py-2 text-[13.5px] leading-relaxed";
+const IN = "min-h-9 w-full rounded-xl border border-input bg-card px-2.5 text-[13.5px]";
+const TA = "w-full rounded-xl border border-input bg-card px-2.5 py-2 text-[13.5px] leading-relaxed";
 
 const BLANK: QuestionValue = { type: "SINGLE", prompt: "", options: ["", "", "", ""], targets: [], answerKey: { index: 0 }, points: 1, difficulty: 2 };
 
@@ -211,7 +211,7 @@ export function QuestionForm({
                     pairs[i] = Number(e.target.value);
                     set({ answerKey: { pairs } });
                   }}
-                  className="min-h-9 rounded-[3px] border border-input bg-card px-1.5 text-[13px]"
+                  className="min-h-9 rounded-xl border border-input bg-card px-1.5 text-[13px]"
                 >
                   {q.targets.map((_, t) => (
                     <option key={t} value={t}>
@@ -273,9 +273,9 @@ export function QuestionForm({
       </datalist>
 
       <div className="flex gap-2">
-        <button className="min-h-9 rounded-[3px] bg-primary px-3 text-[13px] font-medium text-primary-foreground">{q.id ? "Save question" : "Add question"}</button>
+        <button className="min-h-9 rounded-xl bg-primary px-3 text-[13px] font-medium text-primary-foreground">{q.id ? "Save question" : "Add question"}</button>
         {onDone && (
-          <button type="button" onClick={onDone} className="min-h-9 rounded-[3px] px-3 text-[13px] hover:bg-secondary">
+          <button type="button" onClick={onDone} className="min-h-9 rounded-xl px-3 text-[13px] hover:bg-secondary">
             Cancel
           </button>
         )}

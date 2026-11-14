@@ -11,15 +11,12 @@ import levelsFigure from "@/public/images/figma/learning-levels-progression.webp
 import { OpeningStatement } from "@/components/home/OpeningStatement";
 import { SystemFlow } from "@/components/home/SystemFlow";
 import { LearningPath } from "@/components/home/LearningPath";
-import { OperationsLab } from "@/components/home/OperationsLab";
 import { Leadership } from "@/components/home/Leadership";
-import { Mentoring } from "@/components/home/Mentoring";
 import { Founder } from "@/components/home/Founder";
 import { ReviewPack } from "@/components/home/ReviewPack";
 import Image from "next/image";
 import { AtAGlance } from "@/components/home/AtAGlance";
 import { SYSTEM } from "@/lib/data/system";
-import { MENTORING } from "@/lib/data/catalog";
 import reviewPhoto from "@/public/images/photos/operating-review-meeting.webp";
 import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
@@ -37,10 +34,8 @@ import { BRAND } from "@/lib/brand";
  *   01 problem  RCM isn't one process: six facts in a grid
  *   02 cycle    the ten stages, explored stage by stage, plus the full table
  *   03 path     the learning levels as three cards, with live courses and prices
- *   04 lab      the denial investigation: the first question, then the five whys
  *   05 review   the month's operating review, one page of the board pack
  *   06 people   six levels of career progression and the number each one owns
- *   07 advice   one-to-one mentoring sessions
  *   08 author   who wrote the curriculum
  *
  * Copy is edited from the website editor (lib/site/pages/home.ts, defaults drawn from lib/data);
@@ -61,22 +56,13 @@ async function loadPaths() {
   }
 }
 
-async function loadMentoringPrices(): Promise<Record<string, number>> {
-  try {
-    const { publicPricing } = await import("@/lib/services/learning/public-catalog");
-    return Object.fromEntries((await publicPricing()).mentoring.map((m) => [m.sku, m.amount]));
-  } catch {
-    return {};
-  }
-}
-
 export async function generateMetadata() {
   const c = await getPageContent(homePage);
   return pageMeta({ title: c.seo.title, description: c.seo.description, path: "/", absoluteTitle: true });
 }
 
 export default async function Home() {
-  const [c, levels, mentoringPrices] = await Promise.all([getPageContent(homePage), loadPaths(), loadMentoringPrices()]);
+  const [c, levels] = await Promise.all([getPageContent(homePage), loadPaths()]);
   return (
     <>
       <PageReveals />
@@ -93,7 +79,6 @@ export default async function Home() {
                 { count: SYSTEM.length, label: c.glance.stages, href: "#system" },
                 { count: levels.length, label: c.glance.levels, href: "#tracks" },
                 { count: c.people.show ? c.people.roles.length : 0, label: c.glance.roles, href: "#people" },
-                { count: c.mentoring.show ? MENTORING.filter((m) => mentoringPrices[`mentoring-${m.id}`] !== undefined).length : 0, label: c.glance.sessions, href: "#mentoring" },
               ]}
             />
           )}
@@ -122,8 +107,6 @@ export default async function Home() {
 
           {c.path.show && <LearningPath levels={levels} content={c.path} />}
 
-          {c.lab.show && <OperationsLab content={c.lab} />}
-
           {/* The month's review, as the first page of the board pack. */}
           {c.review.show && (
             <Chapter id="governance" folio="05" title={c.review.runningHead} surface="tint">
@@ -151,7 +134,6 @@ export default async function Home() {
           )}
 
           {c.people.show && <Leadership content={c.people} />}
-          {c.mentoring.show && <Mentoring prices={mentoringPrices} content={c.mentoring} />}
           {c.founder.show && <Founder content={c.founder} />}
         </main>
 

@@ -6,7 +6,7 @@ import { flatLessons, type CourseSnapshot } from "@/lib/cms/snapshot";
 /**
  * May this person open a lesson material? Staff who can view content may; a learner may when
  * a released course lists the material and they are enrolled (or the lesson is a free
- * preview). Whether they may also download it is the material's own `downloadable` setting.
+ * preview). Learners only ever read it as page images; files go to staff alone.
  */
 export async function resourceAccess(actor: Actor, id: string) {
   const res = await prisma.resource.findUnique({

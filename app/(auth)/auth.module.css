@@ -1,0 +1,60 @@
+/* Sign-in: one floating card on a faint drafting grid. Left a quiet night panel with the logo's
+   bars breathing and a point travelling the arc; right the form. rcx tokens, light and dark. */
+
+.root { position: relative; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.grid {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--x-ink) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--x-ink) 6%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, #000 30%, transparent 85%);
+}
+.top, .stage, .foot { position: relative; z-index: 1; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px clamp(16px, 3vw, 28px); }
+.back { font-size: 13px; font-weight: 600; color: var(--x-ink-3); transition: color 0.2s; }
+.back:hover { color: var(--x-ink); }
+
+.stage { flex: 1; display: grid; place-items: center; padding: 8px 16px 16px; }
+.card {
+  width: 100%; max-width: 980px;
+  display: grid; overflow: hidden;
+  border-radius: 28px; background: var(--x-surface);
+  box-shadow: 0 1px 2px rgb(14 31 61 / 0.06), 0 40px 80px -40px rgb(14 31 61 / 0.35);
+  animation: enter 0.8s cubic-bezier(0.2, 0, 0.1, 1) both;
+}
+@media (min-width: 880px) { .card { grid-template-columns: 1fr 1fr; min-height: 580px; } }
+@keyframes enter { from { opacity: 0; transform: translateY(16px) scale(0.985); } }
+
+/* ---------- visual ---------- */
+.visual { position: relative; display: none; margin: 8px; border-radius: 22px; background: #0d1526; overflow: hidden; }
+@media (min-width: 880px) { .visual { display: block; } }
+.art { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bars rect { fill: none; stroke: rgb(233 237 244 / 0.22); stroke-width: 1.4; transform-box: fill-box; transform-origin: 50% 100%; animation: breathe 6s ease-in-out infinite; }
+.bars rect:nth-child(2) { animation-delay: -1.5s; }
+.bars rect:nth-child(3) { animation-delay: -3s; }
+.bars rect:nth-child(4) { animation-delay: -4.5s; stroke: rgb(143 214 184 / 0.55); }
+@keyframes breathe { 50% { transform: scaleY(0.9); } }
+.arc { fill: none; stroke: #2a9d8f; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 2.2s 0.4s cubic-bezier(0.2, 0, 0.1, 1) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.head { fill: none; stroke: #2a9d8f; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: 0; animation: show 0.4s 2.4s forwards; }
+@keyframes show { to { opacity: 1; } }
+.dot { fill: #e2603a; filter: drop-shadow(0 0 6px rgb(226 96 58 / 0.6)); }
+.ground { stroke: rgb(233 237 244 / 0.14); stroke-width: 1; }
+.caption { position: absolute; left: 28px; right: 28px; bottom: 26px; display: flex; flex-direction: column; gap: 8px; }
+.line { font-size: clamp(1.8rem, 2.6vw, 2.3rem); color: #f2f4f8; }
+.line em { font-style: italic; color: #8fd6b8; }
+
+/* ---------- form ---------- */
+.form { display: flex; flex-direction: column; justify-content: center; padding: clamp(28px, 5vw, 56px); }
+.inner { width: 100%; max-width: 360px; margin: 0 auto; }
+.mark { display: block; width: 34px; height: 34px; margin-bottom: 26px; }
+
+.foot { padding: 4px 16px 22px; text-align: center; font-size: 12px; color: var(--x-ink-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .bars rect, .arc, .head { animation: none; }
+  .arc { stroke-dashoffset: 0; }
+  .head { opacity: 1; }
+  .dot { display: none; }
+}

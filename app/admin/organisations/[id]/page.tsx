@@ -57,7 +57,7 @@ export default async function OrganisationPage({ params }: { params: Promise<{ i
                   </p>
                   <ul className="mt-1 flex flex-wrap gap-1.5">
                     {g.courses.map((c) => (
-                      <li key={c.id} className="flex items-center gap-1 rounded-[3px] bg-secondary px-2 py-0.5 text-[12px]">
+                      <li key={c.id} className="flex items-center gap-1 rounded-xl bg-secondary px-2 py-0.5 text-[12px]">
                         {c.program.name}
                         <ActionButton action={unassignGroupCourseAction} fields={{ id: g.id, programId: c.programId, orgId: org.id }} variant="ghost" title={`Unassign ${c.program.name}`} size="icon" className="h-5 w-5">
                           ×

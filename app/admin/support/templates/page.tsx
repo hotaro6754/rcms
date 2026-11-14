@@ -44,7 +44,7 @@ export default async function TemplatesPage() {
                   <input type="hidden" name="id" value={t.id} />
                   <input name="title" defaultValue={t.title} aria-label="Title" className={FIELD} />
                   <textarea name="body" defaultValue={t.body} rows={4} aria-label="Body" className={TEXTAREA} />
-                  <button className="w-fit rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Save (needs re-approval)</button>
+                  <button className="w-fit rounded-xl border border-input px-3 py-1.5 text-[13px]">Save (needs re-approval)</button>
                 </ActionForm>
               </details>
             )}

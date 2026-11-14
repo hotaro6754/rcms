@@ -7,6 +7,9 @@ import { prisma } from "./db";
 import { sendMail } from "./email";
 import { audit } from "./audit";
 import { BRAND } from "@/lib/brand";
+import { comingSoon, isPreviewLearner } from "@/lib/launch";
+import { accountCreationAllowed } from "@/lib/account-creation";
+import { effectiveRoles } from "@/lib/permissions";
 
 /**
  * Authentication for every surface: one user table, one session.
@@ -155,6 +158,11 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      // Before launch nobody signs up through the web, and nobody signs in with Google (which
+      // would create an account). Administrators are created on the server (npm run admin:create).
+      if (comingSoon() && !accountCreationAllowed() && (ctx.path === "/sign-up/email" || ctx.path.startsWith("/sign-in/social") || ctx.path.startsWith("/callback/"))) {
+        throw new APIError("FORBIDDEN", { message: "RCMExcel is not open yet. Accounts are not being created.", code: "COMING_SOON" });
+      }
       if (ctx.path === "/sign-up/email") {
         // Terms acceptance is required server-side, not just by a checkbox in the form.
         const body = (ctx.body ?? {}) as { acceptTerms?: unknown; country?: unknown; timezone?: unknown };
@@ -259,6 +267,7 @@ export const auth = betterAuth({
         // changes. Everyone else starts as STUDENT; role and status are forced here whatever
         // the request contained.
         before: async (user) => {
+          if (comingSoon() && !accountCreationAllowed()) return false;
           const owners = (process.env.OWNER_EMAILS ?? "")
             .split(",")
             .map((e) => e.trim().toLowerCase())
@@ -318,6 +327,14 @@ export const auth = betterAuth({
             return false;
           }
           if (user.lockedUntil && user.lockedUntil > new Date()) return false;
+          // Before launch only staff can be signed in.
+          if (comingSoon()) {
+            const roles = await prisma.user.findUnique({ where: { id: session.userId }, select: { email: true, role: true, staffRoles: { select: { role: true } } } });
+            if (!roles || (effectiveRoles(roles.role, roles.staffRoles.map((r) => r.role)).length === 0 && !isPreviewLearner(roles.email))) {
+              await audit({ actorId: session.userId, action: "login_failed", entity: "Session", outcome: "denied", after: { reason: "coming_soon_staff_only" } });
+              return false;
+            }
+          }
         },
         after: async (session) => {
           const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { lastLoginAt: true } });

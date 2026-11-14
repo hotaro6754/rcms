@@ -1,4 +1,5 @@
 import { TwoFactorForm } from "@/components/auth/TwoFactorForm";
+import { comingSoon } from "@/lib/launch";
 
 export const metadata = { title: "Two-step verification" };
 
@@ -9,7 +10,7 @@ export default function TwoFactorPage() {
       <h1 className="mt-3 text-[clamp(2.2rem,3.4vw,2.9rem)] leading-[1.02]">Confirm it is you.</h1>
       <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">Your account uses two-step verification. Enter the current code from your authenticator app.</p>
       <div className="mt-10">
-        <TwoFactorForm />
+        <TwoFactorForm home={comingSoon() ? "/admin" : "/academy"} />
       </div>
     </>
   );

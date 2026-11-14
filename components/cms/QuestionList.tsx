@@ -30,7 +30,7 @@ export function QuestionList({
       {questions.length === 0 && <p className="text-micro text-muted-foreground">No questions yet.</p>}
       <ol className="flex flex-col gap-2">
         {questions.map((q, i) => (
-          <li key={q.id} className="rounded-[3px] border border-border bg-card">
+          <li key={q.id} className="rounded-xl border border-border bg-card">
             <div className="flex items-start gap-2 px-3 py-2.5">
               <span className="text-data mt-0.5 text-[11px] text-subtle">{String(i + 1).padStart(2, "0")}</span>
               <div className="min-w-0 flex-1">
@@ -74,14 +74,14 @@ export function QuestionList({
                     <label className="text-[12.5px]" htmlFor={`bank-${q.id}`}>
                       Copy into bank
                     </label>
-                    <select id={`bank-${q.id}`} name="bankId" className="min-h-8 rounded-[3px] border border-input bg-card px-2 text-[12.5px]">
+                    <select id={`bank-${q.id}`} name="bankId" className="min-h-8 rounded-xl border border-input bg-card px-2 text-[12.5px]">
                       {banks.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.title}
                         </option>
                       ))}
                     </select>
-                    <button className="min-h-8 rounded-[3px] border border-input px-2.5 text-[12.5px] hover:bg-secondary">Copy</button>
+                    <button className="min-h-8 rounded-xl border border-input px-2.5 text-[12.5px] hover:bg-secondary">Copy</button>
                   </ActionForm>
                 )}
               </div>
@@ -91,11 +91,11 @@ export function QuestionList({
       </ol>
       {canEdit &&
         (adding ? (
-          <div className="rounded-[3px] border border-dashed border-input px-3 py-3">
+          <div className="rounded-xl border border-dashed border-input px-3 py-3">
             <QuestionForm owner={owner} courseId={courseId} lessons={lessons} onDone={() => setAdding(false)} />
           </div>
         ) : (
-          <button type="button" onClick={() => setAdding(true)} className="w-fit rounded-[3px] border border-input bg-card px-3 py-1.5 text-[13px] hover:bg-secondary">
+          <button type="button" onClick={() => setAdding(true)} className="w-fit rounded-xl border border-input bg-card px-3 py-1.5 text-[13px] hover:bg-secondary">
             Add a question
           </button>
         ))}

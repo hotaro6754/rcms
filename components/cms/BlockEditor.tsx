@@ -15,8 +15,8 @@ export interface EditorBlock {
 }
 
 const KINDS = Object.keys(BLOCK_LABEL) as BlockKind[];
-const IN = "min-h-9 w-full rounded-[3px] border border-input bg-card px-2.5 text-[13.5px]";
-const TA = "w-full rounded-[3px] border border-input bg-card px-2.5 py-2 text-[13.5px] leading-relaxed";
+const IN = "min-h-9 w-full rounded-xl border border-input bg-card px-2.5 text-[13.5px]";
+const TA = "w-full rounded-xl border border-input bg-card px-2.5 py-2 text-[13.5px] leading-relaxed";
 const s = (v: unknown) => (typeof v === "string" ? v : "");
 
 function L({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
@@ -41,7 +41,7 @@ function KindFields({ kind, d, images, audio = [], documents = [], blockId }: { 
             <input name="title" defaultValue={s(d.title)} maxLength={200} className={IN} placeholder="e.g. Denial categories explained" />
           </L>
           {blockId ? (
-            <a href={`/admin/content/design/${blockId}`} className="w-fit rounded-[3px] bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground">
+            <a href={`/admin/content/design/${blockId}`} className="w-fit rounded-xl bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground">
               Open the visual designer
             </a>
           ) : (
@@ -271,10 +271,10 @@ export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], do
 
   return (
     <div className="flex flex-col gap-2">
-      {blocks.length === 0 && <p className="rounded-[3px] border border-dashed border-input px-4 py-5 text-center text-micro text-muted-foreground">No content yet. Add a block below.</p>}
+      {blocks.length === 0 && <p className="rounded-xl border border-dashed border-input px-4 py-5 text-center text-micro text-muted-foreground">No content yet. Add a block below.</p>}
       <ol className="flex flex-col gap-2">
         {blocks.map((b, i) => (
-          <li key={b.id} className="rounded-[3px] border border-border bg-card">
+          <li key={b.id} className="rounded-xl border border-border bg-card">
             <div className="flex items-center gap-2 px-3 py-2">
               <span className="text-data text-[10.5px] tracking-[0.08em] text-subtle">{BLOCK_LABEL[b.kind].toUpperCase()}</span>
               <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground">{summary(b)}</span>
@@ -310,8 +310,8 @@ export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], do
                 <input type="hidden" name="courseId" value={courseId} />
                 <KindFields kind={b.kind} d={b.data} images={images} audio={audio} documents={documents} blockId={b.id} />
                 <div className="flex gap-2">
-                  <button className="min-h-9 rounded-[3px] bg-primary px-3 text-[13px] font-medium text-primary-foreground">Save block</button>
-                  <button type="button" onClick={() => setEditing(null)} className="min-h-9 rounded-[3px] px-3 text-[13px] hover:bg-secondary">
+                  <button className="min-h-9 rounded-xl bg-primary px-3 text-[13px] font-medium text-primary-foreground">Save block</button>
+                  <button type="button" onClick={() => setEditing(null)} className="min-h-9 rounded-xl px-3 text-[13px] hover:bg-secondary">
                     Cancel
                   </button>
                 </div>
@@ -322,12 +322,12 @@ export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], do
       </ol>
 
       {canEdit && (
-        <div className="rounded-[3px] border border-dashed border-input px-3 py-3">
+        <div className="rounded-xl border border-dashed border-input px-3 py-3">
           <div className="flex flex-wrap items-center gap-2">
             <label htmlFor={`kind-${lessonId}`} className="text-[12.5px] font-medium">
               Add a block
             </label>
-            <select id={`kind-${lessonId}`} value={newKind} onChange={(e) => setNewKind(e.target.value as BlockKind)} className="min-h-9 rounded-[3px] border border-input bg-card px-2 text-[13px]">
+            <select id={`kind-${lessonId}`} value={newKind} onChange={(e) => setNewKind(e.target.value as BlockKind)} className="min-h-9 rounded-xl border border-input bg-card px-2 text-[13px]">
               <option value="">Choose type…</option>
               {KINDS.map((k) => (
                 <option key={k} value={k}>
@@ -343,8 +343,8 @@ export function BlockEditor({ courseId, lessonId, blocks, images, audio = [], do
               <input type="hidden" name="courseId" value={courseId} />
               <KindFields kind={newKind} d={{}} images={images} audio={audio} documents={documents} />
               <div className="flex gap-2">
-                <button className="min-h-9 rounded-[3px] bg-primary px-3 text-[13px] font-medium text-primary-foreground">Add {BLOCK_LABEL[newKind].toLowerCase()}</button>
-                <button type="button" onClick={() => setNewKind("")} className="min-h-9 rounded-[3px] px-3 text-[13px] hover:bg-secondary">
+                <button className="min-h-9 rounded-xl bg-primary px-3 text-[13px] font-medium text-primary-foreground">Add {BLOCK_LABEL[newKind].toLowerCase()}</button>
+                <button type="button" onClick={() => setNewKind("")} className="min-h-9 rounded-xl px-3 text-[13px] hover:bg-secondary">
                   Cancel
                 </button>
               </div>

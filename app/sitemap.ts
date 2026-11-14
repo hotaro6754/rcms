@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { siteUrl } from "@/lib/seo";
+import { comingSoon } from "@/lib/launch";
+import { POLICIES } from "@/lib/legal/policies";
 import { SECTIONS, sectionByKind } from "@/lib/library-sections";
 
 /** Every public page: the fixed pages, released courses, published library entries and custom pages. */
@@ -12,11 +14,9 @@ const FIXED: { path: string; priority: number; changeFrequency: MetadataRoute.Si
   { path: "/catalog", priority: 0.9, changeFrequency: "weekly" },
   { path: "/learning-paths", priority: 0.8, changeFrequency: "monthly" },
   { path: "/pricing", priority: 0.8, changeFrequency: "monthly" },
-  { path: "/mentoring", priority: 0.7, changeFrequency: "monthly" },
   { path: "/resources", priority: 0.7, changeFrequency: "weekly" },
   { path: "/resources/tests", priority: 0.5, changeFrequency: "monthly" },
   { path: "/about", priority: 0.6, changeFrequency: "yearly" },
-  { path: "/community", priority: 0.4, changeFrequency: "monthly" },
   { path: "/blog", priority: 0.4, changeFrequency: "weekly" },
   { path: "/contact", priority: 0.5, changeFrequency: "yearly" },
   { path: "/legal/terms", priority: 0.2, changeFrequency: "yearly" },
@@ -27,8 +27,11 @@ const FIXED: { path: string; priority: number; changeFrequency: MetadataRoute.Si
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Before launch there is nothing public to list.
+  if (comingSoon()) return [];
   const base = siteUrl().origin;
   const entries: MetadataRoute.Sitemap = FIXED.map((f) => ({ url: `${base}${f.path}`, changeFrequency: f.changeFrequency, priority: f.priority }));
+  for (const p of POLICIES) entries.push({ url: `${base}/legal/${p.slug}`, changeFrequency: "yearly", priority: 0.2 });
   for (const s of SECTIONS) entries.push({ url: `${base}/resources/${s.path}`, changeFrequency: "weekly", priority: 0.6 });
   try {
     const [courses, library, pages] = await Promise.all([

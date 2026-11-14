@@ -18,7 +18,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   const paid = (await searchParams).paid;
   return (
     <div className="mx-auto max-w-[760px] px-6 py-12">
-      {paid && order.state === "PAID" && <p role="status" className="mb-6 border-l-2 border-success bg-success-bg px-4 py-3 text-[14px] text-success">Payment verified. Your access is ready in My academy.</p>}
+      {paid && order.state === "PAID" && <p role="status" className="mb-6 border-l-2 border-success bg-success-bg px-4 py-3 text-[14px] text-success">Payment verified. Your access is ready in My learning.</p>}
       {paid && order.state !== "PAID" && <p role="status" className="mb-6 border-l-2 border-warning bg-warning-bg px-4 py-3 text-[14px] text-warning">We are still confirming this payment with the provider. This page updates once it is confirmed.</p>}
       <article className="rounded-[var(--radius)] border border-border bg-card p-8 print:border-0">
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">

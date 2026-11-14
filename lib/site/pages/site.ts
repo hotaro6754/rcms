@@ -23,9 +23,10 @@ const MENUS = [
     overview: { label: "Compare the levels", href: "/learning-paths" },
     intro: "Three levels, each built on the one before. Start where you actually work today; every course ends with assessed work you can show.",
     items: [
-      item("Learning levels", "Trainee — Foundation", "/catalog?level=trainee", "Your first revenue cycle role"),
-      item("Learning levels", "Professional — Execution", "/catalog?level=professional", "Working the claim on the floor"),
-      item("Learning levels", "Leadership — Governance", "/catalog?level=leadership", "Running the operation"),
+      item("Learning levels", "Beginner — RCM Foundation", "/catalog?level=beginner", "US Healthcare RCM foundation"),
+      item("Learning levels", "Professional — Process Excellence", "/catalog?level=professional", "Departmental process excellence"),
+      item("Learning levels", "Leader — Operational Management", "/catalog?level=leader", "Department and operational management"),
+      item("Learning levels", "Executive Leadership", "/catalog?level=executive", "Strategic and business excellence"),
       item("Programs", "Course catalogue", "/catalog", "Every released course and its price"),
       item("Programs", "Learning paths", "/learning-paths", "The levels side by side"),
       item("Programs", "Practice tests", "/resources/tests", "Check yourself against a level"),
@@ -38,25 +39,8 @@ const MENUS = [
     items: [
       item("On this site", "Claim #20481 walkthrough", "/#top", "One claim, filled in stage by stage"),
       item("On this site", "The ten revenue-cycle stages", "/#system", "Front end, middle and back end"),
-      item("On this site", "Denial investigation", "/#lab", "Root cause analysis, five whys"),
       item("On this site", "Monthly operating review", "/#governance", "The month's measures, explained upward"),
       item("On this site", "Career progression", "/#people", "Six levels, and the number each one owns"),
-      item("Operations console", "Operations console", "/overview", "A worked example practice"),
-      item("Operations console", "Governance Room", "/governance", "The full seven-stage review"),
-      item("Operations console", "Denial inventory", "/queues", "Denials by reason and owner"),
-      item("Operations console", "KPI library", "/metrics", "What each measure means"),
-      item("Operations console", "Capacity and roster", "/roster", "Who is working what"),
-    ],
-  },
-  {
-    label: "Mentoring",
-    overview: { label: "All mentoring sessions", href: "/mentoring" },
-    intro: "One-to-one sessions, chosen by the length of the problem. Send a request and we confirm a time by email.",
-    items: [
-      item("Sessions", "Career consultation", "/mentoring#career", "30 minutes, one-to-one"),
-      item("Sessions", "Professional guidance", "/mentoring#professional", "45 minutes, one-to-one"),
-      item("Sessions", "Leadership mentoring", "/mentoring#leadership", "60 minutes, one-to-one"),
-      item("Sessions", "Executive career roadmap", "/mentoring#roadmap", "90 minutes, one-to-one"),
     ],
   },
   {
@@ -68,7 +52,6 @@ const MENUS = [
       item("", "Practice tests", "/resources/tests", "Self-checks for each level"),
       item("", "Writing", "/blog", "Articles from the floor"),
       item("", "Floor Notes", "/#floor-notes", "The monthly letter"),
-      item("", "Community", "/community", "Channels for learners"),
     ],
   },
   {
@@ -86,7 +69,7 @@ const MENUS = [
 ];
 const footerRow = {
   title: text("Row title", "", { max: 40, help: "Shown in capitals." }),
-  links: list("Links", { link: link("Link", { label: "", href: "/" }) }, [], { max: 12 }),
+  links: list("Links", { link: link("Link", { label: "", href: "/" }) }, [], { max: 16 }),
   whatsapp: toggle("Add the WhatsApp link to this row", false, {
     help: "Shown only when a WhatsApp number is configured for the site.",
   }),
@@ -143,7 +126,7 @@ export const sitePage = definePage({
       title: text("Heading", "The revenue cycle is complicated.", { max: 120 }),
       emphasis: text("Heading: emphasised ending", "Learning it doesn’t have to be.", { max: 120, optional: true }),
       primary: link("Main button", { label: "See the learning levels", href: "/learning-paths" }),
-      secondary: link("Second link", { label: "Or talk it through, 1:1", href: "/mentoring" }),
+      secondary: link("Second link", { label: "Browse the course catalogue", href: "/catalog" }),
       tertiary: link("Small link", { label: "Pricing", href: "/pricing" }),
     }),
     notes: group("Footer: monthly letter sign-up", {
@@ -177,19 +160,7 @@ export const sitePage = definePage({
               { link: { label: "Learning paths", href: "/learning-paths" } },
               { link: { label: "Programs", href: "/courses" } },
               { link: { label: "Pricing", href: "/pricing" } },
-              { link: { label: "1:1 mentoring", href: "/mentoring" } },
               { link: { label: "Corporate accounts", href: "/pricing" } },
-            ],
-          },
-          {
-            title: "Practice",
-            whatsapp: false,
-            links: [
-              { link: { label: "Operations console", href: "/overview" } },
-              { link: { label: "Governance Room", href: "/governance" } },
-              { link: { label: "Denial inventory", href: "/queues" } },
-              { link: { label: "KPI library", href: "/metrics" } },
-              { link: { label: "Capacity and roster", href: "/roster" } },
             ],
           },
           {
@@ -197,7 +168,6 @@ export const sitePage = definePage({
             whatsapp: false,
             links: [
               { link: { label: "About the author", href: "/about" } },
-              { link: { label: "Community", href: "/community" } },
               { link: { label: "Writing", href: "/blog" } },
             ],
           },
@@ -215,6 +185,16 @@ export const sitePage = definePage({
               { link: { label: "Refunds", href: "/legal/refund" } },
               { link: { label: "Disclaimer", href: "/legal/disclaimer" } },
               { link: { label: "Content governance", href: "/legal/content-governance" } },
+              { link: { label: "Learner terms", href: "/legal/learner-terms" } },
+              { link: { label: "Cookies", href: "/legal/cookies" } },
+              { link: { label: "Academic policy", href: "/legal/academic-policy" } },
+              { link: { label: "Certification", href: "/legal/certification" } },
+              { link: { label: "Copyright", href: "/legal/copyright" } },
+              { link: { label: "HIPAA disclaimer", href: "/legal/hipaa" } },
+              { link: { label: "No employment guarantee", href: "/legal/no-employment-guarantee" } },
+              { link: { label: "No mentoring", href: "/legal/no-mentoring" } },
+              { link: { label: "Editorial disclaimer", href: "/legal/editorial" } },
+              { link: { label: "Limitation of liability", href: "/legal/liability" } },
             ],
           },
         ],

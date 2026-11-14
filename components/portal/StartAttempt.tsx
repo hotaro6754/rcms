@@ -24,7 +24,7 @@ export function StartAttempt({ quizId, label }: { quizId: string; label: string 
             else setError(res.error);
           })
         }
-        className="inline-flex min-h-11 w-fit items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+        className="inline-flex min-h-11 w-fit items-center rounded-xl bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
       >
         {pending ? "Preparing…" : label}
       </button>

@@ -13,7 +13,7 @@ export function TemplatePicker({ templates, target }: { templates: { id: string;
           if (t && box) box.value = box.value ? `${box.value}\n\n${t.body}` : t.body;
           e.target.value = "";
         }}
-        className="min-h-8 rounded-[3px] border border-input bg-card px-2 text-[12.5px]"
+        className="min-h-8 rounded-xl border border-input bg-card px-2 text-[12.5px]"
       >
         <option value="">Insert…</option>
         {templates.map((t) => (

@@ -11,7 +11,8 @@ import path from "node:path";
 
 // pdf.js is loaded from node_modules at runtime (serverExternalPackages), so its font folder is
 // there too. (require.resolve cannot be used here: the bundler rewrites it into a module id.)
-const STANDARD_FONTS = path.join(process.cwd(), "node_modules", "pdfjs-dist", "standard_fonts") + path.sep;
+// pdf.js insists the URL ends in "/" (a Windows "\" is refused), so separators are forward slashes.
+const STANDARD_FONTS = path.join(process.cwd(), "node_modules", "pdfjs-dist", "standard_fonts").replace(/\\/g, "/") + "/";
 
 type PdfJs = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
 let lib: Promise<PdfJs> | null = null;

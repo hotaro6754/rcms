@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -95,12 +96,12 @@ export function Checkout({ sku, name, email, initial }: { sku: string; name: str
         <label htmlFor="coupon" className="sr-only">
           Coupon code
         </label>
-        <input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Coupon code" className="min-h-10 flex-1 rounded-[3px] border border-input bg-card px-3 text-[14px]" />
-        <button type="button" onClick={apply} disabled={pending || !coupon} className="min-h-10 rounded-[3px] border border-input px-3 text-[13.5px] hover:bg-secondary disabled:opacity-50">
+        <input id="coupon" value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Coupon code" className="min-h-10 flex-1 rounded-xl border border-input bg-card px-3 text-[14px]" />
+        <button type="button" onClick={apply} disabled={pending || !coupon} className="min-h-10 rounded-xl border border-input px-3 text-[13.5px] hover:bg-secondary disabled:opacity-50">
           Apply
         </button>
       </div>
-      <button type="button" onClick={pay} disabled={pending || !!status} className="inline-flex min-h-12 items-center justify-center rounded-[3px] bg-primary px-6 text-[15px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
+      <button type="button" onClick={pay} disabled={pending || !!status} className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 text-[15px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
         {status ?? (pending ? "Preparing…" : q.amount === 0 ? "Enrol" : `Pay ${inr(q.amount)}`)}
       </button>
       {error && (
@@ -108,7 +109,7 @@ export function Checkout({ sku, name, email, initial }: { sku: string; name: str
           {error}
         </p>
       )}
-      <p className="text-[12px] leading-relaxed text-muted-foreground">Payments are processed by Razorpay. RCMExcel never receives or stores your card or bank details. By paying you accept the <a href="/legal/terms" className="underline">terms</a> and <a href="/legal/refund" className="underline">refund policy</a>.</p>
+      <p className="text-[12px] leading-relaxed text-muted-foreground">Payments are processed by Razorpay. RCMExcel never receives or stores your card or bank details. By paying you accept the <Link href="/legal/terms" className="underline">terms</Link> and <Link href="/legal/refund" className="underline">refund policy</Link>.</p>
     </div>
   );
 }

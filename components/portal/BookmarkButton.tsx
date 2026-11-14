@@ -23,7 +23,7 @@ export function BookmarkButton({ lessonId, saved }: { lessonId: string; saved: b
             else setError(res.error);
           })
         }
-        className="inline-flex min-h-9 items-center gap-1.5 rounded-[3px] border border-input px-3 text-[13px] hover:bg-secondary disabled:opacity-50"
+        className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-input px-3 text-[13px] hover:bg-secondary disabled:opacity-50"
       >
         {on ? <BookmarkCheck className="h-4 w-4" aria-hidden /> : <Bookmark className="h-4 w-4" aria-hidden />}
         {on ? "Saved" : "Save lesson"}

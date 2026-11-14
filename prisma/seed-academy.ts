@@ -1,8 +1,9 @@
 import type { PrismaClient } from "@prisma/client";
 import { backfillRelease } from "../lib/services/cms/release";
+import { SPEC_LEVELS } from "./seed-curriculum";
 
 /**
- * Academy structure from the blueprint: the three learning levels, each existing course
+ * Academy structure: the four specification learning levels, each existing course
  * placed in one, first releases for courses that were already live, and a synthetic
  * Foundation assessment that exercises every automatically graded question type.
  *
@@ -10,108 +11,16 @@ import { backfillRelease } from "../lib/services/cms/release";
  * seed never overwrites an edit made there.
  */
 
-export const LEVELS = [
-  {
-    slug: "trainee",
-    name: "Trainee",
-    displayTitle: "Trainee — Foundation",
-    sequence: 1,
-    accent: "teal",
-    shortDescription: "Understand the US healthcare ecosystem and the basic physician billing workflow.",
-    description:
-      "Build the vocabulary and process foundation: who the stakeholders are, how insurance and eligibility work, how a professional claim moves from encounter to payment, and why privacy rules apply to every step.",
-    audience: "New to RCM: no healthcare background, targeting a first revenue cycle role.",
-    prerequisites: ["None"],
-    outcomes: ["Explain the claim lifecycle end to end", "Read an EOB and an ERA", "Recognise the main denial categories and who resolves them"],
-    coreTopics: [
-      "Healthcare stakeholders",
-      "Insurance basics",
-      "Patient demographics",
-      "Eligibility and authorization",
-      "Coding overview",
-      "CMS-1500 / 837P overview",
-      "Claim lifecycle",
-      "Payment and denial basics",
-      "HIPAA awareness",
-    ],
-    estimatedEffort: "6 to 8 weeks part-time",
-    assessmentRequirement: "Knowledge checks, terminology matching and basic workflow sequencing",
-    passingCriteria: "70% on every assessment",
-    completionRequirement: "Every lesson complete and every assessment passed",
-    badgeName: "Foundation badge",
-  },
-  {
-    slug: "professional",
-    name: "Professional",
-    displayTitle: "Professional — Execution",
-    sequence: 2,
-    accent: "blue",
-    shortDescription: "Manage end-to-end RCM workflows and resolve operational exceptions.",
-    description:
-      "Develop end-to-end workflow capability: front-end controls, charge capture, claim edits and rejections, payment posting, underpayments, denials and appeals, AR follow-up and quality controls, tested through scenarios and root-cause cases.",
-    audience: "Managing workflows: one to six years in billing, AR, posting or eligibility.",
-    prerequisites: ["Trainee level or equivalent experience"],
-    outcomes: ["Work a denial from CARC/RARC to root cause", "Prioritise AR by value and risk", "Design corrective actions that prevent repeat errors"],
-    coreTopics: [
-      "Front-end controls",
-      "Charge capture",
-      "Coding dependencies",
-      "Claim edits and clearinghouse rejections",
-      "Payment posting",
-      "Underpayments",
-      "Denials and appeals",
-      "AR follow-up",
-      "Credit balances",
-      "Quality controls",
-      "Payer-specific workflows",
-    ],
-    estimatedEffort: "8 to 10 weeks part-time",
-    assessmentRequirement: "Timed tests, claim scenarios, denial root-cause analysis and corrective-action exercises",
-    passingCriteria: "70% on every assessment",
-    completionRequirement: "Every lesson complete and every assessment passed",
-    badgeName: "Professional badge",
-  },
-  {
-    slug: "leadership",
-    name: "Leadership",
-    displayTitle: "Leadership — Governance",
-    sequence: 3,
-    accent: "navy",
-    shortDescription: "Lead delivery performance, client outcomes, compliance and continuous improvement.",
-    description:
-      "Govern service delivery: SLA design, KRA ownership, the KPI dictionary, capacity and productivity, quality architecture, reporting, governance cadence, risk and escalation, coaching, Lean improvement and client communication.",
-    audience: "Leading performance: team leads, managers and directors.",
-    prerequisites: ["Professional level or equivalent experience"],
-    outcomes: ["Interpret an operations dashboard and act on it", "Run a governance cadence that produces decisions", "Write an executive action plan with owners and dates"],
-    coreTopics: [
-      "SLA design",
-      "KRA ownership",
-      "KPI dictionary",
-      "Capacity and productivity",
-      "Quality architecture",
-      "Reporting",
-      "Governance cadence",
-      "Issue and risk management",
-      "Escalation",
-      "Coaching",
-      "Lean improvement",
-      "Client communication",
-    ],
-    estimatedEffort: "3 to 6 months part-time",
-    assessmentRequirement: "Dashboard interpretation, governance case studies and executive action plans",
-    passingCriteria: "Rubric-marked case work plus 70% on knowledge assessments",
-    completionRequirement: "Every lesson complete and every assessment passed",
-    badgeName: "Leadership badge",
-  },
-] as const;
+/** The four specification levels (prisma/seed-curriculum.ts), published so demo courses can sit in them. */
+export const LEVELS = SPEC_LEVELS;
 
 /** Where the five existing programs sit in the blueprint's three levels. */
 export const COURSE_LEVEL: Record<string, string> = {
-  foundation: "trainee",
+  foundation: "beginner",
   billing: "professional",
   "ar-denials": "professional",
-  operations: "leadership",
-  executive: "leadership",
+  operations: "leader",
+  executive: "executive",
 };
 
 const DISCLAIMER =

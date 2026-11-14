@@ -14,19 +14,19 @@ import { signIn, signUp } from "@/lib/auth-client";
  * wrong", and the message never reveals whether an email is registered.
  */
 const FIELD =
-  "min-h-11 w-full border-b border-input bg-transparent text-[16px] outline-none transition-colors focus:border-foreground";
+  "h-12 w-full rounded-2xl border-0 bg-secondary px-4 text-[15px] text-foreground outline-none transition-shadow placeholder:text-subtle focus:shadow-[0_0_0_2px_var(--x-mint-ink)]";
 
 const COUNTRIES = ["India", "United States", "Philippines", "United Kingdom", "United Arab Emirates", "Canada", "Other"];
 
 /** Only same-site paths are followed after sign-in, never an absolute URL. */
-function safeNext(raw: string | null) {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : "/academy";
+function safeNext(raw: string | null, fallback: string) {
+  return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : fallback;
 }
 
-export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
+export function AuthForm({ mode, allowSignUp = true, home = "/academy" }: { mode: "sign-in" | "sign-up"; allowSignUp?: boolean; home?: string }) {
   const router = useRouter();
   const params = useSearchParams();
-  const next = safeNext(params.get("next"));
+  const next = safeNext(params.get("next"), home);
   const isSignUp = mode === "sign-up";
   const [country, setCountry] = useState("India");
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -81,8 +81,8 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       {isSignUp && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="name" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
-            NAME
+          <label htmlFor="name" className="text-[13px] font-semibold text-foreground">
+            Full name
           </label>
           <input
             id="name"
@@ -96,8 +96,8 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       )}
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
-            EMAIL
+        <label htmlFor="email" className="text-[13px] font-semibold text-foreground">
+            Email
           </label>
         <input
           id="email"
@@ -112,8 +112,8 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
 
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
-          <label htmlFor="password" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
-            PASSWORD
+          <label htmlFor="password" className="text-[13px] font-semibold text-foreground">
+            Password
           </label>
           {!isSignUp && (
             <Link href="/forgot-password" className="text-[12.5px] text-muted-foreground underline underline-offset-4 hover:text-foreground">
@@ -142,8 +142,8 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       {isSignUp && (
         <>
           <div className="flex flex-col gap-2">
-            <label htmlFor="country" className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
-              COUNTRY
+            <label htmlFor="country" className="text-[13px] font-semibold text-foreground">
+              Country
             </label>
             <select id="country" value={country} onChange={(e) => setCountry(e.target.value)} className={FIELD}>
               {COUNTRIES.map((c) => (
@@ -187,11 +187,12 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       <button
         type="submit"
         disabled={busy}
-        className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-50"
+        className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-5 text-[14px] font-semibold text-primary-foreground transition-transform hover:-translate-y-px disabled:opacity-50"
       >
         {busy ? (isSignUp ? "Creating…" : "Signing in…") : isSignUp ? "Create account" : "Sign in"}
       </button>
 
+      {allowSignUp && (
       <p className="text-[13.5px] text-muted-foreground">
         {isSignUp ? "Already have an account? " : "No account yet? "}
         <Link
@@ -201,6 +202,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           {isSignUp ? "Sign in" : "Create one"}
         </Link>
       </p>
+      )}
     </form>
   );
 }

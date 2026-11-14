@@ -7,12 +7,10 @@ import { catalogPage } from "./pages/catalog";
 import { coursePage } from "./pages/course";
 import { learningPathsPage } from "./pages/learning-paths";
 import { pricingPage } from "./pages/pricing";
-import { mentoringPage } from "./pages/mentoring";
 import { resourcesPage } from "./pages/resources";
 import { resourcesSectionPage } from "./pages/resources-section";
 import { resourcesEntryPage } from "./pages/resources-entry";
 import { resourcesTestsPage } from "./pages/resources-tests";
-import { communityPage } from "./pages/community";
 import { blogPage } from "./pages/blog";
 import { contactPage } from "./pages/contact";
 import { legalTermsPage } from "./pages/legal-terms";
@@ -37,12 +35,10 @@ export const BUILT_IN_PAGES: PageDef[] = [
   coursePage,
   learningPathsPage,
   pricingPage,
-  mentoringPage,
   resourcesPage,
   resourcesSectionPage,
   resourcesEntryPage,
   resourcesTestsPage,
-  communityPage,
   blogPage,
   contactPage,
   legalTermsPage,

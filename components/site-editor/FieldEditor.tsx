@@ -10,7 +10,7 @@ export type MediaOption = { src: string; title: string; alt: string };
 type Common = { path: string; media: MediaOption[]; openDesigner?: (path: string) => void };
 
 const id = (path: string) => `f-${path.replace(/[^a-zA-Z0-9]+/g, "-")}`;
-const SMALL_BTN = "inline-flex min-h-8 items-center gap-1 rounded-[3px] border border-input bg-card px-2 text-[12px] hover:bg-secondary disabled:opacity-40";
+const SMALL_BTN = "inline-flex min-h-8 items-center gap-1 rounded-xl border border-input bg-card px-2 text-[12px] hover:bg-secondary disabled:opacity-40";
 
 /** One field of a page, rendered from its definition. */
 export function FieldEditor({ field, value, onChange, path, media, openDesigner }: Common & { field: Field; value: unknown; onChange: (v: unknown) => void }) {
@@ -28,7 +28,7 @@ export function FieldEditor({ field, value, onChange, path, media, openDesigner 
         <div className="flex flex-col gap-1.5">
           {label}
           <span className="flex items-center gap-2">
-            <input type="color" aria-label={`${field.label}: pick`} value={/^#[0-9a-f]{6}$/i.test(v) ? v : "#000000"} onChange={(e) => onChange(e.target.value)} className="h-10 w-12 cursor-pointer rounded-[3px] border border-input bg-card p-0.5" />
+            <input type="color" aria-label={`${field.label}: pick`} value={/^#[0-9a-f]{6}$/i.test(v) ? v : "#000000"} onChange={(e) => onChange(e.target.value)} className="h-10 w-12 cursor-pointer rounded-xl border border-input bg-card p-0.5" />
             <input id={id(path)} value={v} maxLength={7} onChange={(e) => onChange(e.target.value)} className={`${FIELD} max-w-[9rem] font-mono`} />
             {v !== field.default && (
               <button type="button" className="text-[12px] underline underline-offset-2" onClick={() => onChange(field.default)}>
@@ -46,7 +46,7 @@ export function FieldEditor({ field, value, onChange, path, media, openDesigner 
         <div className="flex flex-col gap-2 rounded-[var(--radius)] border border-border bg-card p-4">
           <p className="text-[13px] font-medium">{field.label}</p>
           <p className="text-[12.5px] text-muted-foreground">{n ? `${n} section${n === 1 ? "" : "s"} designed.` : "Nothing designed yet."} Arrange sections, columns, images, infographics and interactive parts, and place anything freely on a canvas.</p>
-          <button type="button" className="w-fit rounded-[3px] bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground" onClick={() => openDesigner?.(path)}>
+          <button type="button" className="w-fit rounded-xl bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground" onClick={() => openDesigner?.(path)}>
             Open the visual designer
           </button>
           {help}
@@ -130,9 +130,9 @@ export function FieldEditor({ field, value, onChange, path, media, openDesigner 
           <div className="flex flex-wrap items-start gap-3">
             {v.src ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={v.src} alt="" className="h-20 w-28 rounded-[3px] border border-border object-cover" />
+              <img src={v.src} alt="" className="h-20 w-28 rounded-xl border border-border object-cover" />
             ) : (
-              <span className="grid h-20 w-28 place-items-center rounded-[3px] border border-dashed border-border text-[11px] text-muted-foreground">No image</span>
+              <span className="grid h-20 w-28 place-items-center rounded-xl border border-dashed border-border text-[11px] text-muted-foreground">No image</span>
             )}
             <div className="flex min-w-[16rem] flex-1 flex-col gap-2">
               <label className="flex flex-col gap-1 text-[12px] text-muted-foreground">
@@ -251,7 +251,7 @@ export function FieldsEditor({ fields, value, onChange, path, media, openDesigne
 function ListItem({ title, children }: { title: string; children: (open: boolean) => React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-[3px] border border-border bg-card">
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card">
       <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 px-3 text-left text-[13px]">
         <ChevronRight className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} aria-hidden="true" />
         <span className="min-w-0 truncate">{title}</span>

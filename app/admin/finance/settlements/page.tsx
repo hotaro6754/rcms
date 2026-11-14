@@ -70,8 +70,8 @@ export default async function SettlementsPage() {
                       <ActionForm action={settlementAction} className="flex gap-1">
                         <input type="hidden" name="id" value={i.id} />
                         <input type="hidden" name="op" value="reject" />
-                        <input name="reason" required placeholder="Reason" aria-label="Reason for rejection" className="min-h-8 w-32 rounded-[3px] border border-input bg-card px-2 text-[12px]" />
-                        <button className="rounded-[3px] border border-input px-2 text-[12px]">Reject</button>
+                        <input name="reason" required placeholder="Reason" aria-label="Reason for rejection" className="min-h-8 w-32 rounded-xl border border-input bg-card px-2 text-[12px]" />
+                        <button className="rounded-xl border border-input px-2 text-[12px]">Reject</button>
                       </ActionForm>
                     </div>
                   )}
@@ -84,8 +84,8 @@ export default async function SettlementsPage() {
                     <ActionForm action={settlementAction} className="flex gap-1">
                       <input type="hidden" name="id" value={i.id} />
                       <input type="hidden" name="op" value="pay" />
-                      <input name="paymentRef" required placeholder="Transaction ref" aria-label="Payment reference" className="min-h-8 w-36 rounded-[3px] border border-input bg-card px-2 text-[12px]" />
-                      <button className="rounded-[3px] border border-input px-2 text-[12px]">Record paid</button>
+                      <input name="paymentRef" required placeholder="Transaction ref" aria-label="Payment reference" className="min-h-8 w-36 rounded-xl border border-input bg-card px-2 text-[12px]" />
+                      <button className="rounded-xl border border-input px-2 text-[12px]">Record paid</button>
                     </ActionForm>
                   )}
                   {i.status === "PAID" && can(actor, "payment.reconcile") && (

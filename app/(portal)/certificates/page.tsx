@@ -54,7 +54,7 @@ export default async function CertificatesPage() {
                     LEVEL {String(c.program.level).padStart(2, "0")} · {DATE.format(c.issuedAt).toUpperCase()}
                     {c.revokedAt && <span className="ml-2 text-danger">REVOKED</span>}
                   </p>
-                  <p className="font-serif-display mt-2 text-[1.5rem] leading-snug">{c.programName}</p>
+                  <p className="x-display mt-2 text-[1.5rem] leading-snug">{c.programName}</p>
                   <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-2">
                     <span className="text-data text-[12px] tracking-[0.05em]">{c.serial}</span>
                     <Link href={`/certificates/${c.serial}`} className="text-[14px] underline decoration-input underline-offset-[6px] hover:decoration-foreground">
@@ -77,7 +77,7 @@ export default async function CertificatesPage() {
               {pending.map(({ program, status: s }) => (
                 <li key={program.id} className="border-b border-border py-5">
                   <p className="text-data text-[10.5px] tracking-[0.12em] text-subtle">LEVEL {String(program.level).padStart(2, "0")}</p>
-                  <p className="font-serif-display mt-2 text-[1.5rem] leading-snug">{program.name}</p>
+                  <p className="x-display mt-2 text-[1.5rem] leading-snug">{program.name}</p>
                   <dl className="text-data mt-3 grid w-fit grid-cols-[auto_auto] gap-x-6 gap-y-1 text-[12px]">
                     <dt className="text-subtle">LESSONS</dt>
                     <dd>
@@ -92,7 +92,7 @@ export default async function CertificatesPage() {
                     {s.eligible ? (
                       <ClaimButton
                         programId={program.id}
-                        className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover"
+                        className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover"
                       />
                     ) : (
                       <Link href={`/academy/${program.slug}`} className="text-[14px] underline decoration-input underline-offset-[6px] hover:decoration-foreground">

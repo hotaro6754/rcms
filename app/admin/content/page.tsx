@@ -142,7 +142,7 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
                       Show in catalogue
                     </ActionButton>
                   )}
-                  <Link href={`/admin/content/levels/${level.id}`} className="min-h-8 rounded-[3px] border border-input bg-card px-3 py-1.5 text-[13px] hover:bg-secondary">
+                  <Link href={`/admin/content/levels/${level.id}`} className="min-h-8 rounded-xl border border-input bg-card px-3 py-1.5 text-[13px] hover:bg-secondary">
                     Edit level
                   </Link>
                 </div>

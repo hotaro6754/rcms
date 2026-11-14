@@ -4,17 +4,15 @@ import { getActor, isStaff } from "@/lib/actor";
 import { PlatformShell } from "@/components/platform/PlatformShell";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { NOINDEX } from "@/lib/seo";
+import { comingSoon, isPreviewLearner } from "@/lib/launch";
 
 /** Signed-in and sign-in pages are kept out of search engines. */
 export const metadata = NOINDEX;
 
 const NAV = [
-  { href: "/academy", label: "My academy" },
-  { href: "/cases", label: "Case practice" },
+  { href: "/academy", label: "My learning" },
   { href: "/library", label: "Library" },
   { href: "/certificates", label: "Certificates", exact: true },
-  { href: "/labs", label: "Governance Labs" },
-  { href: "/assistant", label: "Assistant" },
   { href: "/support", label: "Support" },
   { href: "/account", label: "Account" },
 ];
@@ -23,6 +21,8 @@ const NAV = [
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const actor = await getActor();
   if (!actor) redirect("/sign-in");
+  // Before launch the learner area is for staff and the listed preview learners only.
+  if (comingSoon() && !isStaff(actor) && !isPreviewLearner(actor.email)) redirect("/coming-soon");
   // Vendor-only contacts keep their account and security settings but have no learner area.
   const path = (await headers()).get("x-pathname") ?? "";
   if (actor.role === "VENDOR" && !isStaff(actor) && !path.startsWith("/account")) redirect("/vendor");

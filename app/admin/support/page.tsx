@@ -81,7 +81,7 @@ export default async function SupportQueue({ searchParams }: { searchParams: Pro
 
       <nav aria-label="Queue views" className="mt-6 flex flex-wrap gap-1.5 border-b border-border pb-3">
         {VIEWS.map((x) => (
-          <Link key={x.v} href={`?${qs({ view: x.v })}`} aria-current={view === x.v ? "page" : undefined} className="rounded-[3px] px-2.5 py-1.5 text-[13px] hover:bg-secondary aria-[current=page]:bg-foreground aria-[current=page]:text-background">
+          <Link key={x.v} href={`?${qs({ view: x.v })}`} aria-current={view === x.v ? "page" : undefined} className="rounded-xl px-2.5 py-1.5 text-[13px] hover:bg-secondary aria-[current=page]:bg-foreground aria-[current=page]:text-background">
             {x.l}
           </Link>
         ))}

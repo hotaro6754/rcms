@@ -5,7 +5,7 @@ import { issueCertificateAction, revokeCertificateAction } from "@/lib/actions/l
 
 const SELECT = "min-h-10 w-full border-b border-input bg-transparent text-[14px] outline-none focus:border-foreground";
 const BTN =
-  "inline-flex min-h-10 items-center rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50";
+  "inline-flex min-h-10 items-center rounded-xl bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50";
 
 /** Issue a certificate by hand: pick a person and a program. */
 export function IssueForm({ people, programs }: { people: { id: string; label: string }[]; programs: { id: string; label: string }[] }) {

@@ -163,7 +163,7 @@ export function ActionButton({
         title={title}
         aria-label={title}
         className={cn(
-          "inline-flex items-center justify-center gap-1.5 rounded-[3px] text-[13px] font-medium transition-colors disabled:opacity-50",
+          "inline-flex items-center justify-center gap-1.5 rounded-xl text-[13px] font-medium transition-colors disabled:opacity-50",
           size === "icon" ? "h-8 w-8" : "min-h-8 px-3",
           styles,
           className,

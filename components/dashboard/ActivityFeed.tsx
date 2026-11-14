@@ -16,7 +16,7 @@ export function ActivityFeed({ limit }: { limit?: number }) {
       {items.map((e, i) => (
         <li key={e.id} className="flex gap-3">
           <div className="flex flex-col items-center">
-            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-[2px] ${TONE[e.kind]}`} />
+            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-xl ${TONE[e.kind]}`} />
             {i < items.length - 1 && <span className="w-px flex-1 bg-border" />}
           </div>
           <div className="pb-5">

@@ -123,3 +123,22 @@ export async function unassignGroupCourseAction(fd: FormData) {
     refreshOrg(opt(fd, "orgId"));
   });
 }
+
+/** Admins & students page: create an account of either kind. */
+export async function createAccountAction(fd: FormData) {
+  return attempt(async () => {
+    const { createAccount } = await import("@/lib/services/people/accounts");
+    await createAccount(await requireActor(), { name: str(fd, "name"), email: str(fd, "email"), password: str(fd, "password"), kind: str(fd, "kind") });
+    revalidatePath("/admin/users");
+  });
+}
+
+/** Admins & students page: make someone an administrator, or a student again. */
+export async function setAccountKindAction(fd: FormData) {
+  return attempt(async () => {
+    await requireFreshSignIn();
+    const { setAccountKind } = await import("@/lib/services/people/accounts");
+    await setAccountKind(await requireActor(), str(fd, "userId"), str(fd, "kind") === "ADMIN" ? "ADMIN" : "STUDENT");
+    revalidatePath("/admin/users");
+  });
+}

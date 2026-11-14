@@ -51,9 +51,9 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
           ["Quality (1–5)", score.quality ?? "—"],
           ["Overdue", score.overdue],
         ].map(([l, val]) => (
-          <div key={String(l)} className="border-t-2 border-foreground pt-2">
+          <div key={String(l)} className="rounded-[20px] bg-card px-4 pt-2">
             <dt className="text-data text-[10.5px] tracking-[0.1em] text-subtle">{String(l).toUpperCase()}</dt>
-            <dd className="font-serif-display mt-1 text-[1.8rem] leading-none">{val}</dd>
+            <dd className="x-display mt-1 text-[1.8rem] leading-none">{val}</dd>
           </div>
         ))}
       </dl>
@@ -101,19 +101,19 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
                       <input type="hidden" name="vendorId" value={v.id} />
                       <textarea name="comment" required rows={2} placeholder="Review comment for the vendor" aria-label="Review comment" className={TEXTAREA} />
                       <span className="flex flex-wrap items-center gap-2">
-                        <select name="qualityScore" aria-label="Quality score" className="min-h-8 rounded-[3px] border border-input bg-card px-2 text-[12.5px]">
+                        <select name="qualityScore" aria-label="Quality score" className="min-h-8 rounded-xl border border-input bg-card px-2 text-[12.5px]">
                           <option value="">Quality…</option>
                           {[1, 2, 3, 4, 5].map((n) => (
                             <option key={n}>{n}</option>
                           ))}
                         </select>
-                        <button name="decision" value="ACCEPTED" className="rounded-[3px] bg-primary px-3 py-1.5 text-[12.5px] text-primary-foreground">
+                        <button name="decision" value="ACCEPTED" className="rounded-xl bg-primary px-3 py-1.5 text-[12.5px] text-primary-foreground">
                           Accept
                         </button>
-                        <button name="decision" value="CHANGES_REQUESTED" className="rounded-[3px] border border-input px-3 py-1.5 text-[12.5px]">
+                        <button name="decision" value="CHANGES_REQUESTED" className="rounded-xl border border-input px-3 py-1.5 text-[12.5px]">
                           Request changes
                         </button>
-                        <button name="decision" value="REJECTED" className="rounded-[3px] border border-danger/40 px-3 py-1.5 text-[12.5px] text-danger">
+                        <button name="decision" value="REJECTED" className="rounded-xl border border-danger/40 px-3 py-1.5 text-[12.5px] text-danger">
                           Reject
                         </button>
                       </span>
@@ -213,7 +213,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
           <Panel title="Lifecycle">
             <ol className="flex flex-wrap gap-1">
               {LIFECYCLE.map((s, i) => (
-                <li key={s} className={`text-data rounded-[2px] px-1.5 py-0.5 text-[10px] ${i === idx ? "bg-foreground text-background" : i < idx ? "bg-success-bg text-success" : "bg-secondary text-subtle"}`}>
+                <li key={s} className={`text-data rounded-xl px-1.5 py-0.5 text-[10px] ${i === idx ? "bg-foreground text-background" : i < idx ? "bg-success-bg text-success" : "bg-secondary text-subtle"}`}>
                   {s.replace(/_/g, " ")}
                 </li>
               ))}
@@ -229,7 +229,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
                   ))}
                 </select>
                 <input name="reason" required placeholder="Reason" aria-label="Reason" className={FIELD} />
-                <button className="w-fit rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Update status</button>
+                <button className="w-fit rounded-xl border border-input px-3 py-1.5 text-[13px]">Update status</button>
               </ActionForm>
             )}
           </Panel>
@@ -239,7 +239,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
               {ONBOARDING.map(([k, label]) => (
                 <Checkbox key={k} name={k} label={label} defaultChecked={!!checklist[k]} />
               ))}
-              {manage && <button className="mt-2 w-fit rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Save checklist</button>}
+              {manage && <button className="mt-2 w-fit rounded-xl border border-input px-3 py-1.5 text-[13px]">Save checklist</button>}
             </ActionForm>
           </Panel>
           <Panel title="Payout details">
@@ -267,7 +267,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
                   <input name="payoutLast4" required pattern="\d{4}" placeholder="Last 4 of account" aria-label="Last four digits" className={FIELD} />
                   <input name="taxIdLast4" placeholder="Last 4 of tax ID (optional)" aria-label="Tax ID last four" className={FIELD} />
                   <input name="reason" required placeholder="Reason and how it was verified" aria-label="Reason" className={FIELD} />
-                  <button className="w-fit rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Request</button>
+                  <button className="w-fit rounded-xl border border-input px-3 py-1.5 text-[13px]">Request</button>
                 </ActionForm>
                 <p className="mt-1 text-[11.5px] text-muted-foreground">Never type full account or tax numbers here. Verify changes by calling the vendor on a number already on file.</p>
               </details>
@@ -286,7 +286,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
               <ActionForm action={linkVendorUserAction} className="mt-2 flex gap-1.5">
                 <input type="hidden" name="id" value={v.id} />
                 <input name="email" type="email" required placeholder="Contact's account email" aria-label="Contact email" className={FIELD} />
-                <button className="rounded-[3px] border border-input px-3 text-[13px]">Link</button>
+                <button className="rounded-xl border border-input px-3 text-[13px]">Link</button>
               </ActionForm>
             )}
           </Panel>
@@ -315,7 +315,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
                 <input name="expiresAt" type="date" aria-label="Expires" className={FIELD} />
                 <input name="file" type="file" required aria-label="File" className="text-[13px]" />
                 <Checkbox name="visibleToVendor" label="Visible to the vendor" defaultChecked />
-                <button className="w-fit rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Upload</button>
+                <button className="w-fit rounded-xl border border-input px-3 py-1.5 text-[13px]">Upload</button>
               </ActionForm>
             )}
           </Panel>

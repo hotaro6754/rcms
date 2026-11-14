@@ -81,7 +81,7 @@ export default async function HistoryPage({ params, searchParams }: { params: Pr
 
         <Panel title={sp.entity ? "Changes to one item" : "All changes"} aside={sp.entity ? <Link href="?" className="text-micro underline">Show all</Link> : undefined}>
           {comparison && (
-            <div className="mb-5 rounded-[3px] border border-border bg-secondary/40 px-3 py-3">
+            <div className="mb-5 rounded-xl border border-border bg-secondary/40 px-3 py-3">
               <p className="text-[13px] font-semibold">
                 {comparison.older.entityType} v{comparison.older.version} → v{comparison.newer.version}
               </p>
@@ -135,8 +135,8 @@ export default async function HistoryPage({ params, searchParams }: { params: Pr
                         <ActionForm action={rollbackRevisionAction} className="flex items-center gap-1.5" confirm={`Restore ${r.entityType.toLowerCase()} to version ${r.version}? This becomes a new version; nothing is erased.`}>
                           <input type="hidden" name="revisionId" value={r.id} />
                           <input type="hidden" name="courseId" value={id} />
-                          <input name="reason" required placeholder="Reason" aria-label="Reason for restoring" className="min-h-8 w-40 rounded-[3px] border border-input bg-card px-2 text-[12px]" />
-                          <button className="min-h-8 rounded-[3px] border border-input px-2 text-[12px] hover:bg-secondary">Restore this version</button>
+                          <input name="reason" required placeholder="Reason" aria-label="Reason for restoring" className="min-h-8 w-40 rounded-xl border border-input bg-card px-2 text-[12px]" />
+                          <button className="min-h-8 rounded-xl border border-input px-2 text-[12px] hover:bg-secondary">Restore this version</button>
                         </ActionForm>
                       )}
                     </div>

@@ -133,11 +133,13 @@ describe("design and document blocks", () => {
 });
 
 describe("view-only materials", () => {
-  it("are view-only unless the course team allows downloading, and are read as page images", async () => {
+  it("are always view-only, and are read as page images", async () => {
     const author = await staff("CONTENT_ADMIN");
     const { course, modules } = await makeCourseDraft(author, { modules: 1, lessons: 1 });
-    const res = await addMaterial(author, modules[0].lessons[0].id, { title: "Remittance walkthrough" }, file(await samplePdf(), "walkthrough.pdf"));
+    const res = await addMaterial(author, modules[0].lessons[0].id, { title: "Remittance walkthrough", format: "READING" }, file(await samplePdf(), "walkthrough.pdf"));
     expect(res.downloadable).toBe(false);
+    expect(res.format).toBe("READING");
+    expect(res.pages).toBe(2);
     await releaseCourse(course.id, author);
 
     const learner = await makeUser({ name: "Asha Learner" });
@@ -147,9 +149,10 @@ describe("view-only materials", () => {
     expect(access.ok && !access.staff && !access.res.downloadable).toBe(true);
 
     await expect(setDownloadable(learner, res.id, true)).rejects.toBeInstanceOf(AuthorisationError);
-    await setDownloadable(author, res.id, true);
+    // Downloads are off platform-wide (spec LMS-14): even the course team cannot switch them on.
+    await expect(setDownloadable(author, res.id, true)).rejects.toThrow(/view-only/);
     const again = await resourceAccess(learner, res.id);
-    expect(again.ok && again.res.downloadable).toBe(true);
+    expect(again.ok && !again.res.downloadable).toBe(true);
 
     // Page images carry no watermark: two readers get the same image of the same page.
     const other = await makeUser({ name: "Ben Learner" });
