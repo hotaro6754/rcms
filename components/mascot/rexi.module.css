@@ -1,0 +1,26 @@
+.wrap { position: relative; display: inline-block; flex: none; }
+.svg { display: block; width: 100%; height: auto; overflow: visible; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.shadow { fill: var(--x-ink, #0e1f3d); opacity: 0.28; }
+.body { fill: var(--x-lime, #d6f34a); }
+.shine { fill: #ffffff; opacity: 0.32; }
+.tuft { fill: none; stroke: var(--x-teal, #2a9d8f); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.arm { fill: none; stroke: var(--x-lime, #d6f34a); stroke-width: 12; stroke-linecap: round; }
+.cheek { fill: var(--x-orange, #ff6a2b); opacity: 0.45; }
+.white { fill: #ffffff; }
+.pupil { fill: #10141c; transition: cx 0.12s ease-out, cy 0.12s ease-out; }
+.glint { fill: #ffffff; transition: cx 0.12s ease-out, cy 0.12s ease-out; }
+.lid path { fill: none; stroke: #10141c; stroke-width: 5; stroke-linecap: round; }
+.brow { fill: none; stroke: #10141c; stroke-width: 4.5; stroke-linecap: round; }
+.mouth { fill: none; stroke: #10141c; stroke-width: 5; stroke-linecap: round; }
+.mouthFill { fill: #10141c; }
+.foot { fill: color-mix(in srgb, var(--x-lime, #d6f34a) 70%, #000); }
+.dots circle { fill: var(--x-ink-3, #66718a); }
+.spark path { fill: none; stroke: var(--x-orange, #ff6a2b); stroke-width: 4; stroke-linecap: round; }
+.bubble {
+  position: absolute; z-index: 2; left: 72%; top: 2%;
+  width: max-content; max-width: 220px; padding: 10px 14px;
+  border-radius: 18px 18px 18px 4px; background: var(--x-surface, #fff); color: var(--x-ink, #0e1f3d);
+  box-shadow: var(--x-shadow); font: 600 13px/1.35 var(--x-text, system-ui);
+}
+.bubble[data-side="left"] { left: auto; right: 88%; border-radius: 18px 18px 4px 18px; }
+@media (max-width: 640px) { .bubble { left: auto; right: 0; top: -12%; } }

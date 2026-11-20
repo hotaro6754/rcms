@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, Clock, RotateCcw, ShieldCheck, X } from "lucide-react";
 import { requireActor } from "@/lib/actor";
 import { ServiceError } from "@/lib/errors";
 import { attemptForTaking, attemptResult } from "@/lib/services/learning/attempts";
 import { AttemptRunner } from "@/components/portal/AttemptRunner";
-import { PageHead } from "@/components/platform/PlatformShell";
-import { StatusPill, when } from "@/components/admin/kit";
+import { Rexi } from "@/components/mascot/Rexi";
+import { Confetti } from "@/components/learning/Confetti";
+import { when } from "@/components/admin/kit";
+import s from "./attempt.module.css";
 
 export const metadata = { title: "Assessment" };
 
@@ -21,97 +23,186 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
 
   if (view.status === "IN_PROGRESS") {
     return (
-      <div className="mx-auto max-w-[900px] px-6 py-10">
-        <Link href={`/academy/${view.courseSlug}/${view.lessonId}`} className="text-micro text-muted-foreground hover:text-foreground">
-          ← Back to the lesson (your answers are saved)
+      <div className={s.page}>
+        <Link href={`/academy/${view.courseSlug}/${view.lessonId}`} className={s.back}>
+          <ArrowLeft aria-hidden /> Back to the lesson <span>(your answers are saved)</span>
         </Link>
-        <PageHead kicker={`Attempt ${view.attemptNo} · pass mark ${view.passingScore}%`} title={view.title} lede={view.instructions ?? undefined} />
-        <p className="mt-4 text-[12.5px] text-muted-foreground">Do not enter patient information, account numbers, passwords or payment details in any answer.</p>
-        <div className="mt-6">
-          <AttemptRunner attemptId={view.id} questions={view.questions} initial={view.answers} uploads={view.uploads} expiresAt={view.expiresAt} />
-        </div>
+        <header className={s.takeHead}>
+          <div>
+            <p className="x-kicker">
+              Attempt {view.attemptNo} · pass mark {view.passingScore}%
+            </p>
+            <h1 className={`x-display ${s.title}`}>{view.title}</h1>
+            {view.instructions && <p className={s.lede}>{view.instructions}</p>}
+          </div>
+          <ul className={s.rules}>
+            <li>
+              <ShieldCheck aria-hidden /> Answers save as you go
+            </li>
+            <li>
+              <Clock aria-hidden /> {view.expiresAt ? "Timed: the clock is at the top" : "No time limit"}
+            </li>
+            <li>
+              <X aria-hidden /> No patient, account or payment details in answers
+            </li>
+          </ul>
+        </header>
+        <AttemptRunner attemptId={view.id} questions={view.questions} initial={view.answers} uploads={view.uploads} expiresAt={view.expiresAt} />
       </div>
     );
   }
 
   const r = await attemptResult(actor, id);
+  const pendingReview = r.status === "PENDING_REVIEW";
+  const passed = !pendingReview && r.passed;
+  const score = r.score ?? 0;
+  const correct = r.rows.filter((x) => x.correct === true).length;
+  const wrong = r.rows.filter((x) => x.correct === false).length;
+  // Semicircle gauge
+  const R = 80;
+  const arc = Math.PI * R;
+  const passAt = Math.min(100, Math.max(0, r.passingScore));
+  const px = 100 - R * Math.cos((passAt / 100) * Math.PI);
+  const py = 100 - R * Math.sin((passAt / 100) * Math.PI);
+
   return (
-    <div className="mx-auto max-w-[900px] px-6 py-10">
-      <Link href={`/academy/${r.courseSlug}/${r.lessonId}`} className="text-micro text-muted-foreground hover:text-foreground">
-        ← Back to the lesson
+    <div className={s.page}>
+      {passed && <Confetti />}
+      <Link href={`/academy/${r.courseSlug}/${r.lessonId}`} className={s.back}>
+        <ArrowLeft aria-hidden /> Back to the lesson
       </Link>
-      <PageHead
-        kicker={`Attempt ${r.attemptNo} · submitted ${when(r.submittedAt, true)}`}
-        title={r.title}
-        lede={
-          <span className="flex flex-wrap items-center gap-3">
-            <StatusPill status={r.status} label={r.status === "PENDING_REVIEW" ? "waiting for a reviewer" : r.status === "EXPIRED" ? "time ran out" : "graded"} />
-            {r.score !== null && (
-              <span className="text-[1.2rem] text-foreground">
-                {r.score}% {r.status !== "PENDING_REVIEW" && (r.passed ? <span className="text-success">— passed</span> : <span className="text-danger">— pass mark {r.passingScore}%</span>)}
+
+      <section className={s.hero} data-state={pendingReview ? "review" : passed ? "pass" : "fail"}>
+        <div className={s.heroCopy}>
+          <p className="x-kicker">
+            Attempt {r.attemptNo} · submitted {when(r.submittedAt, true)}
+          </p>
+          <h1 className={`x-display ${s.title}`}>{r.title}</h1>
+          <p className={s.verdict}>
+            {pendingReview
+              ? "Submitted. Written answers are with a reviewer; you will be notified when they are marked."
+              : r.status === "EXPIRED"
+                ? `Time ran out. ${passed ? "You still passed." : "Review the lessons below and try again."}`
+                : passed
+                  ? "Passed. Nicely done: this module counts towards your certificate."
+                  : `Not this time. You need ${r.passingScore}% to pass.`}
+          </p>
+          <div className={s.heroStats}>
+            <span>
+              <Check aria-hidden /> {correct} correct
+            </span>
+            <span>
+              <X aria-hidden /> {wrong} incorrect
+            </span>
+            {pendingReview && (
+              <span>
+                <Clock aria-hidden /> Awaiting review
               </span>
             )}
-          </span>
-        }
-      />
-      {r.status === "PENDING_REVIEW" && <p className="mt-4 text-[14px]">The automatically marked questions are scored below. Written answers and uploads are marked by a reviewer; you will be notified.</p>}
-      {r.feedback && (
-        <div className="mt-6 rounded-[var(--radius)] border border-border bg-card px-5 py-4">
-          <p className="text-[13px] font-semibold">Reviewer feedback</p>
-          <p className="mt-1 whitespace-pre-line text-[14px]">{r.feedback}</p>
+          </div>
+          <div className={s.heroActions}>
+            <Link href={`/academy/${r.courseSlug}`} className={s.primary}>
+              {passed ? "Continue the course" : "Back to the course"} <ArrowRight aria-hidden />
+            </Link>
+            {!passed && !pendingReview && (
+              <Link href={`/academy/${r.courseSlug}/${r.lessonId}#assess`} className={s.secondary}>
+                <RotateCcw aria-hidden /> Try again
+              </Link>
+            )}
+          </div>
         </div>
-      )}
+        <div className={s.gaugeWrap}>
+          <svg viewBox="0 0 200 118" className={s.gauge} role="img" aria-label={`Score ${score}%, pass mark ${r.passingScore}%`}>
+            <path d={`M20 100 A${R} ${R} 0 0 1 180 100`} className={s.gTrack} />
+            <path d={`M20 100 A${R} ${R} 0 0 1 180 100`} className={s.gFill} strokeDasharray={`${(score / 100) * arc} ${arc}`} />
+            <line x1={px} y1={py} x2={100 - (R - 18) * Math.cos((passAt / 100) * Math.PI)} y2={100 - (R - 18) * Math.sin((passAt / 100) * Math.PI)} className={s.gMark} />
+            <text x="100" y="92" textAnchor="middle" className={s.gN}>
+              {r.score === null ? "—" : `${score}%`}
+            </text>
+            <text x="100" y="112" textAnchor="middle" className={s.gL}>
+              PASS MARK {r.passingScore}%
+            </text>
+          </svg>
+          <Rexi mood={pendingReview ? "think" : passed ? "cheer" : "sad"} size={130} say={pendingReview ? "Fingers crossed!" : passed ? "You passed!" : "Let’s review and retry."} />
+        </div>
+      </section>
 
-      {r.competencies.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-[1.1rem]">By competency</h2>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-            {r.competencies.map((c) => (
-              <li key={c.name} className="rounded-xl border border-border bg-card px-3 py-2 text-[13.5px]">
-                {c.name}
-                <span className="text-data float-right text-micro">
-                  {c.awarded}/{c.possible}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {r.remediation.length > 0 && (
-        <section className="mt-8 rounded-[var(--radius)] border border-warning/40 bg-warning-bg px-5 py-4">
-          <h2 className="text-[1.05rem] text-warning">Revisit before your next attempt</h2>
-          <ul className="mt-2 list-disc pl-5 text-[14px]">
-            {r.remediation.map((l) => (
-              <li key={l.id}>
-                <Link href={`/academy/${r.courseSlug}/${l.id}`} className="underline underline-offset-4">
-                  {l.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
+      {r.feedback && (
+        <section className={s.panel}>
+          <p className="x-lab">Reviewer feedback</p>
+          <p className={s.feedback}>{r.feedback}</p>
         </section>
       )}
 
-      <ol className="mt-8 flex flex-col gap-4">
-        {r.rows.map((row, i) => (
-          <li key={row.id} className="rounded-[var(--radius)] border border-border bg-card px-5 py-4">
-            <div className="flex items-start gap-3">
-              {row.correct === true ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-label="Correct" /> : row.correct === false ? <X className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-label="Incorrect" /> : <span className="text-data mt-0.5 text-[10px] text-subtle">REVIEW</span>}
-              <div className="min-w-0 flex-1">
-                <p className="text-[14px] font-medium">
-                  {i + 1}. {row.prompt}{" "}
-                  <span className="text-data text-[10.5px] text-subtle">
+      <div className={s.split}>
+        {r.competencies.length > 0 && (
+          <section className={s.panel}>
+            <p className="x-lab">By competency</p>
+            <ul className={s.comps}>
+              {r.competencies.map((c, i) => {
+                const pct = c.possible ? Math.round((c.awarded / c.possible) * 100) : 0;
+                return (
+                  <li key={c.name}>
+                    <span className={s.compName}>
+                      {c.name}
+                      <b>
+                        {c.awarded}/{c.possible}
+                      </b>
+                    </span>
+                    <span className={s.compTrack}>
+                      <i style={{ width: `${pct}%`, animationDelay: `${i * 80}ms` }} data-low={pct < r.passingScore || undefined} />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+        {r.remediation.length > 0 && (
+          <section className={`${s.panel} ${s.remedy}`}>
+            <p className="x-lab">Revisit before your next attempt</p>
+            <ul className={s.remList}>
+              {r.remediation.map((l) => (
+                <li key={l.id}>
+                  <Link href={`/academy/${r.courseSlug}/${l.id}`}>
+                    <BookOpen aria-hidden /> {l.title} <ArrowRight aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+
+      <section className={s.answers} aria-labelledby="answers-title">
+        <h2 id="answers-title" className={`x-display ${s.h2}`}>
+          Your answers
+        </h2>
+        <ol className={s.rows}>
+          {r.rows.map((row, i) => (
+            <li key={row.id} className={s.row} data-state={row.correct === true ? "ok" : row.correct === false ? "bad" : "review"}>
+              <span className={s.rowIcon}>{row.correct === true ? <Check aria-label="Correct" /> : row.correct === false ? <X aria-label="Incorrect" /> : <Clock aria-label="Awaiting review" />}</span>
+              <div className={s.rowBody}>
+                <p className={s.rowQ}>
+                  <span>Q{i + 1}</span> {row.prompt}
+                  <b>
                     {row.awarded}/{row.points}
-                  </span>
+                  </b>
                 </p>
-                <p className="mt-1.5 text-[13px] text-muted-foreground">Your answer: {row.yourAnswer}</p>
-                {row.rightAnswer && row.correct === false && <p className="mt-1 text-[13px] text-success">Correct answer: {row.rightAnswer}</p>}
-                {row.rationale && <p className="mt-2 border-l-2 border-border pl-3 text-[13px] text-muted-foreground">{row.rationale}</p>}
+                <p className={s.rowA}>
+                  <em>Your answer</em> {row.yourAnswer || "No answer"}
+                </p>
+                {row.rightAnswer && row.correct === false && (
+                  <p className={s.rowRight}>
+                    <em>Correct answer</em> {row.rightAnswer}
+                  </p>
+                )}
+                {row.rationale && <p className={s.rowWhy}>{row.rationale}</p>}
               </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ol>
+      </section>
     </div>
   );
 }

@@ -111,3 +111,30 @@
 .avatar { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--x-green); color: var(--x-on-green); font-weight: 700; font-size: 14px; }
 
 @media (prefers-reduced-motion: reduce) { .hero, .artFill, .lessons, .ringFill { animation: none; } }
+
+/* ---------- assessments ---------- */
+.testChip { display: none; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; background: var(--x-surface-2); font-size: 11.5px; font-weight: 700; color: var(--x-ink-2); white-space: nowrap; }
+@media (min-width: 760px) { .testChip { display: inline-flex; } }
+.testChip svg { width: 13px; height: 13px; }
+.testChip[data-state="passed"] { background: var(--x-lime); color: var(--x-lime-ink); }
+.testChip[data-state="retry"] { background: var(--x-coral-tint); color: var(--x-coral); }
+.testChip[data-state="review"] { background: var(--x-peri); color: var(--x-peri-ink); }
+.trackCard { gap: 12px; }
+.track { position: relative; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.track::before { content: ""; position: absolute; left: 17px; top: 18px; bottom: 18px; width: 2px; background: var(--x-sunken); }
+.track li { position: relative; display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.trackDot { position: relative; z-index: 1; display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--x-surface-2); box-shadow: 0 0 0 4px var(--x-surface); font: 700 12px var(--x-fig); color: var(--x-ink-3); }
+.trackDot svg { width: 16px; height: 16px; }
+.track li[data-state="passed"] .trackDot { background: var(--x-lime); color: var(--x-lime-ink); }
+.track li[data-state="retry"] .trackDot { background: var(--x-orange); color: #fff; }
+.track li[data-state="review"] .trackDot { background: var(--x-peri); color: var(--x-peri-ink); }
+.track li[data-final] .trackDot { background: var(--x-night); color: var(--x-on-night); }
+.track li[data-final][data-state="passed"] .trackDot { background: var(--x-lime); color: var(--x-lime-ink); }
+.track li[data-cert] .trackDot { background: var(--x-butter); color: var(--x-butter-ink); }
+.track li[data-cert][data-state="ready"] .trackDot { background: var(--x-orange); color: #fff; animation: glow 2s ease-in-out infinite; }
+.track li[data-cert][data-state="passed"] .trackDot { background: var(--x-lime); color: var(--x-lime-ink); }
+@keyframes glow { 50% { box-shadow: 0 0 0 4px var(--x-surface), 0 0 0 9px color-mix(in srgb, var(--x-orange) 25%, transparent); } }
+.trackText { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.trackText b { font-size: 13.5px; line-height: 1.3; }
+.trackText small { font-size: 11.5px; color: var(--x-ink-3); }
+a.trackText:hover b { text-decoration: underline; text-underline-offset: 3px; }

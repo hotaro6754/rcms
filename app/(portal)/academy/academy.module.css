@@ -150,3 +150,13 @@
 .helpBtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; background: var(--x-on-night); color: var(--x-night); font-size: 13px; font-weight: 700; }
 .helpBtn svg { width: 15px; height: 15px; }
 .fine { padding: 0 6px; font-size: 11.5px; line-height: 1.5; color: var(--x-ink-3); }
+
+/* hello row with Rexi */
+.helloRow { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.rexi { margin-bottom: -6px; }
+@media (max-width: 560px) { .rexi { display: none; } }
+/* coming soon */
+.soon ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.soon li { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 14px; background: rgb(255 255 255 / 0.45); }
+.soon b { font-size: 13.5px; }
+.soon small { font-size: 12px; opacity: 0.8; }

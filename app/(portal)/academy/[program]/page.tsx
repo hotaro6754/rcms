@@ -34,6 +34,22 @@ export default async function CoursePage({ params }: { params: Promise<{ program
   const lessons = snap.modules.flatMap((m) => m.lessons);
   const totalMin = lessons.reduce((n, l) => n + (l.minutes || 0), 0);
   const assessments = lessons.filter((l) => l.assessment).length;
+  // Assessment track: every assessment in the course in order, with this learner's best result.
+  const quizLessons = lessons.filter((l) => l.assessment);
+  const tries = access.tracked && quizLessons.length
+    ? await prisma.quizAttempt.findMany({ where: { userId: actor.id, quizId: { in: quizLessons.map((l) => l.assessment!.id) } }, select: { quizId: true, passed: true, score: true, status: true } })
+    : [];
+  const quizState = (quizId: string) => {
+    const mine = tries.filter((t) => t.quizId === quizId);
+    if (mine.some((t) => t.passed)) return { state: "passed" as const, best: Math.max(...mine.map((t) => t.score ?? 0)) };
+    if (mine.some((t) => t.status === "PENDING_REVIEW")) return { state: "review" as const, best: null };
+    if (mine.length) return { state: "retry" as const, best: Math.max(...mine.map((t) => t.score ?? 0)) };
+    return { state: "open" as const, best: null };
+  };
+  const track = quizLessons.map((l) => {
+    const mod = snap.modules.find((m) => m.lessons.some((x) => x.id === l.id));
+    return { lesson: l, quiz: l.assessment!, module: mod, final: l.assessment!.kind === "FINAL", ...quizState(l.assessment!.id) };
+  });
   const doneSet = progress?.done ?? new Set<string>();
   const next = lessons.find((l) => !doneSet.has(l.id)) ?? lessons[0];
   const nextModuleId = snap.modules.find((m) => m.lessons.some((l) => l.id === next?.id))?.id;
@@ -131,6 +147,16 @@ export default async function CoursePage({ params }: { params: Promise<{ program
                         {locked && pre ? ` · opens after “${pre.title.replace(/^\d+\.\s*/, "")}”` : ""}
                       </span>
                     </span>
+                    {(() => {
+                      const t = track.find((x) => x.module?.id === m.id && !x.final);
+                      if (!t) return null;
+                      const label = t.state === "passed" ? `Test passed${t.best !== null ? ` · ${t.best}%` : ""}` : t.state === "retry" ? "Test: retake" : t.state === "review" ? "Test: in review" : "Module test";
+                      return (
+                        <span className={s.testChip} data-state={t.state}>
+                          <ClipboardCheck aria-hidden /> {label}
+                        </span>
+                      );
+                    })()}
                     {progress && (
                       <span className={s.modProg}>
                         <span className={s.modTrack}>
@@ -184,6 +210,33 @@ export default async function CoursePage({ params }: { params: Promise<{ program
 
         {/* ---------- side ---------- */}
         <aside className={s.side}>
+          {track.length > 0 && (
+            <section className={`x-slab x-surface ${s.trackCard}`} aria-label="Assessments and certificate">
+              <span className="x-lab">Assessments</span>
+              <ol className={s.track}>
+                {track.map((t, i) => (
+                  <li key={t.quiz.id} data-state={t.state} data-final={t.final || undefined}>
+                    <span className={s.trackDot}>{t.state === "passed" ? <Check aria-hidden /> : <span>{t.final ? "F" : i + 1}</span>}</span>
+                    <Link href={`/academy/${slug}/${t.lesson.id}#assess`} className={s.trackText}>
+                      <b>{t.final ? "Final assessment" : t.quiz.title}</b>
+                      <small>
+                        {t.state === "passed" ? `Passed${t.best !== null ? ` · best ${t.best}%` : ""}` : t.state === "retry" ? `Best ${t.best}% · pass mark ${t.quiz.passingScore}%` : t.state === "review" ? "Waiting for a reviewer" : `Pass mark ${t.quiz.passingScore}%`}
+                      </small>
+                    </Link>
+                  </li>
+                ))}
+                <li data-state={cert ? "passed" : elig?.eligible ? "ready" : "open"} data-cert>
+                  <span className={s.trackDot}>
+                    <Award aria-hidden />
+                  </span>
+                  <span className={s.trackText}>
+                    <b>Certificate</b>
+                    <small>{cert ? "Earned" : elig?.eligible ? "Ready to claim" : "After every lesson and assessment"}</small>
+                  </span>
+                </li>
+              </ol>
+            </section>
+          )}
           <section className={`x-slab x-night ${s.progressCard}`} aria-label="Your progress">
             <span className="x-lab">Your progress</span>
             <div className={s.ringRow}>

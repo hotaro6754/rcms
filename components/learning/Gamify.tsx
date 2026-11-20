@@ -30,7 +30,7 @@ export function StreakCard({
   const C = 2 * Math.PI * 34;
   const met = doneToday >= goal;
   return (
-    <section className={`x-slab x-sand ${s.streak}`} aria-label={`Streak ${streak} days. Daily goal ${doneToday} of ${goal} lessons.`}>
+    <section className={`x-slab x-lime ${s.streak}`} aria-label={`Streak ${streak} days. Daily goal ${doneToday} of ${goal} lessons.`}>
       <div className={s.streakTop}>
         <div className={s.flameWrap} data-hot={streak > 0 || undefined}>
           <Flame className={s.flame} aria-hidden />

@@ -12,6 +12,7 @@ import { enrolFreeAction } from "@/lib/actions/learning";
 import { when } from "@/components/admin/kit";
 import { ArrowRight, Award, BookOpen, Flame, LifeBuoy, MonitorPlay, Play, Presentation } from "lucide-react";
 import { LevelBars } from "@/components/illustration/Bars";
+import { Rexi } from "@/components/mascot/Rexi";
 import { Badges, CoursePath, StatsCard, StreakCard, streakOf, type Badge } from "@/components/learning/Gamify";
 import a from "./academy.module.css";
 
@@ -166,9 +167,18 @@ export default async function AcademyPage() {
       <section className={a.hero}>
         <div className={a.heroCopy}>
           <p className="x-kicker">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" })}</p>
-          <h1 className={`x-display ${a.title}`}>
-            {greeting()}, {first}
-          </h1>
+          <div className={a.helloRow}>
+            <h1 className={`x-display ${a.title}`}>
+              {greeting()}, {first}
+            </h1>
+            <Rexi
+              mood={streak >= 3 ? "cheer" : "idle"}
+              size={112}
+              bubble="left"
+              className={a.rexi}
+              say={featured ? (featured.progress.lessonsDone === 0 ? "Your first lesson is ready." : streak >= 3 ? `${streak}-day streak. Keep going!` : `Next up: ${resume?.title ?? "your course"}`) : "Pick a level to start."}
+            />
+          </div>
           <p className={a.lede}>
             {featured
               ? featured.progress.lessonsDone === 0
@@ -491,6 +501,20 @@ export default async function AcademyPage() {
               </ul>
             </section>
           )}
+
+          <section className={`x-slab x-peri ${a.soon}`} aria-label="Coming soon">
+            <span className="x-lab">Coming soon</span>
+            <ul>
+              <li>
+                <b>Mentoring</b>
+                <small>One-to-one time with experienced RCM operators.</small>
+              </li>
+              <li>
+                <b>Downloadable materials</b>
+                <small>Take-away versions of selected slides and readings.</small>
+              </li>
+            </ul>
+          </section>
 
           <section className={`x-slab x-night ${a.help}`}>
             <span className="x-lab">Need help?</span>

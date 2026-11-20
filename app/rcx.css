@@ -40,6 +40,12 @@
   --x-data: #0e1f3d;
   --x-data-soft: #c9d1df;
   --x-teal: #2a9d8f;
+  /* Energy accents from the owner's liked board: for one highlight tile per view, progress and wins. */
+  --x-lime: #d6f34a; --x-lime-ink: #1d2600;
+  --x-orange: #ff6a2b; --x-orange-ink: #ffffff;
+  --x-butter: #ffe48c; --x-butter-ink: #3d3000;
+  --x-peri: #bdc7ff; --x-peri-ink: #18215a;
+  --x-glow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 18px 50px -18px rgb(255 106 43 / 0.45);
   --x-shadow: 0 1px 2px rgb(14 31 61 / 0.05), 0 24px 48px -24px rgb(14 31 61 / 0.22);
   --x-shadow-sm: 0 1px 2px rgb(14 31 61 / 0.08);
   --x-r-xl: 28px;
@@ -54,7 +60,7 @@
 
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) {
-    --x-bg: #090f1a; --x-surface: #121a29; --x-surface-2: #0e1522; --x-sunken: #1a2335;
+    --x-bg: #07090e; --x-surface: #11151d; --x-surface-2: #0c0f15; --x-sunken: #1b212c;
     --x-ink: #e9edf4; --x-ink-2: #b8c2d3; --x-ink-3: #8a95aa; --x-line: rgb(233 237 244 / 0.08);
     --x-green: #17533f; --x-on-green: #e8f3ee; --x-on-green-2: #9fd1bd;
     --x-mint: #163329; --x-mint-ink: #a6e0c8; --x-mint-strong: #2f7d62;
@@ -67,7 +73,7 @@
   }
 }
 html[data-theme="dark"] {
-  --x-bg: #090f1a; --x-surface: #121a29; --x-surface-2: #0e1522; --x-sunken: #1a2335;
+  --x-bg: #07090e; --x-surface: #11151d; --x-surface-2: #0c0f15; --x-sunken: #1b212c;
   --x-ink: #e9edf4; --x-ink-2: #b8c2d3; --x-ink-3: #8a95aa; --x-line: rgb(233 237 244 / 0.08);
   --x-green: #17533f; --x-on-green: #e8f3ee; --x-on-green-2: #9fd1bd;
   --x-mint: #163329; --x-mint-ink: #a6e0c8; --x-mint-strong: #2f7d62;
@@ -182,6 +188,10 @@ html[data-theme="dark"] .rcx .brand-logo { padding: 6px 12px; border-radius: 999
 .x-sand { background: var(--x-sand); color: var(--x-sand-ink); }
 .x-coral { background: var(--x-coral-tint); color: var(--x-coral); }
 .x-surface { background: var(--x-surface); color: var(--x-ink); }
+.x-lime { background: var(--x-lime); color: var(--x-lime-ink); }
+.x-orange { background: var(--x-orange); color: var(--x-orange-ink); }
+.x-butter { background: var(--x-butter); color: var(--x-butter-ink); }
+.x-peri { background: var(--x-peri); color: var(--x-peri-ink); }
 .x-pill {
   display: inline-flex;
   align-items: center;
