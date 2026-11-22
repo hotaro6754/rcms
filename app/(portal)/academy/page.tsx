@@ -12,9 +12,10 @@ import { enrolFreeAction } from "@/lib/actions/learning";
 import { when } from "@/components/admin/kit";
 import { ArrowRight, Award, BookOpen, Flame, LifeBuoy, MonitorPlay, Play, Presentation } from "lucide-react";
 import { LevelBars } from "@/components/illustration/Bars";
-import { Rexi } from "@/components/mascot/Rexi";
 import { Badges, CoursePath, StatsCard, StreakCard, streakOf, type Badge } from "@/components/learning/Gamify";
 import a from "./academy.module.css";
+import Image from "next/image";
+import emptyArt from "@/public/images/art3d/learn-watch.png";
 
 export const metadata = { title: "My learning" };
 
@@ -171,13 +172,6 @@ export default async function AcademyPage() {
             <h1 className={`x-display ${a.title}`}>
               {greeting()}, {first}
             </h1>
-            <Rexi
-              mood={streak >= 3 ? "cheer" : "idle"}
-              size={112}
-              bubble="left"
-              className={a.rexi}
-              say={featured ? (featured.progress.lessonsDone === 0 ? "Your first lesson is ready." : streak >= 3 ? `${streak}-day streak. Keep going!` : `Next up: ${resume?.title ?? "your course"}`) : "Pick a level to start."}
-            />
           </div>
           <p className={a.lede}>
             {featured
@@ -310,6 +304,7 @@ export default async function AcademyPage() {
           </div>
           {courses.length === 0 ? (
             <div className={`x-slab x-surface ${a.empty}`}>
+              <Image src={emptyArt} alt="" aria-hidden className="x-empty-art" sizes="260px" />
               <p>Courses you enrol on appear here, with your progress and the next lesson.</p>
               <Link href="/catalog" className={a.btn}>
                 Explore the Academy

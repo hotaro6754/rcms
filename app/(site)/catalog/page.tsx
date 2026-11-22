@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { getPageContent } from "@/lib/site/content";
 import { catalogPage } from "@/lib/site/pages/catalog";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/learn-read.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(catalogPage);
@@ -35,7 +36,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader eyebrow={t.header.eyebrow} title={t.header.title} lead={t.header.lead} />
+      <PageHeader art={pageArt} artAlt="A learner reading course slides and charts at a desk." eyebrow={t.header.eyebrow} title={t.header.title} lead={t.header.lead} />
       <div className="mx-auto max-w-[1280px] px-4 pb-24 sm:px-6">
 
       <form role="search" className="site-card -mt-8 relative z-10 flex flex-wrap items-end gap-3 p-5">

@@ -304,7 +304,7 @@ export const CORPORATE = {
 export const FAQ = [
   {
     q: "Do I need a healthcare background to start?",
-    a: "No. The Trainee level assumes nothing and starts at what a payer is and why a claim exists.",
+    a: "No. The Beginner level assumes nothing and starts at what a payer is and why a claim exists.",
   },
   {
     q: "Is there a certificate?",
@@ -316,7 +316,7 @@ export const FAQ = [
   },
   {
     q: "Are sessions live or recorded?",
-    a: "Courses are self-paced, with assessments at the end of lessons and modules. Mentoring is live and one to one. Never share patient information, credentials or real claim data in a session or anywhere on the platform.",
+    a: "Courses are self-paced, with assessments at the end of lessons and modules. Never share patient information, credentials or real claim data in a session or anywhere on the platform.",
   },
   {
     q: "Can my employer pay?",

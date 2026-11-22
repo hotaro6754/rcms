@@ -9,6 +9,8 @@ import { BRAND } from "@/lib/brand";
 import { ClaimButton } from "@/components/certificates/ClaimButton";
 import { CopyLink } from "@/components/certificates/CopyLink";
 import s from "./certificates.module.css";
+import Image from "next/image";
+import emptyArt from "@/public/images/art3d/learn-certify.png";
 
 export const metadata = { title: "Certificates" };
 
@@ -81,12 +83,7 @@ export default async function CertificatesPage() {
         </h2>
         {certs.length === 0 ? (
           <div className={s.emptyCert}>
-            <div className={s.ghostSheet} aria-hidden>
-              <Award />
-              <span />
-              <span />
-              <span />
-            </div>
+            <Image src={emptyArt} alt="" aria-hidden className="x-empty-art" sizes="260px" />
             <div>
               <p className={s.emptyTitle}>Your first certificate will appear here</p>
               <p className={s.emptyText}>Finish every lesson of a course and pass its assessments, then claim it below.</p>

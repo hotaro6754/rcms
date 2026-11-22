@@ -1,0 +1,26 @@
+/* First-visit preloader, in the logo's colours (navy #0c1c4e, teal-to-green arrow).
+   Hidden before first paint unless html[data-preload="run"]. */
+.root { position: fixed; inset: 0; z-index: 200; display: none; color: #0c1c4e; }
+:global(html[data-preload="run"]) .root { display: block; }
+
+.panels { position: absolute; inset: 0; }
+.panels i { position: absolute; inset: 0; }
+.panels i:nth-child(1) { z-index: 3; }
+.panels i:nth-child(2) { z-index: 2; }
+.panels i:nth-child(3) { z-index: 1; }
+.white { background: #ffffff; }
+.navy { background: #0c1c4e; }
+.teal { background: linear-gradient(120deg, #15a9b3, #22d27a); }
+
+.center { position: absolute; z-index: 5; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; }
+.mark { width: clamp(96px, 11vw, 132px); height: auto; overflow: visible; }
+.word { font: 700 clamp(2.2rem, 4.6vw, 3.4rem)/1 var(--font-sans), "Geist", system-ui, sans-serif; letter-spacing: 0.02em; color: #0c1c4e; }
+.tag { font: 500 12.5px var(--font-sans), "Geist", system-ui, sans-serif; letter-spacing: 0.24em; text-transform: uppercase; color: #0c1c4e; }
+
+.foot {
+  position: absolute; z-index: 5; left: max(16px, 4vw); right: max(16px, 4vw); bottom: max(20px, 5vh);
+  display: flex; align-items: center; gap: 20px;
+}
+.num { font: 500 13px var(--font-plex-mono), "IBM Plex Mono", monospace; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+.track { flex: 1; height: 4px; border-radius: 999px; background: #e7ecf3; overflow: hidden; }
+.track i { display: block; height: 100%; background: linear-gradient(90deg, #0c1c4e, #17b99a 70%, #22d27a); border-radius: inherit; }

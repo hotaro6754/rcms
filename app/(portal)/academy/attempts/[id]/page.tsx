@@ -5,7 +5,6 @@ import { requireActor } from "@/lib/actor";
 import { ServiceError } from "@/lib/errors";
 import { attemptForTaking, attemptResult } from "@/lib/services/learning/attempts";
 import { AttemptRunner } from "@/components/portal/AttemptRunner";
-import { Rexi } from "@/components/mascot/Rexi";
 import { Confetti } from "@/components/learning/Confetti";
 import { when } from "@/components/admin/kit";
 import s from "./attempt.module.css";
@@ -123,7 +122,6 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
               PASS MARK {r.passingScore}%
             </text>
           </svg>
-          <Rexi mood={pendingReview ? "think" : passed ? "cheer" : "sad"} size={130} say={pendingReview ? "Fingers crossed!" : passed ? "You passed!" : "Let’s review and retry."} />
         </div>
       </section>
 

@@ -1,0 +1,55 @@
+/* Interactive 3D isometric scene: picture, numbered hotspots, term card, claim token. */
+.scene { margin: 0; display: grid; gap: 14px; }
+.stage { perspective: 1400px; }
+.tilt { position: relative; transform-style: preserve-3d; will-change: transform; }
+.frame { position: absolute; inset: 0; border-radius: 24px; overflow: hidden; background: #f6f8fa; box-shadow: 0 30px 70px -40px rgb(20 35 56 / 0.35), inset 0 0 0 1px rgb(20 35 56 / 0.06); }
+.overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.route { fill: none; stroke: #3e827c; stroke-width: 3; stroke-dasharray: 10 10; stroke-linecap: round; opacity: 0.7; }
+.token rect { fill: #fff; stroke: #142338; stroke-width: 2.5; }
+.token path { fill: none; stroke: #3e827c; stroke-width: 2.5; stroke-linecap: round; }
+
+.spots { position: absolute; inset: 0; transform: translateZ(30px); }
+.spot {
+  position: absolute; translate: -50% -50%;
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  border: 2px solid #fff; background: #142338; color: #fff; cursor: pointer;
+  font: 600 11px var(--mono, ui-monospace, monospace); letter-spacing: 0.02em;
+  box-shadow: 0 8px 20px -6px rgb(20 35 56 / 0.5);
+  transition: background 0.25s, color 0.25s, transform 0.25s;
+}
+.spot span { position: relative; z-index: 1; }
+.spot:hover, .spot[data-on] { background: #3e827c; transform: scale(1.12); }
+.spot:focus-visible { outline: 3px solid #3e827c; outline-offset: 3px; }
+.pulse { position: absolute; inset: -2px; border-radius: 50%; background: #3e827c; pointer-events: none; }
+
+.cardSlot { display: grid; gap: 12px; min-height: 132px; }
+.card {
+  display: grid; gap: 4px; padding: 16px 18px; border-radius: 18px;
+  background: #fff; box-shadow: 0 1px 2px rgb(20 35 56 / 0.05), 0 18px 40px -24px rgb(20 35 56 / 0.35), inset 0 0 0 1px #dce3ea;
+}
+.card b { color: #142338; font-size: 16px; font-weight: 600; }
+.card p { margin: 0; color: #64758a; font-size: 14.5px; line-height: 1.55; }
+.term { font: 500 11px var(--mono, ui-monospace, monospace); letter-spacing: 0.1em; text-transform: uppercase; color: #3e827c; }
+.hint { margin: 0; color: #64758a; font-size: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 999px; border: 0; cursor: pointer;
+  background: #eef2f5; color: #142338; font: 600 12.5px var(--sans, system-ui, sans-serif); transition: background 0.2s, color 0.2s;
+}
+.chip span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #fff; font: 600 10px var(--mono, monospace); }
+.chip[data-on] { background: #142338; color: #fff; }
+.chip[data-on] span { color: #142338; }
+
+@media (max-width: 640px) {
+  .spot { width: 28px; height: 28px; font-size: 10px; }
+  .frame { border-radius: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spot { transition: none; }
+}
+
+/* Very wide scenes (a cropped band) scroll sideways on phones instead of shrinking to a sliver. */
+@media (max-width: 640px) {
+  .wide .stage { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding-bottom: 6px; }
+  .wide .tilt { min-width: 820px; }
+}

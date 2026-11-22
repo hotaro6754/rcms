@@ -470,81 +470,110 @@
    =========================================================================== */
 .site-scope,
 .site-scope .env-paper {
-  --background: #ffffff;
-  --foreground: #0e1a33;            /* navy ink, 17.3:1 */
+  /* The Revenue Cycle Atlas (research/ATLAS_BRIEF.md): cool white, deep ink, muted teal. */
+  --background: #f6f8fa;
+  --foreground: #142338;            /* deep ink, 15.0:1 */
   --card: #ffffff;
-  --card-foreground: #0e1a33;
+  --card-foreground: #142338;
   --popover: #ffffff;
-  --popover-foreground: #0e1a33;
-  --muted: #f1f4f8;
-  --muted-foreground: #475467;      /* 7.7:1 */
-  --subtle: #5d6b82;                /* 5.4:1, 5.0:1 on tint */
-  --primary: #13235b;               /* logo navy: buttons */
-  --primary-hover: #1d3478;
+  --popover-foreground: #142338;
+  --muted: #eef2f5;
+  --muted-foreground: #4f6074;      /* 6.6:1 */
+  --subtle: #64758a;                /* 4.7:1 */
+  --primary: #142338;               /* ink buttons; teal on hover */
+  --primary-hover: #3e827c;
   --primary-foreground: #ffffff;
-  --brand: #0b7470;                 /* logo teal, darkened for text: 5.6:1 */
-  --signal: #10a39b;                /* marks only, never text */
-  --secondary: #eef2f7;
-  --secondary-foreground: #1f2a40;
-  --accent: #e6f4f2;
-  --accent-foreground: #0a5c58;
-  --border: #e2e7ef;
-  --input: #c6cfdc;
-  --ring: #0b7470;
+  --brand: #2f6b66;                 /* muted teal for text: 6.0:1 */
+  --signal: #3e827c;
+  --secondary: #eef2f5;
+  --secondary-foreground: #20364b;
+  --accent: #e2efec;
+  --accent-foreground: #2f6b66;
+  --border: #dce3ea;
+  --input: #c9d3dd;
+  --ring: #3e827c;
   --radius: 0.6rem;
-  --paper: #fbfcfe;
-  --surface-tint: #f5f7fa;
-  --shadow-card: 0 1px 2px rgb(14 26 51 / 0.04), 0 8px 24px -16px rgb(14 26 51 / 0.18);
-  --shadow-card-hover: 0 2px 4px rgb(14 26 51 / 0.05), 0 18px 36px -18px rgb(14 26 51 / 0.28);
-  --font-display: "Satoshi", "Helvetica Neue", Arial, sans-serif;
-  --font-heading: "Satoshi", "Helvetica Neue", Arial, sans-serif;
+  --paper: #ffffff;
+  --surface-tint: #eef2f5;
+  --shadow-card: 0 1px 2px rgb(20 35 56 / 0.05), 0 10px 28px -14px rgb(20 35 56 / 0.18);
+  --shadow-card-hover: 0 2px 4px rgb(20 35 56 / 0.05), 0 22px 44px -22px rgb(20 35 56 / 0.3);
+  --font-display: var(--font-serif), "Newsreader", Georgia, serif;
+  --font-heading: var(--font-serif), "Newsreader", Georgia, serif;
   font-size: 15px;
+}
+/* An explicit dark choice (the toggle) re-themes the public site; light stays the default. */
+html[data-theme="dark"] .site-scope,
+html[data-theme="dark"] .site-scope .env-paper {
+  --background: #0e1621;
+  --foreground: #eef3f8;
+  --card: #152131;
+  --card-foreground: #eef3f8;
+  --popover: #152131;
+  --popover-foreground: #eef3f8;
+  --muted: #1b2a3d;
+  --muted-foreground: #a9b7c7;
+  --subtle: #8fa0b4;
+  --primary: #eef3f8;
+  --primary-hover: #6fb5ac;
+  --primary-foreground: #0e1621;
+  --brand: #8ccac2;
+  --signal: #6fb5ac;
+  --secondary: #1b2a3d;
+  --secondary-foreground: #cbd6e2;
+  --accent: rgb(111 181 172 / 0.14);
+  --accent-foreground: #8ccac2;
+  --border: #26374b;
+  --input: #33475e;
+  --ring: #6fb5ac;
+  --paper: #152131;
+  --surface-tint: #1b2a3d;
+  color-scheme: dark;
 }
 
 /* Section surfaces on the public site. */
 .site-scope .env-tint {
-  --background: #f5f7fa;
-  --card: #ffffff;
+  --background: var(--surface-tint);
+  --card: var(--paper);
 }
 .site-scope .env-sheet {
-  --background: #ffffff;
-  --border: #e2e7ef;
-  --input: #c6cfdc;
+  --background: var(--paper);
 }
 
-/* Navy band: the footer and the occasional emphasis panel. */
+/* Ink band: the occasional emphasis panel. */
 .site-scope .env-ink,
 .site-scope .env-charcoal {
-  --background: #0e1a33;
-  --foreground: #f3f6fb;
-  --card: #16254a;
-  --card-foreground: #f3f6fb;
-  --popover: #16254a;
-  --popover-foreground: #f3f6fb;
-  --muted: #1b2b52;
-  --muted-foreground: #bcc6d8;      /* 10.0:1 */
-  --subtle: #97a3ba;                /* 6.8:1 */
-  --primary: #ffffff;
-  --primary-hover: #e6ecf5;
-  --primary-foreground: #0e1a33;
-  --brand: #6fd3c9;                 /* 9.8:1 */
-  --signal: #6fd3c9;
-  --secondary: #1b2b52;
-  --secondary-foreground: #dfe5ef;
-  --accent: rgb(111 211 201 / 0.14);
-  --accent-foreground: #b6ebe5;
-  --border: rgb(243 246 251 / 0.12);
-  --input: rgb(243 246 251 / 0.24);
-  --ring: #6fd3c9;
+  --background: #142338;
+  --foreground: #eef3f8;
+  --card: #1b2d45;
+  --card-foreground: #eef3f8;
+  --popover: #1b2d45;
+  --popover-foreground: #eef3f8;
+  --muted: #20364b;
+  --muted-foreground: #bccad8;
+  --subtle: #9aabbe;
+  --primary: #eef3f8;
+  --primary-hover: #ffffff;
+  --primary-foreground: #142338;
+  --brand: #8ccac2;
+  --signal: #8ccac2;
+  --secondary: #20364b;
+  --secondary-foreground: #dce5ee;
+  --accent: rgb(140 202 194 / 0.14);
+  --accent-foreground: #b9e1db;
+  --border: rgb(238 243 248 / 0.12);
+  --input: rgb(238 243 248 / 0.24);
+  --ring: #8ccac2;
   color: var(--foreground);
   color-scheme: dark;
 }
 
-/* Inside the public site the display face is the sans: one family, set firmly. */
-.site-scope .font-serif-display {
+/* Headings on the public site: Newsreader at a book weight, like the homepage. */
+.site-scope .font-serif-display,
+.site-scope.editorial :is(h1, h2),
+.site-scope .editorial :is(h1, h2) {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.022em;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 /* Labels and cards live in the components layer so utility classes (a different colour, a
@@ -637,3 +666,10 @@
 .site-scope .text-micro {
   font-size: 12.5px;
 }
+
+/* Inner-page header (components/site/PageHeader.tsx): soft grey ground, 3D art that floats. */
+.page-hero { background: radial-gradient(60% 80% at 85% 40%, #ffffff 0%, #f6f8fa 60%); }
+.page-hero-art { position: relative; animation: page-hero-float 7s ease-in-out infinite alternate; }
+.page-hero-art img { mix-blend-mode: multiply; -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 52%, #000 58%, transparent 78%); mask-image: radial-gradient(ellipse 62% 60% at 50% 52%, #000 58%, transparent 78%); }
+@keyframes page-hero-float { from { transform: translateY(-6px); } to { transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .page-hero-art { animation: none; } }

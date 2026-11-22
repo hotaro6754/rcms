@@ -1,4 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
+import learnerArt from "@/public/images/art3d/signin-portrait.png";
+import brandMark from "@/public/brand/rcmexcel-mark.png";
 import { NOINDEX } from "@/lib/seo";
 import { comingSoon } from "@/lib/launch";
 import { ThemeSwitch } from "@/components/theme/ThemeSwitch";
@@ -32,33 +35,25 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <main className={s.stage}>
         <div className={s.card}>
-          <aside className={s.visual} aria-hidden>
-            <svg viewBox="0 0 400 400" className={s.art}>
-              <defs>
-                <pattern id="auth-dots" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="1" cy="1" r="1" fill="rgb(233 237 244 / 0.09)" />
-                </pattern>
-              </defs>
-              <rect width="400" height="400" fill="url(#auth-dots)" />
-              <g className={s.bars}>
-                <rect x="92" y="250" width="34" height="80" rx="10" />
-                <rect x="146" y="208" width="34" height="122" rx="10" />
-                <rect x="200" y="164" width="34" height="166" rx="10" />
-                <rect x="254" y="118" width="34" height="212" rx="10" />
-              </g>
-              <path id="auth-arc" className={s.arc} d="M60 232 C 150 220, 240 170, 336 80" pathLength={1} />
-              <path className={s.head} d="M318 76 L338 78 L334 98" />
-              <circle r="5" className={s.dot}>
-                <animateMotion dur="7s" repeatCount="indefinite" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="linear">
-                  <mpath href="#auth-arc" />
-                </animateMotion>
-              </circle>
-              <line x1="60" y1="330" x2="340" y2="330" className={s.ground} />
-            </svg>
+          <aside className={s.visual}>
+            <Image
+              src={learnerArt}
+              alt="Illustration of a learner at a sunny desk opening a video lesson, with a certificate framed on the wall."
+              fill
+              priority
+              placeholder="blur"
+              sizes="(min-width: 880px) 720px, 0px"
+              quality={90}
+              className={s.photo}
+            />
+            <div className={s.chips} aria-hidden>
+              <span className={s.chipCobalt}>Watch</span>
+              <span className={s.chipSun}>Practise</span>
+              <span className={s.chipCoral}>Prove</span>
+              <span className={s.chipTeal}>Certify</span>
+            </div>
             <div className={s.caption}>
-              <span className="x-kicker" style={{ color: "#7f8ba1" }}>
-                RCMExcel Academy
-              </span>
+              <span className={s.kicker}>RCMExcel Academy</span>
               <p className={`x-display ${s.line}`}>
                 From learner <em>to leader.</em>
               </p>
@@ -67,12 +62,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           <section className={s.form}>
             <div className={s.inner}>
-              <svg viewBox="0 0 32 32" className={s.mark} aria-hidden>
-                <rect x="5" y="17" width="5" height="10" rx="1.5" fill="var(--x-ink)" />
-                <rect x="13" y="12" width="5" height="15" rx="1.5" fill="var(--x-ink)" />
-                <rect x="21" y="7" width="5" height="20" rx="1.5" fill="var(--x-ink)" />
-                <path d="M4 14 C 10 12, 16 8, 26 3" fill="none" stroke="var(--x-teal)" strokeWidth="2.2" strokeLinecap="round" />
-              </svg>
+              <Image src={brandMark} alt="RCMExcel" className={s.mark} priority />
               {children}
             </div>
           </section>

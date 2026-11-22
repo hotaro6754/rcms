@@ -3,6 +3,7 @@ import { PageHeader, Section } from "@/components/site/PageHeader";
 import { getPageContent } from "@/lib/site/content";
 import { aboutPage } from "@/lib/site/pages/about";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/team-training.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(aboutPage);
@@ -13,7 +14,7 @@ export default async function AboutPage() {
   const c = await getPageContent(aboutPage);
   return (
     <>
-      <PageHeader
+      <PageHeader art={pageArt} artAlt="A training room: a trainer at a screen of process charts and a team at laptops."
         eyebrow={c.header.eyebrow}
         title={c.header.title}
         lead={c.header.lead}

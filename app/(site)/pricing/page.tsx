@@ -7,6 +7,7 @@ import { paymentsConfigured } from "@/lib/payments/razorpay";
 import { getPageContent } from "@/lib/site/content";
 import { pricingPage } from "@/lib/site/pages/pricing";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/learn-certify.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(pricingPage);
@@ -30,7 +31,7 @@ export default async function PricingPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader art={pageArt} artAlt="A professional holding a framed certificate of completion."
         eyebrow={c.header.eyebrow}
         title={c.header.title}
         lead={c.header.lead}

@@ -2,6 +2,7 @@ import { PageHeader, Section } from "@/components/site/PageHeader";
 import { getPageContent } from "@/lib/site/content";
 import { blogPage } from "@/lib/site/pages/blog";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/phases-stack.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(blogPage);
@@ -12,7 +13,7 @@ export default async function BlogPage() {
   const c = await getPageContent(blogPage);
   return (
     <>
-      <PageHeader eyebrow={c.header.eyebrow} title={c.header.title} lead={c.header.lead} />
+      <PageHeader art={pageArt} artAlt="Three stacked platforms for the front end, middle and back end of the revenue cycle." eyebrow={c.header.eyebrow} title={c.header.title} lead={c.header.lead} />
       <Section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {c.posts.items.map((p, i) => (

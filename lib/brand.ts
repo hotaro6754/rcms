@@ -12,7 +12,7 @@ export const BRAND = {
   /** Capitals for small labels (certificates, footers of documents). */
   caps: "RCMEXCEL",
   /** One line on what it is, for search results and link previews. */
-  tagline: "US healthcare revenue cycle training and mentoring, from first claim to operations leadership",
+  tagline: "US healthcare revenue cycle education, from first claim to operations leadership",
   /** Prefix of certificate serials issued from now on (earlier RCMS- serials still verify). */
   serialPrefix: "RCMX",
 } as const;

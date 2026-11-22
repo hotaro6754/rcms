@@ -50,7 +50,7 @@ export const aboutPage = definePage({
     beliefs: group("Beliefs", {
       show: toggle("Show this section", true),
       title: text("Heading", "What this academy believes", { max: 120 }),
-      lead: area("Introduction", "Four positions that shape every program, every scenario and every mentoring session.", { max: 400 }),
+      lead: area("Introduction", "Four positions that shape every program, every scenario and every assessment.", { max: 400 }),
       items: list(
         "Beliefs",
         { title: text("Title", "", { max: 100 }), body: area("Text", "", { max: 800 }) },

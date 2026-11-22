@@ -13,6 +13,8 @@ const OPTIONS: { value: ThemeChoice; label: string; Icon: typeof Sun }[] = [
 
 /** Light / dark / device switch. Remembered in this browser; applied before paint by the boot script. */
 export function ThemeSwitch({ compact = false }: { compact?: boolean }) {
+  // Light-only for now: the switch is hidden everywhere it is used.
+  if (compact !== undefined) return null;
   const [choice, setChoice] = useState<ThemeChoice>("system");
   useEffect(() => {
     setChoice(readTheme());

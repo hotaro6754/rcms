@@ -115,9 +115,9 @@ export const homePage = definePage({
       learnLabel: text("“Where you learn it” label", "WHERE YOU LEARN IT", { max: 40 }),
       levelsFigureTitle: text("Figure under the stages: heading", "Where each stage is taught", { max: 80 }),
       levelNames: group("Level names", {
-        trainee: text("Foundation level", "Trainee — Foundation", { max: 60 }),
-        professional: text("Execution level", "Professional — Execution", { max: 60 }),
-        leadership: text("Governance level", "Leadership — Governance", { max: 60 }),
+        trainee: text("Foundation level", "Beginner — RCM Foundation", { max: 60 }),
+        professional: text("Execution level", "Professional — Process Excellence", { max: 60 }),
+        leadership: text("Governance level", "Leader — Operational Management", { max: 60 }),
       }),
       stages: list(
         "Stages",
@@ -143,7 +143,7 @@ export const homePage = definePage({
       title: text("Heading", "You don’t need another course. You need to know which level you are on.", { max: 160 }),
       countLine: text("Levels sentence", "levels, each built on the one before.", {
         max: 120,
-        help: "Shown after the number of levels in words, e.g. “Three levels, each built on the one before.”",
+        help: "Shown after the number of levels in words, e.g. “Four levels, each built on the one before.”",
       }),
       lead: area("Introduction", "Start where you actually work today; every course ends with assessed work you can show.", { max: 300 }),
       indexLabel: text("Index label", "THE LEVELS", { max: 40 }),
@@ -249,7 +249,9 @@ export const homePage = definePage({
     }),
 
     mentoring: group("07 The advice", {
-      show: toggle("Show this section", true),
+      // Off by default: the published "No Mentoring Disclaimer" (lib/legal/policies.ts) says the
+      // current offering has no one-to-one mentoring. Turn on only when that policy changes.
+      show: toggle("Show this section", false),
       runningHead: runningHead("The advice"),
       title: text("Heading", "Or ask someone who has run the floor.", { max: 100 }),
       lead: area(

@@ -21,7 +21,7 @@ const MENUS = [
   {
     label: "Learning",
     overview: { label: "Compare the levels", href: "/learning-paths" },
-    intro: "Three levels, each built on the one before. Start where you actually work today; every course ends with assessed work you can show.",
+    intro: "Four levels, each built on the one before. Start where you actually work today; every course ends with assessed work you can show.",
     items: [
       item("Learning levels", "Beginner — RCM Foundation", "/catalog?level=beginner", "US Healthcare RCM foundation"),
       item("Learning levels", "Professional — Process Excellence", "/catalog?level=professional", "Departmental process excellence"),
@@ -34,13 +34,13 @@ const MENUS = [
   },
   {
     label: "Practice",
-    overview: { label: "How the claim is taught", href: "/#system" },
+    overview: { label: "How the claim is taught", href: "/#cycle" },
     intro: "You learn it the way it is worked: one claim, every stage it passes through, and every decision that can stop it.",
     items: [
       item("On this site", "Claim #20481 walkthrough", "/#top", "One claim, filled in stage by stage"),
-      item("On this site", "The ten revenue-cycle stages", "/#system", "Front end, middle and back end"),
-      item("On this site", "Monthly operating review", "/#governance", "The month's measures, explained upward"),
-      item("On this site", "Career progression", "/#people", "Six levels, and the number each one owns"),
+      item("On this site", "The ten revenue-cycle stages", "/#cycle", "Front end, middle and back end"),
+      item("On this site", "Monthly operating review", "/#practice", "The month's measures, explained upward"),
+      item("On this site", "Career progression", "/#career", "Six levels, and the number each one owns"),
     ],
   },
   {
@@ -51,7 +51,7 @@ const MENUS = [
       item("", "Resources library", "/resources", "Reference material by topic"),
       item("", "Practice tests", "/resources/tests", "Self-checks for each level"),
       item("", "Writing", "/blog", "Articles from the floor"),
-      item("", "Floor Notes", "/#floor-notes", "The monthly letter"),
+      item("", "Floor Notes", "/#notes", "The monthly letter"),
     ],
   },
   {
@@ -102,7 +102,7 @@ export const sitePage = definePage({
         [
           { link: { label: "Catalogue", href: "/catalog" } },
           { link: { label: "Learning paths", href: "/learning-paths" } },
-          { link: { label: `Why ${BRAND.name}`, href: "/#system" } },
+          { link: { label: `Why ${BRAND.name}`, href: "/#cycle" } },
           { link: { label: "Resources", href: "/resources" } },
           { link: { label: "About", href: "/about" } },
         ],

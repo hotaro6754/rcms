@@ -1,21 +1,10 @@
 /**
- * Pre-launch lockdown ("coming soon").
- *
- * Until SITE_MODE=live is set, the platform is closed to everyone except staff:
- *
- * - every public page, the learner portal, the vendor portal and certificate verification are
- *   replaced by the coming-soon page (middleware.ts);
- * - nobody can create an account through the web; the first administrator is created from the
- *   server with `npm run admin:create` (scripts/create-admin.ts);
- * - only staff accounts can open a session (lib/auth.ts), so a learner who somehow has an
- *   account still cannot get in, except the test accounts listed in LOCKDOWN_PREVIEW_EMAILS;
- * - nothing is indexed and there are no public previews of draft pages.
- *
- * Lockdown is the default. Forgetting the variable keeps the site closed rather than open.
- * Edge-safe: this file must not import anything that touches Node or the database.
+ * Launch state. RCMExcel is live: the pre-launch "coming soon" lockdown is retired and its page
+ * removed (old links to /coming-soon redirect home in middleware.ts). `comingSoon()` stays as the
+ * single switch the rest of the code reads, so pre-launch behaviour (staff-only sign-in, no
+ * sign-ups, no indexing) is not scattered through the codebase if it is ever needed again.
  */
-
-export const comingSoon = () => process.env.SITE_MODE !== "live";
+export const comingSoon = () => false;
 
 /**
  * Paths that stay reachable during lockdown. Everything else is rewritten to /coming-soon.

@@ -6,6 +6,8 @@ import { humanSize, isAvailable } from "@/lib/storage";
 import { storedPageCount } from "@/lib/documents/pages";
 import { LibraryBrowser, type Material } from "@/components/learning/LibraryBrowser";
 import s from "./library-page.module.css";
+import Image from "next/image";
+import emptyArt from "@/public/images/art3d/learn-read.png";
 
 export const metadata = { title: "Library" };
 
@@ -103,6 +105,7 @@ export default async function LibraryPage() {
 
       {programs.length === 0 ? (
         <div className={s.empty}>
+          <Image src={emptyArt} alt="" aria-hidden className="x-empty-art" sizes="260px" />
           <p>You are not enrolled on a course yet, so there is nothing here.</p>
           <Link href="/catalog" className={s.emptyBtn}>
             Find your level

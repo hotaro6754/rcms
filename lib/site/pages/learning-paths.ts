@@ -9,7 +9,7 @@ export const learningPathsPage = definePage({
   fields: {
     seo: group("Search and browser tab", {
       title: text("Page title", "Learning paths", { max: 70 }),
-      description: text("Search description", "Trainee, Professional and Leadership: three levels from your first revenue cycle role to running operations.", { max: 300 }),
+      description: text("Search description", "Beginner, Professional, Leader and Executive Leadership: four levels from your first revenue cycle role to running a portfolio.", { max: 300 }),
     }),
     header: group("Page header", {
       eyebrow: text("Label", "Learning paths", { max: 60 }),

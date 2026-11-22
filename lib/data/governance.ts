@@ -58,7 +58,7 @@ export const ESCALATIONS: Escalation[] = [
     severity: "high",
     title: "Payer policy rejection spike",
     detail:
-      "Aetna commercial began rejecting cardiac imaging without a prior-authorisation segment on 01 Aug. 312 claims denied CO-50 before the pattern was caught.",
+      "Sample Payer A, a fictional commercial plan, began rejecting cardiac imaging without a prior-authorisation segment on 01 Aug. 312 claims denied CO-50 before the pattern was caught.",
     owner: "Revenue Integrity",
     raisedHoursAgo: 55,
     slaHoursRemaining: 18,
@@ -124,13 +124,13 @@ export const RCA = {
     {
       question: "Why did the workflow not fire?",
       answer: "The payer changed its policy effective 01 Aug and expanded the code set.",
-      evidence: "Aetna commercial bulletin 2026-14, published 12 Jul, effective 01 Aug.",
+      evidence: "Sample Payer A bulletin SPA-14 (fictional), published 12 Jul, effective 01 Aug.",
     },
     {
       question: "Why was the policy change not mapped?",
       answer:
         "No one owns reading payer bulletins into the workflow. The bulletin was received and never actioned.",
-      evidence: "Policy-update register has no entry for bulletin 2026-14.",
+      evidence: "Policy-update register has no entry for bulletin SPA-14.",
     },
   ] satisfies RcaStep[],
   conclusion:
@@ -274,7 +274,7 @@ export interface ActivityEvent {
 export const ACTIVITY: ActivityEvent[] = [
   { id: "EV-901", at: "Today 09:12", kind: "recovery", message: "Aged worklist cleared below 10,000 claims", detail: "Queue depth 9,400. First time under the 12,000 target this engagement." },
   { id: "EV-900", at: "Today 08:40", kind: "escalation", message: "ESC-4471 moved to mitigating", detail: "Authorisation rule drafted; awaiting back-date approval." },
-  { id: "EV-898", at: "Yesterday 17:22", kind: "policy", message: "Aetna bulletin 2026-14 logged to the register", detail: "Retroactively recorded. Effective date 01 Aug 2026." },
+  { id: "EV-898", at: "Yesterday 17:22", kind: "policy", message: "Payer bulletin SPA-14 logged to the register", detail: "Retroactively recorded. Effective date 01 Aug 2026." },
   { id: "EV-895", at: "Yesterday 11:05", kind: "capacity", message: "Two analysts reallocated AR-02 to DEN-01", detail: "Denial inventory prioritised for the September close." },
   { id: "EV-891", at: "04 Sep 14:48", kind: "quality", message: "QA audit bar held at 93%", detail: "Proposal to reduce to 90% for volume was declined." },
 ];

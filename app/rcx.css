@@ -14,47 +14,50 @@
    =========================================================================== */
 
 :root {
-  --x-bg: #eceee9;
+  /* Ring palette (owner's choice, Nov 2026): navy, sage, sky and sand on soft grey, one teal accent.
+     Token names kept from the first skin so every page picks this up without being rewritten. */
+  --x-bg: #f6f8fa;
   --x-surface: #ffffff;
-  --x-surface-2: #f5f6f2;
-  --x-sunken: #e2e5df;
-  --x-ink: #0e1f3d;
-  --x-ink-2: #3a4862;
-  --x-ink-3: #66718a;
-  --x-line: rgb(14 31 61 / 0.08);
-  --x-green: #0f4c3a;
-  --x-on-green: #e8f3ee;
-  --x-on-green-2: #a9d3c2;
-  --x-mint: #d5eadf;
-  --x-mint-ink: #0f4c3a;
-  --x-mint-strong: #8fc7ae;
-  --x-sand: #ebe2d4;
-  --x-sand-ink: #5b4630;
-  --x-sand-strong: #c8b08d;
-  --x-coral: #d9562f;
-  --x-coral-tint: #f8e0d6;
-  --x-night: #121c2f;
-  --x-on-night: #e9edf4;
-  --x-on-night-2: #8d9ab1;
-  --x-night-accent: #8fd6b8;
-  --x-data: #0e1f3d;
-  --x-data-soft: #c9d1df;
-  --x-teal: #2a9d8f;
-  /* Energy accents from the owner's liked board: for one highlight tile per view, progress and wins. */
-  --x-lime: #d6f34a; --x-lime-ink: #1d2600;
-  --x-orange: #ff6a2b; --x-orange-ink: #ffffff;
-  --x-butter: #ffe48c; --x-butter-ink: #3d3000;
-  --x-peri: #bdc7ff; --x-peri-ink: #18215a;
-  --x-glow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 18px 50px -18px rgb(255 106 43 / 0.45);
-  --x-shadow: 0 1px 2px rgb(14 31 61 / 0.05), 0 24px 48px -24px rgb(14 31 61 / 0.22);
-  --x-shadow-sm: 0 1px 2px rgb(14 31 61 / 0.08);
+  --x-surface-2: #eef2f5;
+  --x-sunken: #e6ecf1;
+  --x-ink: #142338;
+  --x-ink-2: #3b4d63;
+  --x-ink-3: #64758a;
+  --x-line: rgb(20 35 56 / 0.09);
+  --x-green: #2f6b66;
+  --x-on-green: #eef6f4;
+  --x-on-green-2: #b9ddd4;
+  --x-mint: #d7e8e1;
+  --x-mint-ink: #2f6b66;
+  --x-mint-strong: #9cc9bb;
+  --x-sand: #f1e4d3;
+  --x-sand-ink: #6b4f33;
+  --x-sand-strong: #c9ab86;
+  --x-coral: #b4433c;
+  --x-coral-tint: #f6dfdc;
+  --x-night: #142338;
+  --x-on-night: #eef3f8;
+  --x-on-night-2: #9fb0c6;
+  --x-night-accent: #9fd8cc;
+  --x-data: #142338;
+  --x-data-soft: #c9d3dd;
+  --x-teal: #3e827c;
+  /* Former "energy" accents, now calm fills from the same palette. */
+  --x-lime: #dce8f5; --x-lime-ink: #142338;
+  --x-orange: #3e827c; --x-orange-ink: #ffffff;
+  --x-butter: #f1e4d3; --x-butter-ink: #142338;
+  --x-peri: #dce8f5; --x-peri-ink: #142338;
+  --x-glow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 18px 50px -18px rgb(62 130 124 / 0.45);
+  --x-shadow: 0 1px 2px rgb(20 35 56 / 0.05), 0 24px 48px -26px rgb(20 35 56 / 0.24);
+  --x-shadow-sm: 0 1px 2px rgb(20 35 56 / 0.08);
   --x-r-xl: 28px;
   --x-r-lg: 20px;
   --x-r-md: 14px;
   --x-r-sm: 10px;
-  --x-text: "Satoshi", var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --x-fig: var(--font-sans), "Satoshi", system-ui, sans-serif;
-  --x-display: var(--font-instrument), var(--font-serif), Georgia, "Times New Roman", serif;
+  /* Same type as the public site: Geist for text, Newsreader for display, Plex Mono for labels. */
+  --x-text: var(--font-sans), "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --x-fig: var(--font-sans), "Geist", system-ui, sans-serif;
+  --x-display: var(--font-serif), "Newsreader", Georgia, "Times New Roman", serif;
   --x-mono: var(--font-plex-mono), ui-monospace, Menlo, Consolas, monospace;
 }
 
@@ -209,4 +212,18 @@ html[data-theme="dark"] .rcx .brand-logo { padding: 6px 12px; border-radius: 999
 
 @media (prefers-reduced-motion: reduce) {
   .rcx, .rcx * { transition: none !important; animation: none !important; }
+}
+
+/* 3D illustration in portal headers (academy, certificates, library): same set as the public site. */
+.x-hero-art { width: clamp(150px, 16vw, 220px); height: auto; justify-self: center; align-self: center; mix-blend-mode: multiply; animation: x-hero-float 7s ease-in-out infinite alternate; }
+@keyframes x-hero-float { from { transform: translateY(-5px); } to { transform: translateY(6px); } }
+@media (max-width: 760px) { .x-hero-art { display: none; } }
+@media (prefers-reduced-motion: reduce) { .x-hero-art { animation: none; } }
+
+
+/* Empty states: a 3D scene of what will be here, faded into the card (no frame). */
+.x-empty-art {
+  display: block; width: clamp(180px, 22vw, 260px); height: auto; margin: 0 auto 6px; mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 60% 58% at 50% 52%, #000 55%, transparent 76%);
+  mask-image: radial-gradient(ellipse 60% 58% at 50% 52%, #000 55%, transparent 76%);
 }
