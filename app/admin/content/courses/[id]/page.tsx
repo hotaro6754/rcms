@@ -7,13 +7,14 @@ import { Panel, StatusPill } from "@/components/admin/kit";
 import { CurriculumTree } from "@/components/cms/CurriculumTree";
 import { BlockEditor } from "@/components/cms/BlockEditor";
 import { QuestionList } from "@/components/cms/QuestionList";
-import { MaterialsManager } from "@/components/studio/MaterialsManager";
+import { LessonFormats } from "@/components/studio/MaterialsManager";
+import { storedPageCount } from "@/lib/documents/pages";
 import { ArchiveAssessment, AssessmentSettings, CourseForm, DuplicateCourse, LessonPanel, ModulePanel, WorkflowPanel } from "@/components/cms/panels";
 import { releaseReadiness } from "@/lib/services/cms/release";
 import { impactOf } from "@/lib/services/cms/structure";
 import { usersWithPermission } from "@/lib/services/people/staff-lookup";
 import { STATUS_LABEL } from "@/lib/services/cms/core";
-import { humanSize, typeLabel } from "@/lib/storage";
+import { humanSize, isAvailable, isLink, typeLabel } from "@/lib/storage";
 import type { QuestionValue } from "@/components/cms/QuestionForm";
 import { strings } from "@/lib/json-list";
 
@@ -126,19 +127,25 @@ export default async function CourseWorkspace({ params, searchParams }: { params
           modules={allModules.map((m) => ({ id: m.id, title: m.title, course: m.program.name, sameCourse: m.programId === id }))}
           owners={(await usersWithPermission("content.edit")).map((u) => ({ id: u.id, name: u.name }))}
         />
+        <Panel title="Lesson formats: video, slides and reading">
+          <LessonFormats
+            lessonId={lesson.id}
+            canEdit={canEdit}
+            videos={lesson.blocks.filter((b) => b.kind === "VIDEO").length}
+            rows={await Promise.all(
+              lesson.resources.map(async (r) => ({
+                id: r.id,
+                title: r.title,
+                format: r.format,
+                size: humanSize(r.sizeBytes),
+                source: r.sourceMime ? typeLabel(r.sourceMime) : null,
+                pages: r.mimeType === "application/pdf" && !isLink(r.fileKey) && isAvailable(r.fileKey) ? await storedPageCount(r.fileKey) : 0,
+              })),
+            )}
+          />
+        </Panel>
         <Panel title="Content">
           <BlockEditor courseId={id} lessonId={lesson.id} canEdit={canEdit} images={images} audio={audio} documents={documents} blocks={lesson.blocks.map((b) => ({ id: b.id, kind: b.kind, data: b.data as Record<string, unknown>, updatedAt: b.updatedAt.toISOString() }))} />
-        </Panel>
-        <Panel title="Downloadable resources">
-          {canEdit ? (
-            <MaterialsManager lessonId={lesson.id} rows={lesson.resources.map((r) => ({ id: r.id, title: r.title, type: typeLabel(r.mimeType), size: humanSize(r.sizeBytes), downloadable: r.downloadable }))} />
-          ) : (
-            <ul className="text-[13px]">
-              {lesson.resources.map((r) => (
-                <li key={r.id}>{r.title}</li>
-              ))}
-            </ul>
-          )}
         </Panel>
         <Panel title={quiz ? `Assessment: ${quiz.title}` : "Assessment"}>
           <div className="flex flex-col gap-5">
@@ -206,10 +213,10 @@ export default async function CourseWorkspace({ params, searchParams }: { params
         }
         actions={
           <>
-            <Link href={`/admin/content/courses/${id}/preview`} className="min-h-10 rounded-[3px] border border-input bg-card px-4 py-2.5 text-[13.5px] hover:bg-secondary">
+            <Link href={`/admin/content/courses/${id}/preview`} className="min-h-10 rounded-xl border border-input bg-card px-4 py-2.5 text-[13.5px] hover:bg-secondary">
               Preview as learner
             </Link>
-            <Link href={`/admin/content/courses/${id}/history`} className="min-h-10 rounded-[3px] border border-input bg-card px-4 py-2.5 text-[13.5px] hover:bg-secondary">
+            <Link href={`/admin/content/courses/${id}/history`} className="min-h-10 rounded-xl border border-input bg-card px-4 py-2.5 text-[13.5px] hover:bg-secondary">
               Versions and history
             </Link>
           </>

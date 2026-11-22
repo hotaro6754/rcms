@@ -108,7 +108,7 @@ export const STAFF_ROLES = [
 export type StaffRoleName = (typeof STAFF_ROLES)[number];
 
 export const ROLE_LABEL: Record<StaffRoleName, string> = {
-  SUPER_ADMIN: "Super Administrator",
+  SUPER_ADMIN: "Admin",
   ACADEMY_DIRECTOR: "Academy Director",
   CONTENT_ADMIN: "Content Administrator",
   ACADEMIC_REVIEWER: "Academic Reviewer",

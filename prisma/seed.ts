@@ -2,14 +2,11 @@ import "dotenv/config";
 import { PrismaClient, PublishState, ProductKind } from "@prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { mysqlPoolConfig } from "../lib/db-config";
-import { LEVELS, PROGRAMS, BUNDLES, MENTORING } from "../lib/data/catalog";
+import { LEVELS, PROGRAMS, BUNDLES } from "../lib/data/catalog";
 import { FOUNDATION_LESSONS } from "../lib/data/curriculum";
-import { CLIENT, METRICS, DENIALS, PODS } from "../lib/data/telemetry";
-import { AGENDA, ESCALATIONS, RCA, RISKS, ACTIONS } from "../lib/data/governance";
-import { NORTHGATE } from "../lib/data/scenarios";
 import { backfillReleases, seedBlocksFromBodies, seedFoundationAssessment, seedLevels, seedPlans } from "./seed-academy";
 import { seedLibrary } from "./seed-library";
-import { seedCases } from "./seed-cases";
+import { seedSpecCurriculum } from "./seed-curriculum";
 import { seedSupport } from "./seed-support";
 import { strings } from "../lib/json-list";
 
@@ -87,7 +84,7 @@ async function seedPrograms() {
   console.log(`  programs: ${PROGRAMS.length}, lessons: ${lessonCount}, resources: ${resourceCount}`);
 }
 
-async function seedTracksAndMentoring() {
+async function seedTracks() {
   for (const b of BUNDLES) {
     const found = await prisma.product.findUnique({ where: { sku: `track-${b.id}` } });
     if (!found) {
@@ -96,64 +93,7 @@ async function seedTracksAndMentoring() {
       await prisma.product.update({ where: { id: found.id }, data: { includes: b.includes } });
     }
   }
-  for (const m of MENTORING) {
-    const found = await prisma.product.findUnique({ where: { sku: `mentoring-${m.id}` } });
-    if (!found) {
-      await prisma.product.create({ data: { sku: `mentoring-${m.id}`, kind: ProductKind.MENTORING, name: `${m.name} (${m.minutes} min)`, amount: toPaise(m.price) } });
-    }
-  }
-  console.log(`  tracks: ${BUNDLES.length}, mentoring products: ${MENTORING.length}`);
-}
-
-async function seedScenario() {
-  /**
-   * The whole Meridian engagement becomes one Governance Lab scenario. Storing the
-   * telemetry as JSON means a graded attempt keeps the numbers it was graded against, even
-   * if the teaching data is edited afterwards.
-   */
-  const telemetry = {
-    client: CLIENT,
-    metrics: METRICS,
-    denials: DENIALS,
-    pods: PODS,
-    agenda: AGENDA,
-    escalations: ESCALATIONS,
-    rca: RCA,
-    risks: RISKS,
-    actions: ACTIONS,
-  };
-
-  await prisma.scenario.upsert({
-    where: { slug: "meridian-cardiology-sep-2026" },
-    update: { telemetry: telemetry as never },
-    create: {
-      slug: "meridian-cardiology-sep-2026",
-      clientName: CLIENT.name,
-      specialty: CLIENT.specialty,
-      providers: CLIENT.providers,
-      reviewPeriod: CLIENT.reviewPeriod,
-      telemetry: telemetry as never,
-      state: PublishState.PUBLISHED,
-    },
-  });
-  // A second, assessed scenario with a different failure mode. Its presence is what makes
-  // the lab engine data-driven rather than one hard-coded engagement.
-  await prisma.scenario.upsert({
-    where: { slug: NORTHGATE.slug },
-    update: { telemetry: NORTHGATE as never },
-    create: {
-      slug: NORTHGATE.slug,
-      clientName: NORTHGATE.clientName,
-      specialty: NORTHGATE.specialty,
-      providers: NORTHGATE.providers,
-      reviewPeriod: NORTHGATE.reviewPeriod,
-      telemetry: NORTHGATE as never,
-      state: PublishState.PUBLISHED,
-    },
-  });
-
-  const count = await prisma.scenario.count();
-  console.log(`  scenarios: ${count} (meridian worked example, northgate assessed)`);
+  console.log(`  tracks: ${BUNDLES.length}`);
 }
 
 async function seedChannels() {
@@ -194,17 +134,21 @@ async function main() {
     return;
   }
   console.log("Seeding RCMExcel…");
-  await seedPrograms();
+  // The demonstration courses (text lessons, sample prices) are test fixtures for the browser
+  // journeys, not Academy content: seed them only when asked (SEED_DEMO=1).
+  const demo = process.env.SEED_DEMO === "1";
+  if (demo) await seedPrograms();
   await seedLevels(prisma);
-  await seedBlocksFromBodies(prisma);
-  await seedFoundationAssessment(prisma);
-  await backfillReleases(prisma);
-  await seedTracksAndMentoring();
+  await seedSpecCurriculum(prisma);
+  if (demo) {
+    await seedBlocksFromBodies(prisma);
+    await seedFoundationAssessment(prisma);
+    await backfillReleases(prisma);
+    await seedTracks();
+  }
   await seedPlans(prisma);
   await seedLibrary(prisma);
-  await seedCases(prisma);
   await seedSupport(prisma);
-  await seedScenario();
   await seedChannels();
   await seedPlatform();
   console.log("Done. Re-running this is safe: existing records are never overwritten.");

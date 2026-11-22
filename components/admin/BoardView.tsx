@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Board, Metric } from "@/lib/services/reports/dashboards";
 import { KPIS } from "@/lib/services/reports/kpi";
 import { inr } from "./kit";
+import s from "./board-view.module.css";
 
 function fmt(m: Metric) {
   if (m.value === null || m.value === undefined) return "—";
@@ -20,45 +21,59 @@ function fmt(m: Metric) {
   }
 }
 
-/** A dashboard: figures with their KPI definitions one click away, then breakdown tables. */
+/* One anchor slab per row of five, the rest plain: the eye lands on the night tile first. */
+const TONES = ["x-night", "x-surface", "x-surface", "x-mint", "x-surface", "x-sand", "x-surface", "x-surface", "x-surface", "x-surface"];
+
+/** Leading number in a breakdown value ("12 · 40%" → 12), for the proportional bar. */
+const numberOf = (v: unknown) => {
+  const n = typeof v === "number" ? v : parseFloat(String(v).replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(n) ? n : null;
+};
+
+/** A dashboard: figure slabs with their KPI definitions one click away, then breakdown slabs. */
 export function BoardView({ board }: { board: Board }) {
   return (
-    <div className="flex flex-col gap-12">
-      <dl className="grid grid-cols-2 gap-x-6 sm:grid-cols-3 lg:grid-cols-5">
-        {board.metrics.map((m) => {
+    <div className={s.root}>
+      <dl className={s.metrics}>
+        {board.metrics.map((m, i) => {
           const def = m.kpi ? KPIS[m.kpi] : null;
+          const empty = m.value === null || m.value === undefined;
           return (
-            <div key={m.label} className="border-t-2 border-foreground pb-6 pr-2 pt-3">
-              <dt className="text-data text-[10.5px] tracking-[0.1em] text-subtle">{m.label.toUpperCase()}</dt>
-              <dd className="font-serif-display mt-2 text-[clamp(1.7rem,2.6vw,2.4rem)] leading-none">{m.href ? <Link href={m.href} className="hover:underline hover:decoration-1 hover:underline-offset-8">{fmt(m)}</Link> : fmt(m)}</dd>
-              {m.note && <dd className="mt-1.5 text-[12px] leading-snug text-muted-foreground">{m.note}</dd>}
+            <div key={m.label} className={`x-slab ${TONES[i % TONES.length]} ${s.metric}`} style={{ animationDelay: `${i * 35}ms` }}>
+              <dt className="x-lab">{m.label}</dt>
+              <dd className={`x-fig ${s.value}`} data-empty={empty || undefined}>
+                {m.href ? <Link href={m.href}>{fmt(m)}</Link> : fmt(m)}
+              </dd>
+              {m.note && <dd className={s.note}>{m.note}</dd>}
               {def && (
-                <dd className="mt-1">
-                  <details className="text-[11.5px] text-muted-foreground">
-                    <summary className="cursor-pointer">Definition</summary>
-                    <p className="mt-1">{def.purpose}</p>
-                    <p className="mt-1">
-                      <strong>Formula:</strong> {def.formula}
-                    </p>
-                    {def.numerator && (
+                <dd className={s.defWrap}>
+                  <details className={s.def}>
+                    <summary>How it is counted</summary>
+                    <div className={s.defBody}>
+                      <p>{def.purpose}</p>
                       <p>
-                        <strong>Numerator:</strong> {def.numerator}
+                        <b>Formula</b> {def.formula}
                       </p>
-                    )}
-                    {def.denominator && (
+                      {def.numerator && (
+                        <p>
+                          <b>Numerator</b> {def.numerator}
+                        </p>
+                      )}
+                      {def.denominator && (
+                        <p>
+                          <b>Denominator</b> {def.denominator}
+                        </p>
+                      )}
                       <p>
-                        <strong>Denominator:</strong> {def.denominator}
+                        <b>Exclusions</b> {def.exclusions}
                       </p>
-                    )}
-                    <p>
-                      <strong>Exclusions:</strong> {def.exclusions}
-                    </p>
-                    <p>
-                      <strong>Source:</strong> {def.source} · <strong>Owner:</strong> {def.owner}
-                    </p>
-                    <p>
-                      <strong>Target:</strong> {def.target ?? "not set — no contractual or validated basis yet"}
-                    </p>
+                      <p>
+                        <b>Source</b> {def.source} · <b>Owner</b> {def.owner}
+                      </p>
+                      <p>
+                        <b>Target</b> {def.target ?? "not set: no contractual or validated basis yet"}
+                      </p>
+                    </div>
                   </details>
                 </dd>
               )}
@@ -66,27 +81,31 @@ export function BoardView({ board }: { board: Board }) {
           );
         })}
       </dl>
+
       {board.breakdowns.length > 0 && (
-        <div className="grid gap-10 lg:grid-cols-2">
-          {board.breakdowns.map((b) => (
-            <section key={b.label}>
-              <p role="heading" aria-level={2} className="text-data border-b-2 border-foreground pb-2 text-[10.5px] tracking-[0.14em] text-subtle">
-                {b.label.toUpperCase()}
-              </p>
-              {b.rows.length === 0 ? (
-                <p className="py-4 text-[13px] text-muted-foreground">No data yet.</p>
-              ) : (
-                <ul>
-                  {b.rows.map((r, i) => (
-                    <li key={i} className="flex items-baseline justify-between gap-4 border-b border-border py-2.5 text-[13.5px]">
-                      <span className="min-w-0">{r.label}</span>
-                      <span className="text-data shrink-0 text-[12px] text-muted-foreground">{r.value}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          ))}
+        <div className={s.breakdowns}>
+          {board.breakdowns.map((b) => {
+            const nums = b.rows.map((r) => numberOf(r.value));
+            const max = Math.max(1, ...nums.map((n) => n ?? 0));
+            return (
+              <section key={b.label} className="x-slab x-surface">
+                <h2 className="x-lab">{b.label}</h2>
+                {b.rows.length === 0 ? (
+                  <p className={s.none}>No data yet.</p>
+                ) : (
+                  <ul className={s.rows}>
+                    {b.rows.map((r, i) => (
+                      <li key={i}>
+                        {nums[i] !== null && <span className={s.bar} style={{ width: `${Math.max(2, ((nums[i] ?? 0) / max) * 100)}%` }} aria-hidden />}
+                        <span className={s.rowLabel}>{r.label}</span>
+                        <span className={s.rowValue}>{r.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
     </div>

@@ -23,6 +23,13 @@ datasource db {
 /// The coarse account type. Staff authority comes from StaffRoleAssignment, not from here;
 /// OWNER, ADMIN and TRAINER are kept for continuity and imply a default staff role
 /// (see lib/permissions.ts).
+/// How a lesson material is presented to learners (lesson formats: video, slides, reading).
+enum ResourceFormat {
+  SLIDES
+  READING
+  OTHER
+}
+
 enum Role {
   STUDENT
   TRAINER
@@ -775,9 +782,16 @@ model Resource {
   mimeType   String @db.MediumText
   sizeBytes  Int?
   watermark  Boolean   @default(true)
-  /// Learners may download the file itself. Off by default: PDFs are read in the
-  /// page-by-page reader and other files stay with the course team.
+  /// Retained for history only. Learner downloads are disabled platform-wide (spec LMS-14):
+  /// every material is view-only, read page by page as server-rendered images.
   downloadable Boolean  @default(false)
+  /// How the lesson presents it: SLIDES (the deck, shown slide by slide) or READING (the full
+  /// study material, page by page). OTHER is a staff-only attachment learners never see.
+  format     ResourceFormat @default(OTHER)
+  /// The original upload (for example the .pptx or .docx) when `fileKey` holds the PDF made
+  /// from it for viewing. Staff only; never served to learners.
+  sourceKey  String? @db.MediumText
+  sourceMime String? @db.MediumText
   archivedAt DateTime?
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)

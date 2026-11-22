@@ -73,17 +73,18 @@ describe("subscriber administration", () => {
     expect(note.body).not.toContain("4111 1111 1111 1111");
   });
 
-  it("requires a second person's approval for exports above the threshold, and neutralises formulas", async () => {
+  it("needs an approved request for exports above the threshold, and neutralises formulas", async () => {
     const admin = await staff("SUBSCRIBER_ADMIN");
-    const admin2 = await staff("SUBSCRIBER_ADMIN");
     await prisma.setting.create({ data: { key: "export.approvalThreshold", value: 2 } });
     await makeUser({ name: "=HYPERLINK(\"http://evil\")" });
     await makeUser();
     await makeUser();
     await expect(subs.exportSubscribers(admin, {})).rejects.toThrow(/Request approval/);
     const req = await requestApproval(admin, "DATA_EXPORT", { report: "subscribers", filters: {}, rowCount: 3 }, "Quarterly board reporting");
-    await expect(decideApproval(admin, req.id, true)).rejects.toThrow(/different person/);
-    await decideApproval(admin2, req.id, true);
+    // An administrator who may approve exports has the request applied at once (single-admin
+    // academy); it is still recorded, and cannot be decided a second time.
+    expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id: req.id } })).status).toBe("EXECUTED");
+    await expect(decideApproval(admin, req.id, true)).rejects.toThrow(/already been decided/);
     const out = await subs.exportSubscribers(admin, {});
     expect(out.count).toBe(3);
     expect(out.csv).toContain("'=HYPERLINK");

@@ -99,16 +99,13 @@ describe("authentication", () => {
 });
 
 describe("maker-checker approvals", () => {
-  it("grants a staff role only when a different authorised person approves", async () => {
+  it("applies a role change at once when the requester may approve it, and records it", async () => {
     const director = await staff("ACADEMY_DIRECTOR");
-    const otherDirector = await staff("ACADEMY_DIRECTOR");
     const target = await makeUser();
     const req = await requestApproval(director, "ROLE_CHANGE", { userId: target.id, role: "FINANCE_ADMIN", action: "grant" }, "New finance hire");
-    await expect(decideApproval(director, req.id, true)).rejects.toThrow(/different person/);
-    await expect(decideApproval(await staff("FINANCE_ADMIN"), req.id, true)).rejects.toBeInstanceOf(AuthorisationError);
-    await decideApproval(otherDirector, req.id, true);
     expect((await loadActor(target.id))!.staffRoles).toContain("FINANCE_ADMIN");
     expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id: req.id } })).status).toBe("EXECUTED");
+    await expect(decideApproval(await staff("ACADEMY_DIRECTOR"), req.id, true)).rejects.toThrow(/already been decided/);
   });
 
   it("stops anyone requesting their own roles or a director proposing super administrator", async () => {
@@ -141,11 +138,12 @@ describe("maker-checker approvals", () => {
     expect(await prisma.program.findUnique({ where: { id: course.id } })).toBeNull();
   });
 
-  it("lets only the requester cancel", async () => {
-    const director = await staff("ACADEMY_DIRECTOR");
-    const req = await requestApproval(director, "ROLE_CHANGE", { userId: (await makeUser()).id, role: "AUDITOR", action: "grant" }, "Annual audit");
-    await expect(cancelApproval(await staff("ACADEMY_DIRECTOR"), req.id)).rejects.toThrow();
-    await cancelApproval(director, req.id);
+  it("lets only the requester cancel a request that waits on someone else", async () => {
+    const product = await prisma.product.create({ data: { sku: "program-cancel", kind: "PROGRAM", name: "Test", amount: 199900 } });
+    const finance = await staff("FINANCE_ADMIN");
+    const req = await requestApproval(finance, "PRICE_CHANGE", { productId: product.id, amount: 249900, effectiveFrom: new Date(Date.now() + 86400_000).toISOString() }, "Price review");
+    await expect(cancelApproval(await staff("FINANCE_ADMIN"), req.id)).rejects.toThrow();
+    await cancelApproval(finance, req.id);
     expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id: req.id } })).status).toBe("CANCELLED");
   });
 });

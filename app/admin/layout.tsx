@@ -8,6 +8,9 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { BRAND } from "@/lib/brand";
+import { ThemeSwitch } from "@/components/theme/ThemeSwitch";
+import { isPreviewLearner } from "@/lib/launch";
+import { CommandPalette, type CommandItem } from "@/components/command/CommandPalette";
 
 export const metadata = { ...NOINDEX, title: { default: "Admin Control Center", template: "%s · Admin" } };
 
@@ -24,7 +27,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const actor = await getActor();
   if (!actor) redirect("/sign-in?next=/admin");
   if (!actor.emailVerified || BLOCKED_STATUSES.includes(actor.status)) redirect("/account");
-  if (!isStaff(actor)) redirect("/account");
+  // A preview learner signing in before launch lands on the learner area, not the admin.
+  if (!isStaff(actor)) redirect(isPreviewLearner(actor.email) ? "/academy" : "/account");
   if (mfaRequired() && !actor.twoFactorEnabled) redirect("/account/security?required=admin");
 
   const sections = navSections(actor.permissions).map((s) => ({
@@ -32,9 +36,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     groups: s.groups.map((g) => ({ href: g.href, label: g.label, icon: g.icon, links: g.links.map((l) => ({ href: l.href, label: l.label })) })),
   }));
   const role = actor.staffRoles.map((r) => ROLE_LABEL[r]).join(", ");
+  const commands: CommandItem[] = sections.flatMap((sec) =>
+    sec.groups.flatMap((g) => (g.links.length > 1 ? g.links.map((l) => ({ label: l.label, href: l.href, group: sec.label, hint: g.label })) : [{ label: g.label, href: g.href, group: sec.label }])),
+  );
 
   return (
-    <div className="editorial flex min-h-dvh flex-col bg-background lg:flex-row">
+    <div className="rcx flex min-h-dvh flex-col bg-background lg:flex-row">
       <AdminSidebar
         sections={sections}
         footer={
@@ -48,15 +55,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         }
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="hidden h-14 shrink-0 items-center justify-between border-b border-border px-6 lg:flex">
+        <header className="hidden h-16 shrink-0 items-center justify-between px-6 lg:flex">
           <Link href="/" className="flex items-baseline" aria-label={`${BRAND.name}, public site`}>
             <Wordmark />
           </Link>
-          {actor.vendorIds.length > 0 && (
-            <Link href="/vendor" className="text-data text-[11px] tracking-[0.1em] text-subtle hover:text-foreground">
-              VENDOR PORTAL
-            </Link>
-          )}
+          <div className="flex items-center gap-4">
+            {actor.vendorIds.length > 0 && (
+              <Link href="/vendor" className="text-data text-[11px] tracking-[0.1em] text-subtle hover:text-foreground">
+                VENDOR PORTAL
+              </Link>
+            )}
+            <CommandPalette items={commands} searches={[{ label: "Find admins and students", href: "/admin/users?q={q}" }]} placeholder="Jump to a page or find a person" />
+            <ThemeSwitch />
+          </div>
         </header>
         <main className="flex-1">{children}</main>
       </div>

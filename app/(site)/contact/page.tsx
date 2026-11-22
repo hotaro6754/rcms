@@ -5,6 +5,7 @@ import { publicPricing } from "@/lib/services/learning/public-catalog";
 import { getPageContent } from "@/lib/site/content";
 import { contactPage } from "@/lib/site/pages/contact";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/learn-practise.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(contactPage);
@@ -22,7 +23,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
   const wa = whatsappUrl();
   return (
     <>
-      <PageHeader
+      <PageHeader art={pageArt} artAlt="Two colleagues working through a claim case together."
         eyebrow={c.header.eyebrow}
         title={c.header.title}
         lead={c.header.lead}

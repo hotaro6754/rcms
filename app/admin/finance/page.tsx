@@ -106,13 +106,13 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                       {can(actor, "payment.reconcile") && (
                         <ActionForm action={reconcileAction} className="mt-1 flex flex-wrap gap-1">
                           <input type="hidden" name="id" value={p.id} />
-                          <select name="status" defaultValue={p.reconciliation} aria-label="Reconciliation status" className="min-h-7 rounded-[3px] border border-input bg-card px-1 text-[11.5px]">
+                          <select name="status" defaultValue={p.reconciliation} aria-label="Reconciliation status" className="min-h-7 rounded-xl border border-input bg-card px-1 text-[11.5px]">
                             {RECON.map((s) => (
                               <option key={s}>{s}</option>
                             ))}
                           </select>
-                          <input name="note" placeholder="Note" aria-label="Reconciliation note" className="min-h-7 w-28 rounded-[3px] border border-input bg-card px-1.5 text-[11.5px]" />
-                          <button className="min-h-7 rounded-[3px] border border-input px-2 text-[11.5px]">Save</button>
+                          <input name="note" placeholder="Note" aria-label="Reconciliation note" className="min-h-7 w-28 rounded-xl border border-input bg-card px-1.5 text-[11.5px]" />
+                          <button className="min-h-7 rounded-xl border border-input px-2 text-[11.5px]">Save</button>
                         </ActionForm>
                       )}
                     </div>
@@ -126,7 +126,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                         <input type="hidden" name="orderId" value={o.id} />
                         <input name="amount" type="number" step="0.01" min="1" required placeholder="Amount (₹)" aria-label="Refund amount in rupees" className={FIELD} />
                         <input name="reason" required minLength={5} placeholder="Reason" aria-label="Refund reason" className={FIELD} />
-                        <button className="rounded-[3px] border border-input px-2 py-1.5 text-[12.5px]">Request</button>
+                        <button className="rounded-xl border border-input px-2 py-1.5 text-[12.5px]">Request</button>
                       </ActionForm>
                     </details>
                   )}

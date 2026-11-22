@@ -15,7 +15,7 @@ export const pricingPage = definePage({
   fields: {
     seo: group("Search and browser tab", {
       title: text("Page title", "Pricing", { max: 70 }),
-      description: text("Search description", "All-access plans, individual courses, tracks, mentoring and corporate accounts. Prices are the ones charged at checkout.", { max: 300 }),
+      description: text("Search description", "All-access plans, individual courses, tracks and corporate accounts. Prices are the ones charged at checkout.", { max: 300 }),
     }),
     header: group("Page header", {
       eyebrow: text("Label", "Pricing", { max: 60 }),
@@ -69,13 +69,14 @@ export const pricingPage = definePage({
     mentoring: group(
       "Mentoring",
       {
-        show: toggle("Show this section", true),
+        // Off by default: see the "No Mentoring Disclaimer" in lib/legal/policies.ts.
+      show: toggle("Show this section", false),
         title: text("Heading", "Mentoring", { max: 120 }),
         lead: area("Introduction", "Live, one to one. Requests are confirmed by email with a time that suits you.", { max: 400 }),
         sessionColumn: text("Session column heading", "Session", { max: 40 }),
         whoColumn: text("Audience column heading", "Who it is for", { max: 60 }),
         priceColumn: text("Price column heading", "Price", { max: 40 }),
-        cta: link("Button", { label: "Request a session", href: "/mentoring" }),
+        cta: link("Button", { label: "Contact us", href: "/contact" }),
       },
       { help: "Shown when at least one mentoring session is on sale." },
     ),

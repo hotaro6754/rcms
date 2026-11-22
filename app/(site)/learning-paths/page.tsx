@@ -6,6 +6,7 @@ import { publicPaths } from "@/lib/services/learning/public-catalog";
 import { getPageContent } from "@/lib/site/content";
 import { learningPathsPage } from "@/lib/site/pages/learning-paths";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/level-ladder.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(learningPathsPage);
@@ -23,7 +24,7 @@ export default async function LearningPathsPage() {
   const t = content.levels;
   return (
     <>
-      <PageHeader eyebrow={content.header.eyebrow} title={content.header.title} lead={content.header.lead} />
+      <PageHeader art={pageArt} artAlt="A 3D staircase of four levels, from a learner with a laptop to an executive boardroom." eyebrow={content.header.eyebrow} title={content.header.title} lead={content.header.lead} />
 
       <Section>
         {levels.length === 0 && <p className="text-[15px] text-muted-foreground">{t.empty}</p>}

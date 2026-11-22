@@ -5,11 +5,11 @@ import { runDueApprovals } from "@/lib/services/approvals";
 import { runSubscriptionLifecycle } from "@/lib/services/commerce/checkout";
 import { audit } from "@/lib/audit";
 import { purgeTranscripts, runSupportSla } from "@/lib/services/support/tickets";
-import { purgeAssistant } from "@/lib/services/assistant/assistant";
+import { prisma } from "@/lib/db";
 
 /**
  * Scheduled work: due course releases and expiries, approved changes reaching their effective date,
- * subscription period ends and grace periods, support SLA warnings, breaches and auto-closure, and support transcript and assistant conversation retention. Call it every 15 minutes (Vercel Cron or any
+ * subscription period ends and grace periods, support SLA warnings, breaches and auto-closure, support transcript retention, and removal of any conversations left from the retired learning assistant. Call it every 15 minutes (Vercel Cron or any
  * scheduler) with `Authorization: Bearer $CRON_SECRET`. Each job is idempotent.
  */
 export async function GET(req: Request) {
@@ -24,7 +24,9 @@ export async function GET(req: Request) {
   const subs = await runSubscriptionLifecycle();
   const sla = await runSupportSla();
   const purged = await purgeTranscripts();
-  const assistantPurged = await purgeAssistant();
+  // The AI assistant was retired (out of scope: no AI features at launch). Whatever it stored is
+  // no longer needed for any purpose, so it is deleted rather than kept.
+  const assistantPurged = (await prisma.assistantConversation.deleteMany({})).count;
   await audit({ action: "update", entity: "Cron", after: { published: published.length, expired: expired.length, ...subs, slaWarned: sla.warned, slaBreached: sla.breached.length, supportClosed: sla.closed, purgedMessages: purged, assistantConversationsPurged: assistantPurged } });
   return NextResponse.json({ published, expired, subscriptions: subs, support: { warned: sla.warned, breached: sla.breached.length, closed: sla.closed } });
 }

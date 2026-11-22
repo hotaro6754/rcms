@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { indexingOn, PRIVATE_PREFIXES, siteUrl } from "@/lib/seo";
+import { comingSoon } from "@/lib/launch";
 
 /**
  * Public pages may be indexed; signed-in areas, the admin, sign-in pages, checkout, the API
@@ -8,7 +9,7 @@ import { indexingOn, PRIVATE_PREFIXES, siteUrl } from "@/lib/seo";
  */
 export default function robots(): MetadataRoute.Robots {
   const base = siteUrl().origin;
-  if (!indexingOn()) return { rules: { userAgent: "*", disallow: "/" } };
+  if (comingSoon() || !indexingOn()) return { rules: { userAgent: "*", disallow: "/" } };
   return {
     rules: {
       userAgent: "*",

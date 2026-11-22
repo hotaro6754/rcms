@@ -1,0 +1,59 @@
+/* Sign-in: one floating card on a faint drafting grid. Left a quiet night panel with the logo's
+   bars breathing and a point travelling the arc; right the form. rcx tokens, light and dark. */
+
+.root { position: relative; min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: #f6f8fa; }
+.grid {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--x-ink) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--x-ink) 6%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, #000 30%, transparent 85%);
+}
+.top, .stage, .foot { position: relative; z-index: 1; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px clamp(16px, 3vw, 28px); }
+.back { font-size: 13px; font-weight: 600; color: var(--x-ink-3); transition: color 0.2s; }
+.back:hover { color: var(--x-ink); }
+
+.stage { flex: 1; display: grid; place-items: center; padding: 8px 16px 16px; }
+.card {
+  width: 100%; max-width: 980px;
+  display: grid; overflow: hidden;
+  border-radius: 28px; background: var(--x-surface);
+  box-shadow: 0 1px 2px rgb(14 31 61 / 0.06), 0 40px 80px -40px rgb(14 31 61 / 0.35);
+  animation: enter 0.8s cubic-bezier(0.2, 0, 0.1, 1) both;
+}
+@media (min-width: 880px) { .card { grid-template-columns: 1fr 1fr; min-height: 580px; } }
+@keyframes enter { from { opacity: 0; transform: translateY(16px) scale(0.985); } }
+
+/* ---------- visual: the learner illustration with the four course steps as colour chips ---------- */
+.visual { position: relative; display: none; margin: 8px; border-radius: 22px; background: #eef2f5; overflow: hidden; }
+@media (min-width: 880px) { .visual { display: block; } }
+.photo { object-fit: cover; object-position: 50% 70%; animation: drift 18s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: scale(1) translateY(0); } to { transform: scale(1.03) translateY(-1%); } }
+.visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgb(19 32 58 / 0.82), rgb(19 32 58 / 0) 46%); pointer-events: none; }
+.chips { position: absolute; z-index: 1; top: 18px; left: 18px; right: 18px; display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { padding: 6px 12px; border-radius: 999px; font: 600 12px var(--font-sans), system-ui, sans-serif; animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.chips span:nth-child(2) { animation-delay: 0.08s; }
+.chips span:nth-child(3) { animation-delay: 0.16s; }
+.chips span:nth-child(4) { animation-delay: 0.24s; }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.9); } }
+.chipCobalt { background: #142338; color: #fff; }
+.chipSun { background: #f1e4d3; color: #142338; }
+.chipCoral { background: #d7e8e1; color: #142338; }
+.chipTeal { background: #dce8f5; color: #142338; }
+.caption { position: absolute; z-index: 1; left: 28px; right: 28px; bottom: 26px; display: flex; flex-direction: column; gap: 8px; }
+.kicker { font: 500 11px var(--font-plex-mono), monospace; letter-spacing: 0.12em; text-transform: uppercase; color: rgb(255 255 255 / 0.8); }
+.line { font-size: clamp(1.8rem, 2.6vw, 2.3rem); color: #fff; }
+.line em { font-style: italic; color: #d7e8e1; }
+
+/* ---------- form ---------- */
+.form { display: flex; flex-direction: column; justify-content: center; padding: clamp(28px, 5vw, 56px); }
+.inner { width: 100%; max-width: 360px; margin: 0 auto; }
+.mark { display: block; width: 52px; height: auto; margin-bottom: 24px; }
+
+.foot { padding: 4px 16px 22px; text-align: center; font-size: 12px; color: var(--x-ink-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .photo, .chips span { animation: none; }
+}

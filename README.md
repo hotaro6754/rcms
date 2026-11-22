@@ -11,6 +11,36 @@ Training data only: the platform must never hold real patient, provider, payer o
 
 ---
 
+## Pre-launch lockdown (current state)
+
+The site is **closed until `SITE_MODE=live`** (`lib/launch.ts`, `middleware.ts`): every public page,
+the learner portal, certificates and the vendor portal answer with the coming-soon page; nobody can
+sign up; only staff accounts can sign in (at `/sign-in`), straight into `/admin`. To test the learner
+side before launch, list learner accounts in `LOCKDOWN_PREVIEW_EMAILS` (comma separated): they can sign
+in and use the learner area, while every public page still shows coming soon. Create the first
+administrator on the server:
+
+```bash
+npm run admin:create -- you@example.com "Your Name"
+```
+
+**Lessons come in three formats** that learners choose between: the video (a Video block from a
+secure host), the slide deck (`.pptx` or its PDF) and the reading material (`.pdf` or `.docx`),
+added under *Lesson formats* in the lesson editor. Everything is view-only: slides and reading are
+shown as server-rendered page images watermarked with the learner's account; learners are never
+sent a file. Exact PowerPoint conversion needs LibreOffice on the server (`SOFFICE_PATH`); without
+it the deck is re-drawn from its text and pictures, so export it as a PDF from PowerPoint for an
+exact copy.
+
+`npm run db:seed` creates the specification curriculum (four levels, four draft courses, 80 modules
+from the Website Development Specification §6). The old demonstration courses are test fixtures:
+`SEED_DEMO=1 npm run db:seed`. Removed as out of scope (spec §3.2): AI assistant, mentoring,
+community, case simulations, Governance Labs and the operations console (their services and tables
+remain for now), and all learner downloads (LMS-14). Draft policy pages required by spec §12.1
+are under `/legal/*` (`lib/legal/policies.ts`) and need counsel's approval before launch.
+
+---
+
 ## Running it
 
 **Quickest, on your own computer.** You need Node.js 22 and MariaDB (free from
@@ -34,7 +64,7 @@ npm install
 cp .env.example .env      # DATABASE_URL (mysql://...) and BETTER_AUTH_SECRET at minimum
 
 npm run db:deploy         # applies prisma/migrations, then the audit-log triggers
-npm run db:seed           # levels, courses, sample assessment, plans, reference data (idempotent)
+SEED_DEMO=1 npm run db:seed  # levels, spec curriculum, demo courses for the e2e tests (idempotent)
 npm run dev:accounts      # LOCAL ONLY: one synthetic account per role, see below
 npm run dev
 ```

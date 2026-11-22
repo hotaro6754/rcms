@@ -55,7 +55,7 @@ export function renderCertificatePdf(c: CertificatePdfInput): Promise<Buffer> {
     doc.font("Helvetica").fontSize(10).fillColor("#161513").text(c.verifyUrl, width - 380, y + 16, { width: 300, align: "right" });
 
     doc.font("Helvetica").fontSize(8.5).fillColor("#6f6a62").text(
-      "An Academy certificate of course completion. It is not a professional credential and is not issued, accredited or endorsed by AAPC, AHIMA, HFMA, AAHAM or any government body.",
+      "An independent RCMExcel Academy award based on the published curriculum and assessment requirements. It is not a government-issued qualification, university degree or professional licence, and is not issued, endorsed or accredited by HHS, CMS, the US Department of Education, AHIMA, AAPC, AMA or any other external body.",
       80,
       height - 82,
       { width: width - 160, align: "center" },

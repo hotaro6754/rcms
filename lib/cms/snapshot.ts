@@ -21,6 +21,8 @@ export interface SnapshotResource {
   title: string;
   mimeType: string;
   sizeBytes: number | null;
+  /** Lesson format (absent in releases made before formats existed; read the live row then). */
+  format?: "SLIDES" | "READING" | "OTHER";
 }
 
 export interface SnapshotAssessment {

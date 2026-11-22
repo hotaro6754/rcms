@@ -41,13 +41,13 @@ export default async function PrivacyPage() {
                 <ActionForm action={resolvePrivacyAction} className="mt-3 flex flex-wrap items-center gap-2" confirm={r.kind === "DELETION" ? "Completing a deletion anonymises this account and revokes its certificates. Continue?" : undefined}>
                   <input type="hidden" name="id" value={r.id} />
                   <input name="resolution" placeholder="What was done (sent to the audit log)" aria-label="Resolution" className={`${FIELD} max-w-md`} />
-                  <button name="outcome" value="IN_REVIEW" className="rounded-[3px] border border-input px-3 py-1.5 text-[13px]">
+                  <button name="outcome" value="IN_REVIEW" className="rounded-xl border border-input px-3 py-1.5 text-[13px]">
                     Mark in review
                   </button>
-                  <button name="outcome" value="COMPLETED" className="rounded-[3px] bg-primary px-3 py-1.5 text-[13px] text-primary-foreground">
+                  <button name="outcome" value="COMPLETED" className="rounded-xl bg-primary px-3 py-1.5 text-[13px] text-primary-foreground">
                     Complete
                   </button>
-                  <button name="outcome" value="REJECTED" className="rounded-[3px] border border-input px-3 py-1.5 text-[13px]">
+                  <button name="outcome" value="REJECTED" className="rounded-xl border border-input px-3 py-1.5 text-[13px]">
                     Reject
                   </button>
                 </ActionForm>

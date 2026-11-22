@@ -63,7 +63,7 @@ export const LAB = {
       label: "Payer policy changes",
       verdict: "on-path",
       finding:
-        "Aetna bulletin 2026-14 expanded the authorization code set from 01 Aug. It was received and never mapped into the workflow.",
+        "The payer's bulletin SPA-14 (fictional) expanded the authorization code set from 01 Aug. It was received and never mapped into the workflow.",
     },
   ] satisfies LabChoice[],
   steps: RCA.steps,

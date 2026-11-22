@@ -96,7 +96,7 @@ export function BlockView({ block, mediaContext }: { block: ViewBlock; mediaCont
             {d.captions ? " · captions available" : ""}
           </figcaption>
           {s(d.transcript) && (
-            <details className="rounded-[3px] border border-border bg-card px-3 py-2">
+            <details className="rounded-xl border border-border bg-card px-3 py-2">
               <summary className="cursor-pointer text-micro font-medium">Transcript</summary>
               <Markdown text={s(d.transcript)} className="mt-2 flex flex-col gap-2 [&_p]:text-[13.5px]" />
             </details>
@@ -107,7 +107,7 @@ export function BlockView({ block, mediaContext }: { block: ViewBlock; mediaCont
     case "LINK": {
       const href = safeHref(s(d.url));
       return (
-        <p className="rounded-[3px] border border-border bg-card px-4 py-3 text-[14px]">
+        <p className="rounded-xl border border-border bg-card px-4 py-3 text-[14px]">
           {href ? (
             <a href={href} target="_blank" rel="noopener noreferrer nofollow" className="font-medium underline underline-offset-4">
               {s(d.label)}
@@ -176,7 +176,7 @@ export function BlockView({ block, mediaContext }: { block: ViewBlock; mediaCont
           <div className="flex flex-col gap-3 px-4 py-3.5">
             <Markdown text={s(d.context)} className="flex flex-col gap-3 [&_p]:text-[14px]" />
             {s(d.question) && (
-              <p className="border-l-2 border-foreground pl-3 text-[14px] font-medium">{s(d.question)}</p>
+              <p className="rounded-xl bg-secondary px-3 pl-3 text-[14px] font-medium">{s(d.question)}</p>
             )}
             {s(d.discussion) && (
               <details>

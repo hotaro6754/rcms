@@ -1,0 +1,229 @@
+/* ===========================================================================
+   RCMExcel product skin ("rcx"): the signed-in academy, the admin, sign-in and
+   the coming-soon page.
+
+   Built from the owner's Cosmos board: soft rounded slabs filled with one tone
+   each (no outlines), light and dark tiles side by side, thin very large
+   figures, deep clinical green and logo navy, mint and sand as quiet fills, and
+   coral kept for the one thing that needs a look.
+
+   Two themes. The bare tokens are light; dark comes from the reader's system
+   setting (html without data-theme) or from the switch (html[data-theme]).
+   Everything inside .rcx also re-maps the shadcn token contract, so older
+   pages and components pick the skin up without being rewritten.
+   =========================================================================== */
+
+:root {
+  /* Ring palette (owner's choice, Nov 2026): navy, sage, sky and sand on soft grey, one teal accent.
+     Token names kept from the first skin so every page picks this up without being rewritten. */
+  --x-bg: #f6f8fa;
+  --x-surface: #ffffff;
+  --x-surface-2: #eef2f5;
+  --x-sunken: #e6ecf1;
+  --x-ink: #142338;
+  --x-ink-2: #3b4d63;
+  --x-ink-3: #64758a;
+  --x-line: rgb(20 35 56 / 0.09);
+  --x-green: #2f6b66;
+  --x-on-green: #eef6f4;
+  --x-on-green-2: #b9ddd4;
+  --x-mint: #d7e8e1;
+  --x-mint-ink: #2f6b66;
+  --x-mint-strong: #9cc9bb;
+  --x-sand: #f1e4d3;
+  --x-sand-ink: #6b4f33;
+  --x-sand-strong: #c9ab86;
+  --x-coral: #b4433c;
+  --x-coral-tint: #f6dfdc;
+  --x-night: #142338;
+  --x-on-night: #eef3f8;
+  --x-on-night-2: #9fb0c6;
+  --x-night-accent: #9fd8cc;
+  --x-data: #142338;
+  --x-data-soft: #c9d3dd;
+  --x-teal: #3e827c;
+  /* Former "energy" accents, now calm fills from the same palette. */
+  --x-lime: #dce8f5; --x-lime-ink: #142338;
+  --x-orange: #3e827c; --x-orange-ink: #ffffff;
+  --x-butter: #f1e4d3; --x-butter-ink: #142338;
+  --x-peri: #dce8f5; --x-peri-ink: #142338;
+  --x-glow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 18px 50px -18px rgb(62 130 124 / 0.45);
+  --x-shadow: 0 1px 2px rgb(20 35 56 / 0.05), 0 24px 48px -26px rgb(20 35 56 / 0.24);
+  --x-shadow-sm: 0 1px 2px rgb(20 35 56 / 0.08);
+  --x-r-xl: 28px;
+  --x-r-lg: 20px;
+  --x-r-md: 14px;
+  --x-r-sm: 10px;
+  /* Same type as the public site: Geist for text, Newsreader for display, Plex Mono for labels. */
+  --x-text: var(--font-sans), "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --x-fig: var(--font-sans), "Geist", system-ui, sans-serif;
+  --x-display: var(--font-serif), "Newsreader", Georgia, "Times New Roman", serif;
+  --x-mono: var(--font-plex-mono), ui-monospace, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --x-bg: #07090e; --x-surface: #11151d; --x-surface-2: #0c0f15; --x-sunken: #1b212c;
+    --x-ink: #e9edf4; --x-ink-2: #b8c2d3; --x-ink-3: #8a95aa; --x-line: rgb(233 237 244 / 0.08);
+    --x-green: #17533f; --x-on-green: #e8f3ee; --x-on-green-2: #9fd1bd;
+    --x-mint: #163329; --x-mint-ink: #a6e0c8; --x-mint-strong: #2f7d62;
+    --x-sand: #29231b; --x-sand-ink: #e6d2b3; --x-sand-strong: #8a7354;
+    --x-coral: #f2825f; --x-coral-tint: #3b2118;
+    --x-night: #050912; --x-on-night: #e9edf4; --x-on-night-2: #7f8ba1;
+    --x-data: #aebfdd; --x-data-soft: #2a3650;
+    --x-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 24px 48px -24px rgb(0 0 0 / 0.7);
+    --x-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+}
+html[data-theme="dark"] {
+  --x-bg: #07090e; --x-surface: #11151d; --x-surface-2: #0c0f15; --x-sunken: #1b212c;
+  --x-ink: #e9edf4; --x-ink-2: #b8c2d3; --x-ink-3: #8a95aa; --x-line: rgb(233 237 244 / 0.08);
+  --x-green: #17533f; --x-on-green: #e8f3ee; --x-on-green-2: #9fd1bd;
+  --x-mint: #163329; --x-mint-ink: #a6e0c8; --x-mint-strong: #2f7d62;
+  --x-sand: #29231b; --x-sand-ink: #e6d2b3; --x-sand-strong: #8a7354;
+  --x-coral: #f2825f; --x-coral-tint: #3b2118;
+  --x-night: #050912; --x-on-night: #e9edf4; --x-on-night-2: #7f8ba1;
+  --x-data: #aebfdd; --x-data-soft: #2a3650;
+  --x-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 24px 48px -24px rgb(0 0 0 / 0.7);
+  --x-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+}
+
+/* The skin: page ground, type, and the shadcn contract re-pointed at the tokens. */
+.rcx {
+  --background: var(--x-bg);
+  --foreground: var(--x-ink);
+  --card: var(--x-surface);
+  --card-foreground: var(--x-ink);
+  --popover: var(--x-surface);
+  --popover-foreground: var(--x-ink);
+  --muted: var(--x-sunken);
+  --muted-foreground: var(--x-ink-2);
+  --subtle: var(--x-ink-3);
+  --primary: var(--x-ink);
+  --primary-hover: color-mix(in srgb, var(--x-ink) 86%, var(--x-bg));
+  --primary-foreground: var(--x-bg);
+  --brand: var(--x-mint-ink);
+  --signal: var(--x-mint-strong);
+  --secondary: var(--x-sunken);
+  --secondary-foreground: var(--x-ink);
+  --accent: var(--x-mint);
+  --accent-foreground: var(--x-mint-ink);
+  --border: var(--x-line);
+  --input: color-mix(in srgb, var(--x-ink) 18%, transparent);
+  --ring: var(--x-mint-ink);
+  --radius: 0.875rem;
+  --success: var(--x-mint-ink);
+  --success-bg: var(--x-mint);
+  --warning: var(--x-sand-ink);
+  --warning-bg: var(--x-sand);
+  --danger: var(--x-coral);
+  --danger-bg: var(--x-coral-tint);
+  --destructive: var(--x-coral);
+  --sidebar: var(--x-surface);
+  --sidebar-foreground: var(--x-ink);
+  --sidebar-border: var(--x-line);
+  --chart-1: var(--x-data);
+  --chart-2: var(--x-green);
+  --chart-3: var(--x-mint-strong);
+  --chart-4: var(--x-sand-strong);
+  --chart-5: var(--x-coral);
+  background: var(--x-bg);
+  color: var(--x-ink);
+  font-family: var(--x-text);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+html[data-theme="dark"] .rcx,
+html[data-theme="dark"] body:has(.rcx) { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .rcx { color-scheme: dark; }
+}
+body:has(.rcx) { background: var(--x-bg); }
+
+/* The logo is a navy image: in dark mode it sits on a small white pill so it stays legible. */
+html[data-theme="dark"] .rcx .brand-logo { padding: 6px 12px; border-radius: 999px; background: #ffffff; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .rcx .brand-logo { padding: 6px 12px; border-radius: 999px; background: #ffffff; }
+}
+
+/* Shared shadcn parts inside the skin: rounded like the rest (the public site keeps its own). */
+.rcx [data-slot="button"] { border-radius: 999px; }
+.rcx [data-slot="badge"] { border-radius: 999px; }
+.rcx :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) { border-radius: 12px; }
+.rcx :is([data-slot="card"], [data-slot="select-content"]) { border-radius: 20px; }
+
+/* Shared pieces any rcx page can use. */
+.x-lab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--x-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.x-kicker {
+  font-family: var(--x-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--x-ink-3);
+}
+.x-display {
+  font-family: var(--x-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+}
+.x-fig {
+  font-family: var(--x-fig);
+  font-weight: 300;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.x-slab { border-radius: var(--x-r-lg); padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.x-night { background: var(--x-night); color: var(--x-on-night); }
+.x-green { background: var(--x-green); color: var(--x-on-green); }
+.x-mint { background: var(--x-mint); color: var(--x-mint-ink); }
+.x-sand { background: var(--x-sand); color: var(--x-sand-ink); }
+.x-coral { background: var(--x-coral-tint); color: var(--x-coral); }
+.x-surface { background: var(--x-surface); color: var(--x-ink); }
+.x-lime { background: var(--x-lime); color: var(--x-lime-ink); }
+.x-orange { background: var(--x-orange); color: var(--x-orange-ink); }
+.x-butter { background: var(--x-butter); color: var(--x-butter-ink); }
+.x-peri { background: var(--x-peri); color: var(--x-peri-ink); }
+.x-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.x-pill[data-tone="act"] { background: var(--x-coral-tint); color: var(--x-coral); }
+.x-pill[data-tone="watch"] { background: var(--x-sand); color: var(--x-sand-ink); }
+.x-pill[data-tone="good"] { background: var(--x-mint); color: var(--x-mint-ink); }
+.x-pill[data-tone="plain"] { background: var(--x-sunken); color: var(--x-ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rcx, .rcx * { transition: none !important; animation: none !important; }
+}
+
+/* 3D illustration in portal headers (academy, certificates, library): same set as the public site. */
+.x-hero-art { width: clamp(150px, 16vw, 220px); height: auto; justify-self: center; align-self: center; mix-blend-mode: multiply; animation: x-hero-float 7s ease-in-out infinite alternate; }
+@keyframes x-hero-float { from { transform: translateY(-5px); } to { transform: translateY(6px); } }
+@media (max-width: 760px) { .x-hero-art { display: none; } }
+@media (prefers-reduced-motion: reduce) { .x-hero-art { animation: none; } }
+
+
+/* Empty states: a 3D scene of what will be here, faded into the card (no frame). */
+.x-empty-art {
+  display: block; width: clamp(180px, 22vw, 260px); height: auto; margin: 0 auto 6px; mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 60% 58% at 50% 52%, #000 55%, transparent 76%);
+  mask-image: radial-gradient(ellipse 60% 58% at 50% 52%, #000 55%, transparent 76%);
+}

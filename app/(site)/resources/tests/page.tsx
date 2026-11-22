@@ -6,6 +6,7 @@ import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { resourcesTestsPage } from "@/lib/site/pages/resources-tests";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/learn-prove.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(resourcesTestsPage);
@@ -22,7 +23,7 @@ export default async function TestsPage() {
   const detail = await Promise.all(courses.map(async (c) => ({ c, course: await getPublishedCourse(c.slug) })));
   return (
     <>
-      <PageHeader eyebrow={content.header.eyebrow} title={content.header.title} lead={content.header.lead} crumbs={[{ label: "Resources", href: "/resources" }, { label: content.header.title }]} />
+      <PageHeader art={pageArt} artAlt="A learner taking an online assessment." eyebrow={content.header.eyebrow} title={content.header.title} lead={content.header.lead} crumbs={[{ label: "Resources", href: "/resources" }, { label: content.header.title }]} />
       <Section>
         {levels.map((l) => {
           const inLevel = detail.filter((d) => d.c.levelId === l.id && d.course);

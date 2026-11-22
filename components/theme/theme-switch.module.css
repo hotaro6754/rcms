@@ -1,0 +1,19 @@
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--x-sunken); }
+.seg button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--x-ink-3);
+  font: 600 12px/1 var(--x-text);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.seg button svg { width: 15px; height: 15px; }
+.seg button:hover { color: var(--x-ink); }
+.seg button[aria-checked="true"] { background: var(--x-surface); color: var(--x-ink); box-shadow: var(--x-shadow-sm); }
+.seg button:focus-visible { outline: 2px solid var(--x-coral); outline-offset: 1px; }

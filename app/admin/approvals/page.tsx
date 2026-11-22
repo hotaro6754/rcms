@@ -46,10 +46,10 @@ export default async function ApprovalsPage() {
                   <ActionForm action={decideApprovalAction} className="mt-3 flex flex-wrap items-center gap-2">
                     <input type="hidden" name="id" value={r.id} />
                     <input name="note" placeholder="Note (required to reject)" aria-label="Decision note" className={`${FIELD} max-w-sm`} />
-                    <button name="decision" value="approve" className="rounded-[3px] bg-primary px-3 py-1.5 text-[13px] text-primary-foreground">
+                    <button name="decision" value="approve" className="rounded-xl bg-primary px-3 py-1.5 text-[13px] text-primary-foreground">
                       Approve
                     </button>
-                    <button name="decision" value="reject" className="rounded-[3px] border border-input px-3 py-1.5 text-[13px]">
+                    <button name="decision" value="reject" className="rounded-xl border border-input px-3 py-1.5 text-[13px]">
                       Reject
                     </button>
                   </ActionForm>

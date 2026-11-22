@@ -110,7 +110,7 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
 
       <div className="mt-10 flex flex-col gap-10">
         {levels.length === 0 && (
-          <Empty title="No learning levels yet">Create the first level below. The blueprint’s three are Trainee (Foundation), Professional (Execution) and Leadership (Governance).</Empty>
+          <Empty title="No learning levels yet">Create the first level below. The published four are Beginner (RCM Foundation), Professional (Process Excellence), Leader (Operational Management) and Executive Leadership.</Empty>
         )}
         {levels.map((level, i) => {
           const inLevel = courses.filter((c) => c.levelId === level.id);
@@ -142,7 +142,7 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
                       Show in catalogue
                     </ActionButton>
                   )}
-                  <Link href={`/admin/content/levels/${level.id}`} className="min-h-8 rounded-[3px] border border-input bg-card px-3 py-1.5 text-[13px] hover:bg-secondary">
+                  <Link href={`/admin/content/levels/${level.id}`} className="min-h-8 rounded-xl border border-input bg-card px-3 py-1.5 text-[13px] hover:bg-secondary">
                     Edit level
                   </Link>
                 </div>
@@ -214,10 +214,10 @@ export default async function ContentHome({ searchParams }: { searchParams: Prom
             <summary className="cursor-pointer text-[14px] font-semibold">Add a learning level</summary>
             <ActionForm action={createLevelAction} className="mt-4 grid gap-4 sm:grid-cols-2" resetOnSuccess success="Level created.">
               <Field label="Name" htmlFor="lv-name">
-                <input id="lv-name" name="name" required className={FIELD} placeholder="Trainee" />
+                <input id="lv-name" name="name" required className={FIELD} placeholder="Beginner" />
               </Field>
               <Field label="Display title" htmlFor="lv-title">
-                <input id="lv-title" name="displayTitle" required className={FIELD} placeholder="Trainee — Foundation" />
+                <input id="lv-title" name="displayTitle" required className={FIELD} placeholder="Beginner — RCM Foundation" />
               </Field>
               <Field label="Short description" htmlFor="lv-short" className="sm:col-span-2">
                 <textarea id="lv-short" name="shortDescription" required rows={2} className={TEXTAREA} />

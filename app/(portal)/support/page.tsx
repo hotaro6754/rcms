@@ -2,10 +2,12 @@ import Link from "next/link";
 import { requireActor } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { PageHead } from "@/components/platform/PlatformShell";
-import { Empty, Pill, Table, Td, when } from "@/components/admin/kit";
+import { Pill, Table, Td, when } from "@/components/admin/kit";
 import { DONE_STATUSES, LEARNER_STATUS_LABEL } from "@/lib/support/states";
 import { CATEGORY_LABEL } from "@/lib/services/support/tickets";
 import { getSetting } from "@/lib/settings";
+import Image from "next/image";
+import supportArt from "@/public/images/art3d/support.png";
 
 export const metadata = { title: "Support" };
 
@@ -22,7 +24,7 @@ export default async function SupportHome() {
         title="How can we help?"
         lede={`We help with enrolment, course access, navigation, assessments, certificates, payments and general educational questions. Support hours: ${hours}. Outside them, your message waits in the queue and we reply in the same thread.`}
         actions={
-          <Link href="/support/new" className="inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover">
+          <Link href="/support/new" className="inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-[14px] font-medium text-primary-foreground hover:bg-primary-hover">
             Start a conversation
           </Link>
         }
@@ -30,7 +32,14 @@ export default async function SupportHome() {
       <p className="mt-6 border-l-2 border-warning pl-3 text-[13px] text-muted-foreground">Support is for platform and learning questions. We cannot give legal, coding, clinical or payer-specific decisions, and you must never share patient information here.</p>
       <div className="mt-8">
         {tickets.length === 0 ? (
-          <Empty title="No conversations yet." />
+          <div className="x-slab x-surface flex flex-col items-center gap-3 px-6 py-10 text-center">
+            <Image src={supportArt} alt="" aria-hidden className="x-empty-art" sizes="260px" />
+            <p className="text-[17px] font-semibold text-foreground">No conversations yet</p>
+            <p className="max-w-[46ch] text-[14px] text-muted-foreground">Ask about enrolment, course access, assessments, certificates or payments. We reply in the same thread, Monday to Saturday, 10:00–19:00 IST.</p>
+            <Link href="/support/new" className="mt-2 inline-flex h-11 items-center rounded-full bg-[var(--x-ink)] px-5 text-[14px] font-semibold text-white">
+              Start a conversation
+            </Link>
+          </div>
         ) : (
           <Table head={["Reference", "Subject", "Topic", "Status", "Updated"]}>
             {tickets.map((t) => (

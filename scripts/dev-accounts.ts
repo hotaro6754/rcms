@@ -2,6 +2,10 @@ import "dotenv/config";
 import type { StaffRole } from "@prisma/client";
 import { auth } from "../lib/auth";
 import { prisma } from "../lib/db";
+import { allowCliAccountCreation } from "../lib/launch";
+
+// Synthetic accounts are created from this script even while the site is in pre-launch lockdown.
+allowCliAccountCreation();
 
 /**
  * LOCAL DEVELOPMENT ONLY. Creates verified accounts so every surface can be exercised

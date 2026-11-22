@@ -130,7 +130,7 @@ export default async function AccountPage() {
               </p>
               <ActionForm action={deactivateAccountAction} className="mt-3 flex flex-col gap-2" confirm="Close your account now?">
                 <input name="confirm" required placeholder="Type DEACTIVATE" aria-label="Type DEACTIVATE to confirm" autoComplete="off" className={FIELD} />
-                <button className="w-fit rounded-[3px] border border-danger/40 px-3 py-1.5 text-[13px] text-danger">Close account</button>
+                <button className="w-fit rounded-xl border border-danger/40 px-3 py-1.5 text-[13px] text-danger">Close account</button>
               </ActionForm>
             </Panel>
           )}

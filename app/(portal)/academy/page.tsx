@@ -3,7 +3,6 @@ import { listBookmarks } from "@/lib/services/learning/bookmarks";
 import { requireActor } from "@/lib/actor";
 import { prisma } from "@/lib/db";
 import { eligibility } from "@/lib/certificates";
-import { PageHead, Ruled } from "@/components/platform/PlatformShell";
 import { ClaimButton } from "@/components/certificates/ClaimButton";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { flatLessons, type CourseSnapshot } from "@/lib/cms/snapshot";
@@ -11,12 +10,20 @@ import { enrolmentLive } from "@/lib/services/learning/catalog";
 import { progressFor } from "@/lib/services/learning/progress";
 import { enrolFreeAction } from "@/lib/actions/learning";
 import { when } from "@/components/admin/kit";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Award, BookOpen, Flame, LifeBuoy, MonitorPlay, Play, Presentation } from "lucide-react";
+import { LevelBars } from "@/components/illustration/Bars";
+import { Badges, CoursePath, StatsCard, StreakCard, streakOf, type Badge } from "@/components/learning/Gamify";
+import a from "./academy.module.css";
+import Image from "next/image";
+import emptyArt from "@/public/images/art3d/learn-watch.png";
 
-export const metadata = { title: "My academy" };
+export const metadata = { title: "My learning" };
 
-const BTN = "inline-flex min-h-11 items-center rounded-[3px] bg-primary px-5 text-[14px] font-medium text-primary-foreground transition-colors hover:bg-primary-hover";
-const LINK = "inline-flex min-h-11 items-center text-[14px] underline decoration-input underline-offset-[6px] hover:decoration-foreground";
+
+/** A date as its day in India time (YYYY-MM-DD). */
+function dayKeyOf(d: Date) {
+  return new Date(d.getTime() + 5.5 * 3600_000).toISOString().slice(0, 10);
+}
 
 function greeting() {
   const h = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: "Asia/Kolkata" }).format(new Date()));
@@ -99,255 +106,436 @@ export default async function AcademyPage() {
   const first = user.name.split(" ")[0];
   const statusNote = STATUS_NOTE[account.status];
 
-  return (
-    <div className="mx-auto max-w-[1320px] px-6 py-12 lg:py-16">
-      <PageHead
-        kicker="Your academy"
-        title={`${greeting()}, ${first}.`}
-        lede={courses.length ? "Where you are, the next thing to do in each course, and what stands between you and each certificate." : "Nothing is enrolled yet. Find your level in the catalogue, or start a free course."}
-      />
+  // Sixty days of lesson activity: the week strip, the streak and today's goal all come from it.
+  const [recent, passedAttempts] = await Promise.all([
+    prisma.progress.findMany({
+      where: { userId: user.id, OR: [{ lastViewedAt: { gte: new Date(Date.now() - 60 * 86400_000) } }, { completedAt: { gte: new Date(Date.now() - 60 * 86400_000) } }] },
+      select: { lastViewedAt: true, completedAt: true },
+    }),
+    prisma.quizAttempt.count({ where: { userId: user.id, passed: true } }),
+  ]);
+  const timeIn = await prisma.progress.aggregate({ where: { userId: user.id }, _sum: { secondsIn: true } });
+  const minutesLearned = Math.round((timeIn._sum.secondsIn ?? 0) / 60);
+  const perDay = new Map<string, number>();
+  for (const w of recent) for (const d of [w.lastViewedAt, w.completedAt]) if (d) perDay.set(dayKeyOf(d), (perDay.get(dayKeyOf(d)) ?? 0) + 1);
+  const dayKey = dayKeyOf;
+  const activeAll = new Set(recent.flatMap((w) => [w.lastViewedAt, w.completedAt].filter((d): d is Date => !!d).map(dayKey)));
+  const todayKey = dayKey(new Date());
+  const doneToday = recent.filter((w) => w.completedAt && dayKey(w.completedAt) === todayKey).length;
+  const { streak, best } = streakOf(activeAll);
+  const last7 = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(Date.now() - (6 - i) * 86400_000);
+    return { key: dayKey(d), label: d.toLocaleDateString("en-IN", { weekday: "narrow", timeZone: "Asia/Kolkata" }) };
+  });
+  const activeDays = new Set(last7.map((d) => d.key).filter((k) => activeAll.has(k)));
+  const lessonsDone = courses.reduce((n, c) => n + c.progress.lessonsDone, 0);
+  const featured = courses.find((c) => c.progress.lessonsDone > 0 && c.progress.lessonsDone < c.progress.lessonsTotal) ?? courses.find((c) => c.progress.lessonsDone < c.progress.lessonsTotal) ?? null;
+  const resumeOf = (c: Row) => (c.progress.lastViewed && !c.progress.done.has(c.progress.lastViewed.id) ? c.progress.lastViewed : c.progress.next);
 
+  const anyComplete = courses.some((c) => c.progress.lessonsTotal > 0 && c.progress.lessonsDone === c.progress.lessonsTotal);
+  const BADGES: Badge[] = [
+    { id: "first", name: "First lesson", hint: "Finish any lesson", earned: lessonsDone >= 1, tone: "mint", glyph: "spark" },
+    { id: "five", name: "Five lessons", hint: "Finish five lessons", earned: lessonsDone >= 5, tone: "sand", glyph: "five" },
+    { id: "streak3", name: "On a roll", hint: "Three days in a row", earned: best >= 3, tone: "coral", glyph: "flame" },
+    { id: "week", name: "Full week", hint: "Seven days in a row", earned: best >= 7, tone: "night", glyph: "week" },
+    { id: "pass", name: "Assessed", hint: "Pass an assessment", earned: passedAttempts >= 1, tone: "green", glyph: "check" },
+    { id: "course", name: "Course done", hint: "Finish a course", earned: anyComplete, tone: "sand", glyph: "flag" },
+    { id: "cert", name: "Certified", hint: "Earn a certificate", earned: certificates.length >= 1, tone: "coral", glyph: "seal" },
+    { id: "level", name: "Level up", hint: "Complete a level", earned: badges.length >= 1, tone: "night", glyph: "level" },
+  ];
+  const resume = featured ? resumeOf(featured) : null;
+  const resumeHref = featured && resume ? `/academy/${featured.snap.course.slug}/${resume.id}` : featured ? `/academy/${featured.snap.course.slug}` : "/catalog";
+  const myLevel = featured ? levels.find((l) => l.id === featured.e.program.levelId) : null;
+  const weekBars = last7.map((d) => ({ ...d, n: perDay.get(d.key) ?? 0 }));
+  const weekMax = Math.max(1, ...weekBars.map((b) => b.n));
+  const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join("");
+  const learned = minutesLearned >= 60 ? `${Math.floor(minutesLearned / 60)}h ${minutesLearned % 60}m` : `${minutesLearned}m`;
+  const currentLevel = featured ? Math.max(0, levels.findIndex((l) => l.id === featured.e.program.levelId)) : 0;
+  const levelsDone = levels.filter((l) => badges.some((b) => b.levelId === l.id)).length;
+
+  return (
+    <div className={a.page}>
       {statusNote && (
-        <p role="status" className="mt-6 border-l-2 border-warning bg-warning-bg px-4 py-3 text-[14px] text-warning">
+        <p role="status" className={a.notice}>
           {statusNote}{" "}
           <Link href="/account/billing" className="underline underline-offset-4">
             Billing
           </Link>
         </p>
       )}
-      {account.previousLoginAt && (
-        <p className="mt-4 text-[12.5px] text-muted-foreground">
-          Your previous sign-in was {when(account.previousLoginAt, true)} IST. Not you?{" "}
-          <Link href="/support/new?category=PRIVACY_SECURITY" className="underline underline-offset-4">
-            Report suspicious access
+
+      {/* ---------- hello ---------- */}
+      <section className={a.hero}>
+        <div className={a.heroCopy}>
+          <p className="x-kicker">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" })}</p>
+          <div className={a.helloRow}>
+            <h1 className={`x-display ${a.title}`}>
+              {greeting()}, {first}
+            </h1>
+          </div>
+          <p className={a.lede}>
+            {featured
+              ? featured.progress.lessonsDone === 0
+                ? "Watch the video, flip through the slides or read the study material: whichever suits you today."
+                : `You are ${featured.progress.percent}% through ${featured.snap.course.name}.`
+              : "You are not enrolled on a course yet. Start with the level that matches your role today."}
+          </p>
+          <nav className={a.quick} aria-label="Jump into your lesson">
+            <Link href={resumeHref} className={a.quickOn}>
+              <Play aria-hidden /> {featured ? (featured.progress.lessonsDone === 0 ? "Start" : "Resume") : "Browse courses"}
+            </Link>
+            {featured && resume && (
+              <>
+                <Link href={`${resumeHref}?format=video`}>
+                  <MonitorPlay aria-hidden /> Video
+                </Link>
+                <Link href={`${resumeHref}?format=slides`}>
+                  <Presentation aria-hidden /> Slides
+                </Link>
+                <Link href={`${resumeHref}?format=reading`}>
+                  <BookOpen aria-hidden /> Reading
+                </Link>
+              </>
+            )}
+            <Link href="/support/new">
+              <LifeBuoy aria-hidden /> Ask for help
+            </Link>
+          </nav>
+        </div>
+        <aside className={a.profile} aria-label="Your profile">
+          <div className={a.profileTop}>
+            <span className={a.avatar} aria-hidden>
+              {initials}
+            </span>
+            <span className={a.profileWho}>
+              <b>{user.name}</b>
+              <small>{myLevel ? `Level ${myLevel.sequence} · ${myLevel.name}` : "Choose your level"}</small>
+            </span>
+            <span className={a.streakChip} data-hot={streak > 0 || undefined} title={`Best run: ${best} days`}>
+              <Flame aria-hidden /> {streak}
+            </span>
+          </div>
+          <dl className={a.profileStats}>
+            <div>
+              <dt>Time learned</dt>
+              <dd className="x-fig">{learned}</dd>
+            </div>
+            <div>
+              <dt>Lessons</dt>
+              <dd className="x-fig">{lessonsDone}</dd>
+            </div>
+            <div>
+              <dt>Certificates</dt>
+              <dd className="x-fig">{certificates.length}</dd>
+            </div>
+          </dl>
+          <div className={a.weekChart} aria-label={`Lesson activity over the last 7 days: ${weekBars.map((b) => b.n).join(", ")}`}>
+            {weekBars.map((b, i) => (
+              <span key={b.key} data-today={i === 6 || undefined}>
+                <i style={{ height: `${Math.max(6, (b.n / weekMax) * 100)}%`, animationDelay: `${i * 60}ms` }} data-on={b.n > 0 || undefined} />
+                <small>{b.label}</small>
+              </span>
+            ))}
+          </div>
+        </aside>
+      </section>
+
+      <div className={a.grid}>
+        {/* ---------- continue ---------- */}
+        {featured ? (
+          <Link href={resumeHref} className={`x-slab x-green ${a.cont} ${a.g8}`}>
+            <span className={a.contCopy}>
+              <span className="x-lab" style={{ color: "var(--x-on-green-2)" }}>
+                {featured.progress.lessonsDone === 0 ? "Start here" : "Continue where you left off"}
+              </span>
+              <span className={a.contCourse}>{featured.snap.course.name}</span>
+              <span className={`x-display ${a.contLesson}`}>{resume?.title ?? "Course overview"}</span>
+              <span className={a.contTrack} role="progressbar" aria-valuenow={featured.progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Course progress">
+                <span style={{ width: `${featured.progress.percent}%` }} />
+              </span>
+              <span className={a.contMeta}>
+                {featured.progress.lessonsDone} of {featured.progress.lessonsTotal} lessons · {featured.progress.modules.length} modules
+              </span>
+              <span className={a.contBtn}>
+                <Play aria-hidden /> {featured.progress.lessonsDone === 0 ? "Start learning" : "Resume lesson"}
+              </span>
+            </span>
+            <Ring value={featured.progress.percent} />
           </Link>
-          .
-        </p>
-      )}
+        ) : (
+          <Link href="/catalog" className={`x-slab x-green ${a.cont} ${a.g8}`}>
+            <span className={a.contCopy}>
+              <span className="x-lab" style={{ color: "var(--x-on-green-2)" }}>
+                Start here
+              </span>
+              <span className={`x-display ${a.contLesson}`}>Find your level</span>
+              <span className={a.contMeta}>Beginner, Professional, Leader or Executive Leadership</span>
+              <span className={a.contBtn}>
+                Browse courses <ArrowRight aria-hidden />
+              </span>
+            </span>
+          </Link>
+        )}
 
-      {levels.length > 0 && (
-        <ol aria-label="Learning levels" className="mt-10 grid border-b border-border sm:grid-cols-3">
-          {levels.map((l) => {
-            const certified = l.courses.filter((c) => certFor.has(c.id)).length;
-            const active = courses.some((c) => c.e.program.levelId === l.id);
-            const badge = badges.find((b) => b.levelId === l.id);
-            return (
-              <li key={l.id} className={cn("border-t-2 pb-4 pr-4 pt-3", badge ? "border-success" : active ? "border-foreground" : "border-border")}>
-                <p className="text-data text-[10.5px] tracking-[0.12em] text-subtle">
-                  LEVEL {l.sequence} {badge ? "· EARNED" : active ? "· IN PROGRESS" : ""}
-                </p>
-                <p className={cn("font-serif-display mt-1.5 text-[clamp(1.15rem,2vw,1.55rem)] leading-tight", !active && !badge && "text-subtle")}>{l.displayTitle}</p>
-                <p className="mt-1 text-[12.5px] text-muted-foreground">
-                  {certified} of {l.courses.length} courses certified{badge ? ` · ${badge.name}` : ""}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+        {/* ---------- streak + goal ---------- */}
+        <div className={a.g4}>
+          <StreakCard streak={streak} best={best} doneToday={doneToday} goal={1} days={last7.map((d, i) => ({ ...d, on: activeDays.has(d.key), today: i === 6 }))} />
+        </div>
 
-      <div className="mt-14 grid gap-14 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="flex flex-col gap-14">
-          {courses.length === 0 && (
-            <div className="flex flex-wrap items-center gap-6">
-              <Link href="/catalog" className={BTN}>
-                Browse the catalogue
+        {/* ---------- course path + points + badges ---------- */}
+        {featured && featured.progress.modules.length > 0 && (
+          <div className={a.g8}>
+            <CoursePath course={featured.snap.course.name} href={`/academy/${featured.snap.course.slug}`} resumeHref={resumeHref} modules={featured.progress.modules} />
+          </div>
+        )}
+        <div className={`${featured && featured.progress.modules.length > 0 ? a.g4 : a.g12} ${a.stack}`}>
+          <StatsCard lessons={lessonsDone} assessments={passedAttempts} certificates={certificates.length} />
+          <Badges badges={BADGES} />
+        </div>
+      </div>
+
+      <div className={a.columns}>
+        <div className={a.main}>
+          <div className={a.sectionHead}>
+            <h2 className={`x-display ${a.h2}`}>My courses</h2>
+            <Link href="/catalog" className={a.more}>
+              Browse all courses →
+            </Link>
+          </div>
+          {courses.length === 0 ? (
+            <div className={`x-slab x-surface ${a.empty}`}>
+              <Image src={emptyArt} alt="" aria-hidden className="x-empty-art" sizes="260px" />
+              <p>Courses you enrol on appear here, with your progress and the next lesson.</p>
+              <Link href="/catalog" className={a.btn}>
+                Explore the Academy
               </Link>
-              <Link href="/learning-paths" className={LINK}>
-                Which level am I?
-              </Link>
+            </div>
+          ) : (
+            <div className={a.cards}>
+              {courses.map((c) => {
+                const { e, snap, progress, elig } = c;
+                const serial = certFor.get(e.programId);
+                const next = resumeOf(c);
+                const level = levels.find((l) => l.id === e.program.levelId);
+                return (
+                  <article key={e.id} className={`x-slab x-surface ${a.card}`}>
+                    <div className={a.cardTop}>
+                      <span className={a.levelChip} data-level={level?.sequence ?? 1}>
+                        Level {level?.sequence ?? "–"} · {level?.name ?? "Course"}
+                      </span>
+                      {serial ? (
+                        <span className="x-pill" data-tone="good">
+                          Certified
+                        </span>
+                      ) : progress.percent === 100 ? (
+                        <span className="x-pill" data-tone="good">
+                          Complete
+                        </span>
+                      ) : null}
+                    </div>
+                    <h3 className={a.cardTitle}>
+                      <Link href={`/academy/${snap.course.slug}`}>{snap.course.name}</Link>
+                    </h3>
+                    <div className={a.segments} aria-hidden>
+                      {progress.modules.slice(0, 24).map((m) => (
+                        <i key={m.id} data-state={m.total && m.done === m.total ? "done" : m.done ? "part" : "todo"} title={`${m.title}: ${m.done}/${m.total}`} />
+                      ))}
+                    </div>
+                    <div className={a.progressRow}>
+                      <span className={`x-fig ${a.pct}`}>{progress.percent}%</span>
+                      <span className={a.cardMeta}>
+                        {progress.lessonsTotal ? `${progress.lessonsDone} of ${progress.lessonsTotal} lessons · ${progress.modules.length} modules` : "Lessons are being added to this course"}
+                      </span>
+                    </div>
+                    {next && (
+                      <p className={a.next}>
+                        <span>Next</span> {next.title}
+                      </p>
+                    )}
+                    <div className={a.cardActions}>
+                      {next && (
+                        <Link href={`/academy/${snap.course.slug}/${next.id}`} className={a.btn}>
+                          {progress.lessonsDone === 0 ? "Start" : "Continue"}
+                        </Link>
+                      )}
+                      {serial ? (
+                        <Link href={`/certificates/${serial}`} className={a.ghost}>
+                          View certificate
+                        </Link>
+                      ) : elig?.eligible ? (
+                        <ClaimButton programId={e.programId} className={a.btn} />
+                      ) : (
+                        <Link href={`/academy/${snap.course.slug}`} className={a.ghost}>
+                          Curriculum
+                        </Link>
+                      )}
+                    </div>
+                    {!serial && elig && !elig.eligible && elig.lessonsTotal > 0 && (
+                      <p className={a.certHint}>
+                        <Award className="h-3.5 w-3.5" aria-hidden /> Certificate after {elig.lessonsTotal - elig.lessonsDone} more lesson{elig.lessonsTotal - elig.lessonsDone === 1 ? "" : "s"}
+                        {elig.quizzesTotal - elig.quizzesPassed > 0 && ` and ${elig.quizzesTotal - elig.quizzesPassed} assessment${elig.quizzesTotal - elig.quizzesPassed === 1 ? "" : "s"}`}
+                      </p>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           )}
 
-          {courses.map(({ e, snap, progress, elig }) => {
-            const serial = certFor.get(e.programId);
-            const resume = progress.lastViewed && !progress.done.has(progress.lastViewed.id) ? progress.lastViewed : progress.next;
-            return (
-              <article key={e.id} aria-labelledby={`c-${e.id}`}>
-                <div className="flex flex-wrap items-baseline justify-between gap-3">
-                  <p className="text-data text-[11px] tracking-[0.12em] text-subtle">
-                    {snap.course.tier || "COURSE"} · VERSION {e.program.publishedVersion!.version}
-                    {e.expiresAt ? ` · ACCESS UNTIL ${when(e.expiresAt).toUpperCase()}` : ""}
-                  </p>
-                  <p className="text-data text-[11px] tracking-[0.12em] text-subtle">
-                    {progress.lessonsDone} / {progress.lessonsTotal} LESSONS · {progress.percent}%
-                  </p>
-                </div>
-                <div className="relative mt-2 h-0.5 bg-border" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label={`${snap.course.name} progress`}>
-                  <div className="absolute inset-y-0 left-0 bg-foreground" style={{ width: `${progress.percent}%` }} />
-                </div>
-                <h2 id={`c-${e.id}`} className="mt-6 text-[clamp(1.7rem,3vw,2.3rem)] leading-[1.05]">
-                  {snap.course.name}
-                </h2>
-                <ul className="mt-4 grid gap-x-6 gap-y-1 text-[12.5px] text-muted-foreground sm:grid-cols-2">
-                  {progress.modules.map((m) => (
-                    <li key={m.id} className="flex justify-between gap-3">
-                      <span className="truncate">{m.title}</span>
-                      <span className="text-data shrink-0">
-                        {m.done}/{m.total}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                {resume && (
-                  <p className="mt-6 text-[14px]">
-                    <span className="text-data mr-3 text-[10.5px] tracking-[0.12em] text-subtle">{progress.lessonsDone === 0 ? "START" : "RESUME"}</span>
-                    {resume.title}
-                  </p>
-                )}
-                <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-3">
-                  {resume && (
-                    <Link href={`/academy/${snap.course.slug}/${resume.id}`} className={BTN}>
-                      {progress.lessonsDone === 0 ? "Start the first lesson" : "Continue"}
-                    </Link>
-                  )}
-                  <Link href={`/academy/${snap.course.slug}`} className={LINK}>
-                    Curriculum
-                  </Link>
-                  {serial ? (
-                    <Link href={`/certificates/${serial}`} className={LINK}>
-                      View your certificate
-                    </Link>
-                  ) : elig?.eligible ? (
-                    <ClaimButton programId={e.programId} className={BTN} />
-                  ) : elig && elig.lessonsTotal > 0 ? (
-                    <span className="text-[13px] text-subtle">
-                      Certificate after {elig.lessonsTotal - elig.lessonsDone} more lesson{elig.lessonsTotal - elig.lessonsDone === 1 ? "" : "s"}
-                      {elig.quizzesTotal - elig.quizzesPassed > 0 && ` and ${elig.quizzesTotal - elig.quizzesPassed} assessment${elig.quizzesTotal - elig.quizzesPassed === 1 ? "" : "s"}`}
-                    </span>
-                  ) : null}
-                </div>
-              </article>
-            );
-          })}
-
           {covered.length > 0 && (
-            <Ruled label="Included in your subscription">
-              <ul>
+            <section className={`x-slab x-surface ${a.covered}`}>
+              <span className="x-lab">Included in your subscription</span>
+              <ul className={a.list}>
                 {covered.map((c) => (
-                  <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-3">
-                    <Link href={`/catalog/${c.slug}`} className="text-[14px] hover:underline">
-                      {c.name}
-                    </Link>
+                  <li key={c.id}>
+                    <Link href={`/catalog/${c.slug}`}>{c.name}</Link>
                     <ActionForm action={enrolFreeAction} redirectTo={`/academy/${c.slug}`}>
                       <input type="hidden" name="courseId" value={c.id} />
-                      <button className="text-[13px] underline underline-offset-4">Start this course</button>
+                      <button className={a.ghost}>Start</button>
                     </ActionForm>
                   </li>
                 ))}
               </ul>
-            </Ruled>
+            </section>
+          )}
+
+          {levels.length > 0 && (
+            <section className={`x-slab x-surface ${a.pathSlab}`} aria-labelledby="path-title">
+              <div className={a.pathHead}>
+                <div>
+                  <span className="x-lab" id="path-title">
+                    Your path · learner to leader
+                  </span>
+                  <p className={a.slabNote}>Four levels, each a step up. Finish a level to earn its badge.</p>
+                </div>
+                <LevelBars current={currentLevel} done={levelsDone} className={a.pathArt} />
+              </div>
+              <ol className={a.path}>
+                {levels.map((l, i) => {
+                  const badge = badges.find((b) => b.levelId === l.id);
+                  const here = featured?.e.program.levelId === l.id;
+                  const mine = courses.filter((c) => c.e.program.levelId === l.id && c.progress.lessonsTotal > 0);
+                  const started = mine.some((c) => c.progress.lessonsDone > 0);
+                  const state = badge ? "done" : here ? "here" : mine.length ? "mine" : "ahead";
+                  const label = badge ? "Completed" : here ? "You are here" : started ? "In progress" : mine.length ? "Enrolled" : `${l.courses.length} course${l.courses.length === 1 ? "" : "s"}`;
+                  return (
+                    <li key={l.id} className={a.step} data-state={state} style={{ "--lift": `${(levels.length - 1 - i) * 14}px` } as React.CSSProperties}>
+                      <span className={a.stepN}>Level {String(l.sequence).padStart(2, "0")}</span>
+                      <span className={a.stepName}>{l.name}</span>
+                      <span className={a.stepState}>{label}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
           )}
         </div>
 
-        <aside className="flex flex-col gap-12">
-          <Ruled label="Assessments to pass">
+        <aside className={a.side}>
+          <section className={`x-slab x-surface`}>
+            <span className={a.slabHead}>
+              <span className="x-lab">Assessments</span>
+              {upcoming.length + pendingAttempts.length > 0 && <span className={a.count}>{upcoming.length + pendingAttempts.length}</span>}
+            </span>
             {upcoming.length === 0 && pendingAttempts.length === 0 ? (
-              <p className="py-4 text-[13.5px] text-muted-foreground">Nothing outstanding.</p>
+              <p className={a.muted}>Nothing waiting. Assessments appear here when you reach them.</p>
             ) : (
-              <ul>
-                {pendingAttempts.map((a) => (
-                  <li key={a.id} className="border-b border-border py-3 text-[14px]">
-                    <Link href={`/academy/attempts/${a.id}`} className="hover:underline">
-                      {a.quiz.title}
+              <ul className={a.tasks}>
+                {pendingAttempts.map((p) => (
+                  <li key={p.id}>
+                    <Link href={`/academy/attempts/${p.id}`}>
+                      <span className={a.taskTitle}>{p.quiz.title}</span>
+                      <span className={a.taskMeta}>{p.status === "IN_PROGRESS" ? "In progress: resume" : "Waiting for marking"}</span>
                     </Link>
-                    <span className="block text-[12.5px] text-muted-foreground">{a.status === "PENDING_REVIEW" ? "Submitted, waiting for a reviewer" : "In progress — finish it"}</span>
                   </li>
                 ))}
-                {upcoming.slice(0, 6).map((u) => (
-                  <li key={u.quiz.id} className="border-b border-border py-3 text-[14px]">
-                    <Link href={`/academy/${u.course.slug}/${u.lesson.id}`} className="hover:underline">
-                      {u.quiz.title}
+                {upcoming.slice(0, 5).map((u) => (
+                  <li key={u.quiz.id}>
+                    <Link href={`/academy/${u.course.slug}/${u.lesson.id}#assess`}>
+                      <span className={a.taskTitle}>{u.quiz.title}</span>
+                      <span className={a.taskMeta}>
+                        {u.course.name} · pass mark {u.quiz.passingScore}%{u.best >= 0 ? ` · best so far ${u.best}%` : ""}
+                      </span>
                     </Link>
-                    <span className="block text-[12.5px] text-muted-foreground">
-                      {u.course.name} · pass {u.quiz.passingScore}%{u.used ? ` · best ${u.best}% in ${u.used} attempt${u.used === 1 ? "" : "s"}` : ""}
-                      {u.quiz.maxAttempts ? ` · ${Math.max(0, u.quiz.maxAttempts - u.used)} left` : ""}
-                    </span>
                   </li>
                 ))}
               </ul>
             )}
-          </Ruled>
+          </section>
 
-          <Ruled label="Access">
-            <ul className="py-3 text-[13.5px]">
-              {subscriptions.length === 0 ? (
-                <li className="text-muted-foreground">No active subscription. Courses you bought or were given stay yours.</li>
-              ) : (
-                subscriptions.map((s) => (
-                  <li key={s.id}>
-                    {s.product.name} · {s.status.toLowerCase().replace("_", " ")} until {when(s.status === "GRACE_PERIOD" ? (s.graceEndsAt ?? s.currentPeriodEnd) : s.currentPeriodEnd)}
+          <section className="x-slab x-surface">
+            <span className="x-lab">Updates</span>
+            {notifications.length === 0 ? (
+              <p className={a.muted}>No updates yet.</p>
+            ) : (
+              <ul className={a.tasks}>
+                {notifications.map((n) => (
+                  <li key={n.id} data-unread={!n.readAt || undefined}>
+                    <Link href={n.href ?? "#"}>
+                      <span className={a.taskTitle}>{n.title}</span>
+                      <span className={a.taskMeta}>{when(n.createdAt)}</span>
+                    </Link>
                   </li>
-                ))
-              )}
-              <li className="mt-2">
-                <Link href="/account/billing" className="underline underline-offset-4">
-                  Billing and invoices
-                </Link>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {saved.length > 0 && (
+            <section className="x-slab x-mint">
+              <span className="x-lab">Saved lessons</span>
+              <ul className={a.tasks}>
+                {saved.slice(0, 6).map((b) => (
+                  <li key={b.lessonId}>
+                    <Link href={b.href}>
+                      <span className={a.taskTitle}>{b.title}</span>
+                      <span className={a.taskMeta}>{b.course}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section className={`x-slab x-peri ${a.soon}`} aria-label="Coming soon">
+            <span className="x-lab">Coming soon</span>
+            <ul>
+              <li>
+                <b>Mentoring</b>
+                <small>One-to-one time with experienced RCM operators.</small>
+              </li>
+              <li>
+                <b>Downloadable materials</b>
+                <small>Take-away versions of selected slides and readings.</small>
               </li>
             </ul>
-          </Ruled>
+          </section>
 
-          <Ruled label="Recent">
-            {notifications.length === 0 ? (
-              <p className="py-4 text-[13.5px] text-muted-foreground">Nothing yet. Enrolments, grades and certificates show up here.</p>
-            ) : (
-              <ul>
-                {notifications.map((n) => (
-                  <li key={n.id} className="border-b border-border py-3.5">
-                    {n.href ? (
-                      <Link href={n.href} className="text-[14px] leading-snug hover:underline hover:underline-offset-4">
-                        {n.title}
-                      </Link>
-                    ) : (
-                      <p className="text-[14px] leading-snug">{n.title}</p>
-                    )}
-                    {n.body && <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{n.body}</p>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Ruled>
+          <section className={`x-slab x-night ${a.help}`}>
+            <span className="x-lab">Need help?</span>
+            <p>Questions about a lesson, your access or an assessment go to our support team.</p>
+            <Link href="/support/new" className={a.helpBtn}>
+              Ask support <ArrowRight aria-hidden />
+            </Link>
+          </section>
 
-          <Ruled label="Also here">
-            <ul>
-              {[
-                ["/catalog", "Catalogue", "Every course, by level"],
-                ["/library", "Library", "Every material from your courses"],
-                ["/certificates", "Certificates", "Earned, and what is left to earn"],
-                ["/labs", "Governance Labs", "Run a monthly review on teaching data"],
-                ["/support", "Support", "Ask for help; we reply in the thread"],
-              ].map(([href, label, note]) => (
-                <li key={href} className="border-b border-border">
-                  <Link href={href} className="group flex items-baseline justify-between gap-3 py-3.5">
-                    <span>
-                      <span className="block text-[14px] group-hover:underline group-hover:underline-offset-4">{label}</span>
-                      <span className="block text-[12.5px] text-muted-foreground">{note}</span>
-                    </span>
-                    <span aria-hidden="true" className="text-subtle">
-                      →
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Ruled>
-          {saved.length > 0 && (
-            <Ruled label="Saved lessons">
-              <ul>
-                {saved.slice(0, 8).map((b) => (
-                  <li key={b.lessonId} className="border-b border-border py-3">
-                    <Link href={b.href} className="block text-[14px] hover:underline hover:underline-offset-4">
-                      {b.title}
-                    </Link>
-                    <span className="block text-[12.5px] text-muted-foreground">{b.course}</span>
-                  </li>
-                ))}
-              </ul>
-            </Ruled>
-          )}
+          <p className={a.fine}>Educational content only. Every example is synthetic: never enter real patient information anywhere in RCMExcel.</p>
         </aside>
       </div>
     </div>
+  );
+}
+
+function Ring({ value }: { value: number }) {
+  const r = 30;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg viewBox="0 0 76 76" className={a.ring} role="img" aria-label={`${value}% complete`}>
+      <circle cx="38" cy="38" r={r} fill="none" stroke="rgb(255 255 255 / 0.14)" strokeWidth="7" />
+      <circle cx="38" cy="38" r={r} fill="none" stroke="var(--x-on-green)" strokeWidth="7" strokeLinecap="round" strokeDasharray={`${(value / 100) * c} ${c}`} transform="rotate(-90 38 38)" />
+      <text x="38" y="43" textAnchor="middle" style={{ fill: "var(--x-on-green)", font: "300 15px var(--x-fig)" }}>
+        {value}%
+      </text>
+    </svg>
   );
 }

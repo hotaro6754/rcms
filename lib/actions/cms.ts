@@ -144,6 +144,9 @@ export async function workflowAction(fd: FormData) {
       case "submit":
         await release.submitForReview(actor, id, comment);
         break;
+      case "publish-now":
+        await release.publishNow(actor, id, comment);
+        break;
       case "academic-approve":
         await release.reviewAcademic(actor, id, true, comment);
         break;

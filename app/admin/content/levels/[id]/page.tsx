@@ -160,8 +160,8 @@ export default async function LevelPage({ params }: { params: Promise<{ id: stri
                   {canEdit && i > 0 && (
                     <ActionForm action={rollbackRevisionAction} className="mt-1 flex gap-1.5">
                       <input type="hidden" name="revisionId" value={r.id} />
-                      <input name="reason" required placeholder="Reason" aria-label="Reason for restoring" className="min-h-8 w-40 rounded-[3px] border border-input bg-card px-2 text-[12px]" />
-                      <button className="min-h-8 rounded-[3px] border border-input px-2 text-[12px] hover:bg-secondary">Restore</button>
+                      <input name="reason" required placeholder="Reason" aria-label="Reason for restoring" className="min-h-8 w-40 rounded-xl border border-input bg-card px-2 text-[12px]" />
+                      <button className="min-h-8 rounded-xl border border-input px-2 text-[12px] hover:bg-secondary">Restore</button>
                     </ActionForm>
                   )}
                 </li>

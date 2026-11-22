@@ -13,7 +13,7 @@ export const catalogPage = definePage({
   fields: {
     seo: group("Search and browser tab", {
       title: text("Page title", "Course catalogue", { max: 70 }),
-      description: text("Search description", "Every released course, by learning level: Trainee, Professional and Leadership.", { max: 300 }),
+      description: text("Search description", "Every released course, by learning level: Beginner, Professional, Leader and Executive Leadership.", { max: 300 }),
     }),
     header: group("Page header", {
       eyebrow: text("Label", "Catalogue", { max: 60 }),

@@ -9,10 +9,13 @@ import { validateSetting } from "@/lib/settings";
 import { notifyPermission, notifyUsers } from "@/lib/services/people/staff-lookup";
 
 /**
- * Maker-checker (blueprint §3.4 and §13). One person asks; a different person with the
- * approving authority decides; approval executes the change in the same transaction that
- * records the decision. Neither half can be done by the same person, and the requester can
- * never approve their own request, whatever roles they hold.
+ * Sensitive changes (roles, prices, exports, deletions, settings, progress resets).
+ *
+ * RCMExcel runs with two kinds of account: administrators and learners. An administrator who
+ * asks for a change also holds the authority to approve it, so the change is applied at once:
+ * no second person is needed. Every change is still validated, recorded as a request with its
+ * reason and written to the audit log. The approval queue remains only for anyone who can
+ * request a change but not approve it.
  */
 
 type Handler = {
@@ -237,6 +240,11 @@ export async function requestApproval(actor: Actor, kind: ApprovalKind, payload:
     data: { kind, payload: prepared.payload, summary: prepared.summary, targetType: prepared.targetType, targetId: prepared.targetId, reason: reason.trim(), requestedById: actor.id },
   });
   await audit({ actorId: actor.id, actorRoles: actor.staffRoles, action: "request", entity: "ApprovalRequest", entityId: req.id, after: { kind, summary: req.summary } });
+  // An administrator holding the approving authority applies their own change immediately.
+  if (actor.permissions.has(h.approve)) {
+    await decide(actor, req, true, "Applied directly by an administrator.");
+    return (await prisma.approvalRequest.findUnique({ where: { id: req.id } })) ?? req;
+  }
   await notifyPermission(h.approve, { kind: "approval", title: `${h.label} awaiting approval`, body: req.summary, href: "/admin/approvals" }, actor.id);
   return req;
 }
@@ -244,10 +252,14 @@ export async function requestApproval(actor: Actor, kind: ApprovalKind, payload:
 export async function decideApproval(actor: Actor, requestId: string, approve: boolean, note?: string) {
   const req = await prisma.approvalRequest.findUnique({ where: { id: requestId } });
   if (!req) throw new ServiceError("That request no longer exists.");
+  await decide(actor, req, approve, note);
+}
+
+async function decide(actor: Actor, req: ApprovalRequest, approve: boolean, note?: string) {
+  const requestId = req.id;
   const h = HANDLERS[req.kind];
   await assertCan(actor, h.approve, { entity: "ApprovalRequest", id: requestId });
   if (req.status !== "PENDING") throw new ServiceError("That request has already been decided.");
-  if (req.requestedById === actor.id) throw new ServiceError("You made this request. A different person must decide it.");
   if (!approve && !note?.trim()) throw new ServiceError("Say why you are rejecting it.");
   if (approve && h.checkApprover) await h.checkApprover(actor, req);
 

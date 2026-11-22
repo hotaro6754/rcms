@@ -83,7 +83,7 @@ export default async function LeadsPage() {
                     {l.owner?.name ?? "Unassigned"}
                   </TableCell>
                   <TableCell className="px-4">
-                    <Badge className={`rounded-[2px] border-transparent text-micro font-semibold ${STAGE_TONE[l.stage]}`}>
+                    <Badge className={`rounded-xl border-transparent text-micro font-semibold ${STAGE_TONE[l.stage]}`}>
                       {l.stage.toLowerCase()}
                     </Badge>
                   </TableCell>

@@ -1,0 +1,684 @@
+<title>RCMExcel Operating Manual</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a printed operating manual. Left margin column for section codes and figure labels, right body column. */
+:root {
+  --paper: #f3f3ef;      /* page */
+  --sheet: #ffffff;      /* documents, tables */
+  --ink: #0e1f3d;        /* logo navy: text, data */
+  --ink-2: #3c4a63;
+  --ink-3: #6b7588;
+  --rule: #d9dcd5;
+  --rule-2: #e9ebe6;
+  --green: #0f4c3a;      /* clinical green: brand field, accent */
+  --mint: #d6eadf;       /* green tint */
+  --coral: #e2603a;      /* highlight / exception only */
+  --coral-soft: #f8e1d8;
+  --display: "Newsreader", Georgia, "Times New Roman", serif;
+  --text: "Hanken Grotesk", "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d1526; --sheet: #121c31; --ink: #e8ecf3; --ink-2: #b9c2d2; --ink-3: #8a94a8;
+    --rule: #26324a; --rule-2: #1b2539; --green: #5fb89a; --mint: #183a31; --coral: #f08360; --coral-soft: #3a2219;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0d1526; --sheet: #121c31; --ink: #e8ecf3; --ink-2: #b9c2d2; --ink-3: #8a94a8;
+  --rule: #26324a; --rule-2: #1b2539; --green: #5fb89a; --mint: #183a31; --coral: #f08360; --coral-soft: #3a2219;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--text); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 40px 96px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+.mono { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+
+/* masthead */
+.mast { display: grid; gap: 28px; padding-bottom: 32px; border-bottom: 2px solid var(--ink); }
+.mastTop { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+.mast h1 { font-family: var(--display); font-weight: 300; font-size: clamp(2.6rem, 6.4vw, 5.2rem); line-height: .98; letter-spacing: -.025em; max-width: 14ch; }
+.mast h1 em { font-style: italic; color: var(--green); }
+.mastGrid { display: grid; gap: 24px; }
+@media (min-width: 820px) { .mastGrid { grid-template-columns: 1.4fr 1fr; align-items: end; } }
+.lede { font-size: 18px; line-height: 1.55; color: var(--ink-2); max-width: 60ch; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border-top: 1px solid var(--rule); }
+.facts div { padding: 12px 12px 0 0; }
+.facts b { display: block; font-weight: 300; font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.facts span { font-size: 12.5px; color: var(--ink-3); }
+
+/* sections */
+section { display: grid; gap: 16px; padding-block: 44px 8px; border-bottom: 1px solid var(--rule); }
+@media (min-width: 820px) { section { grid-template-columns: 200px minmax(0,1fr); gap: 32px; } }
+.side { display: flex; flex-direction: column; gap: 6px; }
+.side .code { font-family: var(--mono); font-size: 12px; color: var(--green); font-weight: 500; }
+.body { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 3vw, 2.3rem); line-height: 1.08; letter-spacing: -.015em; }
+h3 { font-size: 15px; font-weight: 700; }
+.body > p { max-width: 68ch; color: var(--ink-2); }
+
+/* evidence table */
+.tableWrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--sheet); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+th { text-align: left; font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); padding: 10px 14px; border-bottom: 1px solid var(--ink); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--rule-2); vertical-align: top; color: var(--ink-2); }
+td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; }
+.tag { display: inline-block; padding: 1px 7px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid currentColor; }
+.tag.keep { color: var(--green); }
+.tag.adapt { color: var(--ink-3); }
+.tag.drop { color: var(--coral); }
+
+/* palette */
+.swatches { display: grid; gap: 1px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); background: var(--rule); border: 1px solid var(--rule); }
+.sw { background: var(--sheet); display: flex; flex-direction: column; }
+.chip { height: 92px; }
+.sw div:last-child { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; }
+.sw b { font-size: 14px; }
+.sw small { font-size: 12.5px; color: var(--ink-3); line-height: 1.4; }
+.ratio { display: flex; height: 14px; border: 1px solid var(--rule); }
+.ratio i { display: block; height: 100%; }
+
+/* type specimen */
+.specimen { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+@media (min-width: 820px) { .specimen { grid-template-columns: 1.2fr 1fr 1fr; } }
+.spec { background: var(--sheet); padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.specBig { font-family: var(--display); font-weight: 300; font-size: 44px; line-height: 1; letter-spacing: -.02em; }
+.specText { font-weight: 600; font-size: 30px; line-height: 1.05; letter-spacing: -.02em; }
+.specNum { font-weight: 300; font-size: 56px; line-height: .9; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.spec p { font-size: 13.5px; color: var(--ink-2); }
+
+/* component specimens */
+.specimens { display: grid; gap: 16px; }
+@media (min-width: 900px) { .specimens { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.card { background: var(--sheet); border: 1px solid var(--rule); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.cardHead { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding-bottom: 10px; border-bottom: 1px solid var(--rule-2); }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0; }
+.kpi { padding: 4px 14px 4px 0; border-right: 1px solid var(--rule-2); display: flex; flex-direction: column; gap: 6px; }
+.kpi + .kpi { padding-left: 14px; }
+.kpi:last-child { border-right: 0; }
+.kpi b { font-weight: 300; font-size: 40px; line-height: .95; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 12.5px; color: var(--ink-3); line-height: 1.35; }
+.kpi .delta { font-family: var(--mono); font-size: 11.5px; color: var(--green); }
+.kpi .delta.down { color: var(--coral); }
+.bars { display: flex; align-items: flex-end; gap: 4px; height: 70px; border-bottom: 1px solid var(--ink); }
+.bars i { flex: 1; background: var(--ink); opacity: .85; }
+.bars i.hi { background: var(--coral); opacity: 1; }
+.axis { display: flex; justify-content: space-between; }
+.toc { display: flex; flex-direction: column; }
+.toc .mod { display: flex; gap: 10px; align-items: baseline; padding: 10px 0 6px; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); font-weight: 500; }
+.toc .row { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; font-size: 14.5px; color: var(--ink-2); }
+.toc .row .dots { flex: 1; border-bottom: 1px dotted var(--ink-3); transform: translateY(-4px); min-width: 20px; }
+.toc .row .len { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
+.toc .row.done { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--rule); }
+.toc .row.now { color: var(--ink); font-weight: 600; }
+.toc .row.now::before { content: ""; width: 8px; height: 8px; background: var(--green); flex: none; transform: translateY(-1px); }
+.fmt { display: inline-flex; gap: 6px; }
+.fmt span { font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); border: 1px solid var(--rule); padding: 0 5px; }
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 0; position: relative; }
+.flow div { border-top: 2px solid var(--ink); padding: 10px 8px 0 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.flow div.x { border-top-color: var(--coral); }
+.flow b { font-size: 13px; line-height: 1.25; }
+.flow small { font-size: 11.5px; color: var(--ink-3); line-height: 1.35; }
+.exc { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 4px 14px; padding: 12px 0; border-top: 1px solid var(--rule-2); }
+.exc .tag { align-self: start; margin-top: 3px; }
+.exc p { font-size: 14px; color: var(--ink-2); }
+.exc p b { color: var(--ink); }
+.field { background: var(--green); color: #eaf4ef; padding: 24px; display: flex; flex-direction: column; gap: 14px; justify-content: space-between; min-height: 220px; }
+.field .mono { color: #a9d3c2; }
+.field h3 { font-family: var(--display); font-weight: 300; font-size: 32px; line-height: 1.02; letter-spacing: -.02em; }
+
+/* lists */
+.cols { display: grid; gap: 14px 32px; }
+@media (min-width: 760px) { .cols { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.list li { padding: 12px 0; border-bottom: 1px solid var(--rule-2); display: grid; grid-template-columns: 56px minmax(0,1fr); gap: 12px; font-size: 14.5px; color: var(--ink-2); }
+.list li b { color: var(--ink); }
+.list li .n { font-family: var(--mono); font-size: 12px; color: var(--green); padding-top: 2px; }
+.pages .list li { grid-template-columns: 150px minmax(0,1fr); }
+@media (max-width: 560px) { .pages .list li { grid-template-columns: 1fr; gap: 4px; } }
+.avoid li .n { color: var(--coral); }
+.ask { background: var(--sheet); border: 1px solid var(--ink); padding: 20px; display: flex; flex-direction: column; gap: 4px; }
+.ask ol { margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; color: var(--ink-2); }
+.ask ol b { color: var(--ink); }
+footer { padding-top: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+/* ---- dashboards ---- */
+.frame { background: var(--paper); border: 1px solid var(--rule); padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; overflow: hidden; }
+.frameBar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+.frameBar strong { font-family: var(--display); font-weight: 400; font-size: 22px; letter-spacing: -.01em; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chips span { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; padding: 3px 8px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink-2); }
+.chips span.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.dash { display: grid; gap: 10px; }
+.dash > * { min-width: 0; }
+.tile { background: var(--sheet); border: 1px solid var(--rule); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tile .mono { font-size: 10px; }
+.tileN { font-weight: 300; font-size: 30px; line-height: 1; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.tileS { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
+.strip4 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+@media (min-width: 700px) { .strip4 { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+.split21 { display: grid; gap: 10px; }
+@media (min-width: 760px) { .split21 { grid-template-columns: 2fr 1fr; } }
+.miniBars { display: flex; align-items: flex-end; gap: 3px; height: 90px; border-bottom: 1px solid var(--ink); }
+.miniBars i { flex: 1; background: var(--ink); opacity: .85; }
+.miniBars i.hi { background: var(--coral); opacity: 1; }
+.lrow { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--rule-2); font-size: 12.5px; color: var(--ink-2); }
+.lrow b { color: var(--ink); font-weight: 600; }
+.lrow .num { font-family: var(--mono); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.g { color: var(--green); } .pill.c { color: var(--coral); } .pill.n { color: var(--ink-3); }
+.greet { font-family: var(--display); font-weight: 300; font-size: 26px; line-height: 1.05; letter-spacing: -.015em; }
+.sheetG { background: var(--green); color: #eaf4ef; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.sheetG .mono { color: #a9d3c2; }
+.sheetG b { font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1.1; }
+.sheetG .bar { height: 5px; background: rgba(255,255,255,.18); }
+.sheetG .bar i { display: block; height: 100%; width: 62%; background: #eaf4ef; }
+.sheetG .btn { align-self: flex-start; background: #eaf4ef; color: #0f4c3a; font-weight: 700; font-size: 12.5px; padding: 7px 12px; }
+.view { font-size: 12px; font-weight: 600; color: var(--green); }
+.profile { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.avatar { width: 40px; height: 40px; background: var(--mint); color: var(--green); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--rule); }
+.tabs span { font-size: 12.5px; padding-bottom: 7px; color: var(--ink-3); }
+.tabs span.on { color: var(--ink); font-weight: 600; border-bottom: 2px solid var(--ink); margin-bottom: -1px; }
+.seg { display: flex; gap: 2px; }
+.seg i { flex: 1; height: 8px; background: var(--rule-2); }
+.seg i.d { background: var(--green); } .seg i.p { background: var(--mint); }
+.dashNote { font-size: 13px; color: var(--ink-3); }
+
+/* ---- KPI kit ---- */
+.kit { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.kitHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.kitHead em { font-style: normal; font-family: var(--mono); font-size: 10.5px; color: var(--green); }
+.stack { display: flex; height: 10px; }
+.stack i { display: block; height: 100%; }
+.shares { display: grid; grid-template-columns: 49fr 32fr 19fr; gap: 3px; height: 88px; }
+.shares div { padding: 6px; display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; }
+.shares b { font-weight: 300; font-size: 22px; letter-spacing: -.03em; line-height: 1; }
+.counts { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0; }
+.counts div { padding-right: 8px; display: flex; flex-direction: column; gap: 2px; }
+.counts div + div { padding-left: 10px; border-left: 1px solid var(--rule-2); }
+.counts b { font-weight: 300; font-size: 26px; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.money sup { font-size: .45em; vertical-align: .9em; margin-left: 1px; letter-spacing: 0; }
+.spark { width: 100%; height: 52px; display: block; }
+.ring { width: 64px; height: 64px; flex: none; }
+.rule-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px 24px; }
+@media (min-width: 760px) { .rule-list { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.rule-list li { font-size: 14px; color: var(--ink-2); padding-left: 16px; position: relative; }
+.rule-list li::before { content: ""; position: absolute; left: 0; top: .65em; width: 7px; height: 1px; background: var(--ink); }
+
+/* ---- cards ---- */
+.cardsGrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.path { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 3px; }
+.path div { background: var(--mint); color: var(--green); padding: 8px; min-height: 64px; display: flex; flex-direction: column; justify-content: space-between; font-size: 11.5px; font-weight: 600; line-height: 1.2; }
+.path div span { font-family: var(--mono); font-size: 10px; font-weight: 400; }
+.path div.d { background: var(--green); color: #eaf4ef; }
+.path div.x { background: var(--coral-soft); color: var(--coral); }
+.path div.w { grid-column: span 2; }
+.binder { background: var(--sheet); border: 1px solid var(--rule); border-left: 10px solid var(--ink); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.binder b { font-family: var(--display); font-weight: 400; font-size: 21px; line-height: 1.12; }
+.dates .lrow { align-items: center; }
+.tabsFolder { display: flex; align-items: flex-end; gap: 0; }
+.tabsFolder span { padding: 8px 14px 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; border: 1px solid var(--rule); border-bottom: 0; background: var(--rule-2); color: var(--ink-3); margin-right: -1px; }
+.tabsFolder span.on { background: var(--sheet); color: var(--ink); padding-top: 11px; }
+.tabsBody { background: var(--sheet); border: 1px solid var(--rule); padding: 12px; font-size: 13px; color: var(--ink-2); }
+
+/* ---- mascots ---- */
+.cast { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.actor { background: var(--sheet); border: 1px solid var(--rule); padding: 12px; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+.actor svg { width: 100%; max-width: 140px; height: auto; }
+.actor b { font-size: 13px; }
+.actor small { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
+.tiers { display: grid; gap: 12px; }
+@media (min-width: 820px) { .tiers { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.tier { border-top: 2px solid var(--ink); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.tier p { font-size: 13.5px; color: var(--ink-2); }
+.ink { stroke: var(--ink); }
+.compTable td:nth-child(2) { min-width: 220px; }
+
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="mastTop">
+    <span class="mono">RCMExcel · Visual direction · v1.0 · 13 Nov 2026</span>
+    <span class="mono">For sign-off before any further build work</span>
+  </div>
+  <div class="mastGrid">
+    <h1>The operating <em>manual</em> for revenue cycle careers</h1>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <p class="lede">RCMExcel should look like a well-made annual report crossed with a reference manual: big confident numbers, real documents and diagrams, one deep green brand field, and navy type on paper. Built from the owner's Cosmos board plus outside research.</p>
+      <div class="facts">
+        <div><b>~150</b><span>saves on the owner's board, read one by one</span></div>
+        <div><b>40+</b><span>outside references logged</span></div>
+        <div><b>9</b><span>taste patterns found</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="side"><span class="code">§ 01</span><span class="mono">Board readout</span></div>
+  <div class="body">
+    <h2>What the board says about your taste</h2>
+    <p>The board is not minimal. It is rich in information: charts, stat tiles, report spreads, process maps. It leans on two colour families, deep green and navy, warmed with cream and a coral highlight. Clean brand systems on print (folders, binders, stationery) show up again and again. Most of it fits the brief. About one save in ten pulls the other way (gradients, crypto, generic flat-vector people) and I have set those aside. The ink-line faces and characters stay, for students only.</p>
+    <div class="tableWrap">
+      <table>
+        <thead><tr><th>Pattern</th><th>Seen on the board</th><th>Share</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Numbers as the hero</td><td>Big light-weight stat tiles (002 928, 75%, 1.17M), dark-green "proven outcomes" sheet with 5x and 296%, the $37M health-system case study in a ring binder</td><td class="num">~20%</td><td><span class="tag keep">Keep</span></td></tr>
+          <tr><td>Reports and infographics</td><td>Blue annual-report spreads, black Swiss grid report with red construction lines, light-blue report page grids, chart sets, a Sankey, a gantt timeline, a dense blue data poster</td><td class="num">~15%</td><td><span class="tag keep">Keep</span></td></tr>
+          <tr><td>Diagram kit</td><td>Step infographics 01 to 04, red circle process path, numbered option circles, lime process bento (Planning, Drafting, Publishing), horizontal process-flow sheets, isometric layer stacks, two single-weight line icon sets</td><td class="num">~15%</td><td><span class="tag keep">Keep, one style</span></td></tr>
+          <tr><td>Learning product screens</td><td>A video-course page with a course-contents list beside the lesson, an academy screen with "Available dates" for a foundation course, a reporting dashboard, a user table with progress bars</td><td class="num">~5%</td><td><span class="tag keep">Keep</span></td></tr>
+          <tr><td>Deep green + navy brand fields</td><td>One Medical green stationery, "Holistic Health AaBb" type card, evolve green/yellow, revenew navy + green, saúde green, ATM Capital and Oddval navy print, Cambí navy</td><td class="num">~20%</td><td><span class="tag keep">Keep</span></td></tr>
+          <tr><td>Healthcare B2B websites</td><td>ease ("Fewer clicks. More care.") with a serif headline on mint, "Patients, not Paperwork", health-plan platform pages, dark-green services site, appointment and calendar UI</td><td class="num">~15%</td><td><span class="tag adapt">Adapt</span></td></tr>
+          <tr><td>Warm neutrals + coral</td><td>Finance dashboard in sand, olive and coral; coral bar and pie tiles; cream health-ecosystem page</td><td class="num">~5%</td><td><span class="tag adapt">Adapt</span></td></tr>
+          <tr><td>Ink-line characters</td><td>Four flat-colour faces drawn with a loose ink line, an ink-line character on a magazine contents page, billboard figures, editorial role figures on a health-ecosystem page</td><td class="num">~4%</td><td><span class="tag keep">Keep, students only</span></td></tr>
+          <tr><td>Off-direction</td><td>Purple and neon gradient abstracts, crypto dark-orange glow, rainbow design-subscription site, flat-vector clinic people, stock-doctor heroes</td><td class="num">~8%</td><td><span class="tag drop">Drop</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mono">Shares are estimates from a visual count. No creator or source pages were opened.</p>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 02</span><span class="mono">Thesis</span></div>
+  <div class="body">
+    <h2>One sentence to judge every screen by</h2>
+    <p style="font-family:var(--display);font-size:clamp(1.3rem,2.4vw,1.7rem);line-height:1.3;color:var(--ink);max-width:40ch">If a page could not be printed and handed to a CFO or a hospital billing director without embarrassment, it is not done.</p>
+    <p>That rules out glows, glass and floating card piles on its own. It rules in what your father already trusts: remittance advices, aging reports, month-end operating reports. Every screen borrows the conventions of those documents: section codes, figure numbers, effective dates, ledger tables, footnotes.</p>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 03</span><span class="mono">Colour</span></div>
+  <div class="body">
+    <h2>Navy for words and data, green for the brand, coral only when something needs a look</h2>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#0e1f3d"></div><div><b>Ink navy</b><small>#0E1F3D · from the logo bars. All text, all chart marks.</small></div></div>
+      <div class="sw"><div class="chip" style="background:#0f4c3a"></div><div><b>Clinical green</b><small>#0F4C3A · brand fields, current lesson, primary action. Bridges the logo teal and the board's greens.</small></div></div>
+      <div class="sw"><div class="chip" style="background:#d6eadf"></div><div><b>Mint</b><small>#D6EADF · completed states, quiet panels.</small></div></div>
+      <div class="sw"><div class="chip" style="background:#f3f3ef;border-bottom:1px solid #d9dcd5"></div><div><b>Paper</b><small>#F3F3EF · page ground. Neutral, not yellow cream.</small></div></div>
+      <div class="sw"><div class="chip" style="background:#e2603a"></div><div><b>Coral</b><small>#E2603A · the one highlighted bar, an overdue item, a denial. Never decoration.</small></div></div>
+    </div>
+    <div class="ratio" aria-label="Colour proportions: paper 62%, white sheets 20%, navy 12%, green 5%, coral 1%">
+      <i style="width:62%;background:#f3f3ef"></i><i style="width:20%;background:#fff"></i><i style="width:12%;background:#0e1f3d"></i><i style="width:5%;background:#0f4c3a"></i><i style="width:1%;background:#e2603a"></i>
+    </div>
+    <p class="mono">Proportion on a typical screen: paper 62 · sheets 20 · navy 12 · green 5 · coral 1</p>
+    <p>Dark mode flips to a navy night ground with mint-green and soft coral, so the admin overview can still be read at 11 pm. No gradients in either mode.</p>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 04</span><span class="mono">Type</span></div>
+  <div class="body">
+    <h2>Serif for statements, grotesk for work, mono for the paperwork</h2>
+    <div class="specimen">
+      <div class="spec"><span class="mono">Display · Newsreader Light</span><span class="specBig">Clean claims, paid on the first pass.</span><p>Page titles, lesson titles, pull statements. One per screen.</p></div>
+      <div class="spec"><span class="mono">Text · Satoshi (stand-in shown)</span><span class="specText">Denial management, CARC 45</span><p>Everything you read or click. Body 16px, labels 13px.</p></div>
+      <div class="spec"><span class="mono">Figures · Satoshi Light, tabular</span><span class="specNum">96.4%</span><p>Big numbers set light and large, the way the board's stat tiles do it.</p></div>
+    </div>
+    <p>IBM Plex Mono carries the document layer: section codes (§ 04), figure labels (FIG. 02.3), dates, claim and CPT codes, lesson lengths. The three faces are already installed in the app, so nothing new loads.</p>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 05</span><span class="mono">Specimens</span></div>
+  <div class="body">
+    <h2>How the pieces look</h2>
+    <div class="specimens">
+
+      <div class="card">
+        <div class="cardHead"><h3>KPI strip · admin overview</h3><span class="mono">FIG. 05.1</span></div>
+        <div class="kpis">
+          <div class="kpi"><span class="mono">Active learners</span><b>1,284</b><span class="delta">+8.2% vs last 30 days</span></div>
+          <div class="kpi"><span class="mono">Completion</span><b>61%</b><span class="delta down">−3 pts, Level 2 stalled</span></div>
+          <div class="kpi"><span class="mono">Certificates</span><b>214</b><span class="delta">+19 this month</span></div>
+        </div>
+        <div class="bars" aria-label="Weekly enrolments, last 12 weeks, week 9 highlighted">
+          <i style="height:38%"></i><i style="height:44%"></i><i style="height:41%"></i><i style="height:52%"></i><i style="height:49%"></i><i style="height:58%"></i><i style="height:63%"></i><i style="height:60%"></i><i class="hi" style="height:88%"></i><i style="height:71%"></i><i style="height:69%"></i><i style="height:76%"></i>
+        </div>
+        <div class="axis"><span class="mono">Wk 34</span><span class="mono">Week 42: cohort launch</span><span class="mono">Wk 45</span></div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead"><h3>Course contents · student</h3><span class="mono">FIG. 05.2</span></div>
+        <div class="toc">
+          <div class="mod"><span style="color:var(--green)">02</span> Claims and coding</div>
+          <div class="row done">CMS-1500 field by field <span class="dots"></span><span class="len">14 MIN</span></div>
+          <div class="row now">Clean claim checklist <span class="dots"></span><span class="fmt"><span>Video</span><span>Slides</span><span>Reading</span></span></div>
+          <div class="row">Modifiers 25 and 59 <span class="dots"></span><span class="len">18 MIN</span></div>
+          <div class="mod"><span style="color:var(--green)">03</span> Payments and denials</div>
+          <div class="row">Reading an 835 remittance <span class="dots"></span><span class="len">22 MIN</span></div>
+          <div class="row">CARC and RARC codes <span class="dots"></span><span class="len">16 MIN</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead"><h3>Process diagram · lesson figure</h3><span class="mono">FIG. 05.3</span></div>
+        <div class="flow">
+          <div><span class="mono">01</span><b>Registration</b><small>Eligibility verified</small></div>
+          <div><span class="mono">02</span><b>Charge capture</b><small>CPT, ICD-10</small></div>
+          <div><span class="mono">03</span><b>Claim submit</b><small>837P to payer</small></div>
+          <div class="x"><span class="mono" style="color:var(--coral)">04</span><b>Denial</b><small>CARC 197, no auth</small></div>
+          <div><span class="mono">05</span><b>Appeal</b><small>Within 60 days</small></div>
+        </div>
+        <p style="font-size:13px;color:var(--ink-3)">The board saves step diagrams in five different styles. Pick one: one line weight, numbered steps, coral only on the failure point, single-weight line icons. Same language for every diagram in every course.</p>
+      </div>
+
+      <div class="card" style="padding:0;border:0;background:none">
+        <div class="field">
+          <span class="mono">Level 03 · Operational management</span>
+          <h3>Run the month-end close like a controller.</h3>
+          <div style="display:flex;justify-content:space-between;align-items:end;gap:12px"><span style="font-size:13px;color:#cfe5da">6 modules · 31 lessons · certificate</span><span class="mono">FIG. 05.4</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column:1/-1">
+        <div class="cardHead"><h3>Exceptions list · admin</h3><span class="mono">FIG. 05.5</span></div>
+        <div class="exc"><span class="tag drop">Act</span><p><b>14 learners stuck on Lesson 2.4 for over 10 days.</b> Most stop at the slides. Check slide 9 for clarity.</p></div>
+        <div class="exc"><span class="tag adapt">Watch</span><p><b>Level 4 has video for 3 of 8 lessons.</b> Reading and slides are complete.</p></div>
+        <div class="exc"><span class="tag keep">OK</span><p><b>All published courses have a review date.</b> Next one is due 2 Feb 2027.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 06</span><span class="mono">Dashboards</span><span class="mono" style="text-transform:none;letter-spacing:0">Example figures</span></div>
+  <div class="body">
+    <h2>Three dashboards, three jobs</h2>
+    <p>The board's dashboards share one habit: a period selector at the top, a row of plain counts, one chart that tells the story, and a ledger table underneath. Mercury's home adds a greeting, a row of quick actions and small summary cards that each end in "View". These three layouts take those habits and give each audience its own page.</p>
+
+    <h3>A · Admin overview: the operating report</h3>
+    <div class="frame">
+      <div class="frameBar"><strong>Academy overview</strong><div class="chips"><span>7D</span><span class="on">30D</span><span>90D</span><span>12M</span><span>Export</span></div></div>
+      <div class="strip4">
+        <div class="tile"><span class="mono">Active learners</span><span class="tileN">1,284</span><span class="tileS">+8.2% on prior 30 days</span></div>
+        <div class="tile"><span class="mono">Lessons finished</span><span class="tileN">9,356</span><span class="tileS">7.3 per learner</span></div>
+        <div class="tile"><span class="mono">Completion</span><span class="tileN">61%</span><span class="tileS" style="color:var(--coral)">−3 pts. Level 2 stalls</span></div>
+        <div class="tile"><span class="mono">Certificates</span><span class="tileN">214</span><span class="tileS">19 issued this month</span></div>
+      </div>
+      <div class="split21">
+        <div class="tile"><span class="mono">Enrolments per week · FIG. A.1</span>
+          <div class="miniBars"><i style="height:38%"></i><i style="height:44%"></i><i style="height:41%"></i><i style="height:52%"></i><i style="height:49%"></i><i style="height:58%"></i><i style="height:63%"></i><i style="height:60%"></i><i class="hi" style="height:90%"></i><i style="height:71%"></i><i style="height:69%"></i><i style="height:76%"></i></div>
+          <span class="tileS">Week 42 peak follows the October cohort launch.</span></div>
+        <div class="tile"><span class="mono">Exceptions</span>
+          <div class="lrow"><b>14 stuck on Lesson 2.4</b><span class="pill c">Act</span></div>
+          <div class="lrow"><b>Level 4 video gaps</b><span class="pill n">Watch</span></div>
+          <div class="lrow"><b>Review dates set</b><span class="pill g">OK</span></div></div>
+      </div>
+      <div class="tile"><span class="mono">Course ledger</span>
+        <div class="lrow"><b>RCM Foundation</b><span class="num">412 learners · 74% done</span><span class="pill g">Live</span></div>
+        <div class="lrow"><b>Process Excellence</b><span class="num">318 learners · 58% done</span><span class="pill g">Live</span></div>
+        <div class="lrow"><b>Operational Management</b><span class="num">121 learners · 33% done</span><span class="pill n">Draft changes</span></div></div>
+    </div>
+    <p class="dashNote">Order is fixed: period, counts, story chart, exceptions, ledger. A busy admin reads it top to bottom in under a minute.</p>
+
+    <h3>B · Student desk: one next step</h3>
+    <div class="frame">
+      <div class="frameBar"><span class="greet">Good evening, Priya</span><div class="chips"><span class="on">Resume lesson</span><span>Slides</span><span>Reading</span><span>Ask for help</span></div></div>
+      <div class="split21">
+        <div class="sheetG"><span class="mono">Continue · Level 2 · Module 03</span><b>Reading an 835 remittance</b><div class="bar"><i></i></div><span style="font-size:12px;color:#cfe5da">21 of 34 lessons · about 3 hours left</span><span class="btn">Continue lesson</span></div>
+        <div class="tile"><span class="mono">This week</span>
+          <div class="lrow"><b>Mon–Thu</b><span class="num">4 days active</span></div>
+          <div class="lrow"><b>Quiz 3.2</b><span class="pill c">Due Fri</span></div>
+          <div class="lrow"><b>Live Q&amp;A</b><span class="num">Sat 10:00 IST</span></div></div>
+      </div>
+      <div class="strip4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        <div class="tile"><span class="mono">Assessments</span><span class="tileN">2</span><span class="tileS">due this week</span><span class="view">View →</span></div>
+        <div class="tile"><span class="mono">Certificate</span><span class="tileN">62%</span><span class="tileS">of Level 2 done</span><span class="view">View →</span></div>
+        <div class="tile"><span class="mono">Saved notes</span><span class="tileN">17</span><span class="tileS">across 6 lessons</span><span class="view">View →</span></div>
+      </div>
+    </div>
+    <p class="dashNote">Learners get one solid green object, the next lesson. Everything else is quiet and ends in a "View" link.</p>
+
+    <h3>C · Learner record: for admins</h3>
+    <div class="frame">
+      <div class="profile"><div class="avatar">PR</div><div><b style="font-size:15px">Priya Raman</b><div class="tileS">Level 2 · joined 4 Aug 2026 · last active today</div></div></div>
+      <div class="tabs"><span class="on">Progress</span><span>Assessments</span><span>Certificates</span><span>Activity</span></div>
+      <div class="strip4" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <div class="tile"><span class="mono">Course progress</span><div class="seg"><i class="d"></i><i class="d"></i><i class="d"></i><i class="p"></i><i></i><i></i></div><span class="tileS">3 of 6 modules done, 1 in progress</span></div>
+        <div class="tile"><span class="mono">Assessment average</span><span class="tileN">84%</span><span class="tileS">6 attempts, pass mark 70%</span></div>
+      </div>
+      <div class="tile"><div class="lrow"><b>Quiz 2.1 · Claim forms</b><span class="num">92%</span><span class="pill g">Passed</span></div><div class="lrow"><b>Quiz 2.2 · Modifiers</b><span class="num">64%</span><span class="pill c">Retake</span></div><div class="lrow"><b>Quiz 3.1 · 835 basics</b><span class="num">—</span><span class="pill n">Open</span></div></div>
+    </div>
+    <p class="dashNote">Built from the board's profile page: header, tabs, two KPI cards, then a ledger with status pills.</p>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 07</span><span class="mono">KPI card kit</span></div>
+  <div class="body">
+    <h2>Six KPI cards, each for one kind of number</h2>
+    <p>Every figure on the board is set light and large, with a small mono label above and one plain sentence below. These six cover all the numbers RCMExcel has. Nothing else gets invented.</p>
+    <div class="kit">
+      <div class="tile"><div class="kitHead"><span class="mono">K1 · Figure + sentence</span><em>Single count</em></div><span class="tileN" style="font-size:44px">296</span><span class="tileS">learners moved up a level this quarter, the most since launch.</span></div>
+      <div class="tile"><div class="kitHead"><span class="mono">K2 · Figure + trend</span><em>Change over time</em></div><span class="tileN">1,284</span>
+        <svg class="spark" viewBox="0 0 200 52" preserveAspectRatio="none" aria-label="Active learners rising over 30 days"><path d="M0 40 L20 38 L40 41 L60 33 L80 35 L100 28 L120 30 L140 22 L160 24 L180 16 L200 12 L200 52 L0 52 Z" style="fill:var(--mint)"/><path d="M0 40 L20 38 L40 41 L60 33 L80 35 L100 28 L120 30 L140 22 L160 24 L180 16 L200 12" style="fill:none;stroke:var(--green);stroke-width:1.5"/><circle cx="200" cy="12" r="3" style="fill:var(--green)"/></svg>
+        <span class="tileS">Last 30 days. Range toggle: 7D, 30D, 90D.</span></div>
+      <div class="tile"><div class="kitHead"><span class="mono">K3 · Figure + parts</span><em>Breakdown</em></div><span class="tileN">78%</span>
+        <div class="stack" aria-label="Passed 78%, in progress 14%, failed 8%"><i style="width:78%;background:var(--green)"></i><i style="width:14%;background:var(--mint)"></i><i style="width:8%;background:var(--coral)"></i></div>
+        <div class="lrow"><b>Passed</b><span class="num">78%</span></div><div class="lrow"><b>In progress</b><span class="num">14%</span></div><div class="lrow"><b>Failed</b><span class="num">8%</span></div></div>
+      <div class="tile"><div class="kitHead"><span class="mono">K4 · Share tiles</span><em>Composition</em></div>
+        <div class="shares"><div style="background:var(--ink);color:var(--paper)"><b>49%</b>Level 1</div><div style="background:var(--green);color:#eaf4ef"><b>32%</b>Level 2</div><div style="background:var(--mint);color:var(--green)"><b>19%</b>3–4</div></div>
+        <span class="tileS">Tile width equals share. Reads faster than a pie.</span></div>
+      <div class="tile"><div class="kitHead"><span class="mono">K5 · Status counts</span><em>Workload</em></div>
+        <div class="counts"><div><b>11</b><span class="tileS">To grade</span></div><div><b style="color:var(--coral)">4</b><span class="tileS">Overdue</span></div><div><b>7</b><span class="tileS">Due soon</span></div></div><span class="view">Open grading queue →</span></div>
+      <div class="tile"><div class="kitHead"><span class="mono">K6 · Money figure</span><em>Teaching examples</em></div><span class="tileN money">$1,250<sup>.00</sup></span>
+        <div class="lrow"><b>Billed</b><span class="num">$1,250.00</span></div><div class="lrow"><b>Allowed</b><span class="num">$812.40</span></div><div class="lrow"><b>Patient resp.</b><span class="num">$162.48</span></div></div>
+    </div>
+    <ul class="rule-list">
+      <li>Label in mono caps above, figure light and large, one sentence below.</li>
+      <li>Deltas say what changed and why, not just +3%.</li>
+      <li>Coral appears only on the bad number, never on a good one.</li>
+      <li>Cents set as superscript, as Mercury does, so dollar figures read fast.</li>
+      <li>Rings and gauges only for a single percentage, never side by side.</li>
+      <li>No icons inside KPI cards. The label is enough.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 08</span><span class="mono">Card layouts</span></div>
+  <div class="body">
+    <h2>Cards that look like documents, paths and schedules</h2>
+    <div class="cardsGrid">
+      <div class="tile"><span class="mono">C1 · Step tile path · RCM cycle</span>
+        <div class="path"><div class="d"><span>01</span>Scheduling</div><div class="d"><span>02</span>Eligibility</div><div class="d"><span>03</span>Coding</div><div><span>04</span>Charge entry</div><div><span>05</span>Claim submit</div><div class="x"><span>06</span>Denial</div><div class="w"><span>07</span>Payment posting</div></div>
+        <span class="tileS">From the board's lime process grid. Tiles fill green as lessons are finished; the failure step is coral.</span></div>
+      <div class="binder"><span class="mono">C2 · Case study document</span><b>A 300-bed hospital cut denials from 11% to 6% in two quarters</b><span class="tileS">Problem, actions, figures. Shown as a bound document, like the $37M case study on the board.</span><div class="lrow"><b>Clean claim rate</b><span class="num">89% → 96%</span></div></div>
+      <div class="tile dates"><span class="mono">C3 · Cohort dates</span>
+        <div class="lrow"><b>Foundation · Cohort 07</b><span class="num">6 Jan 2027</span><span class="pill g">Open</span></div>
+        <div class="lrow"><b>Foundation · Cohort 08</b><span class="num">3 Feb 2027</span><span class="pill n">Waitlist</span></div>
+        <div class="lrow"><b>Process Excellence · 03</b><span class="num">17 Feb 2027</span><span class="pill g">Open</span></div>
+        <span class="tileS">From the "Available dates" academy screen. Use only if live cohorts are run.</span></div>
+      <div><div class="tabsFolder"><span>Level 1</span><span class="on">Level 2</span><span>Level 3</span><span>Level 4</span></div><div class="tabsBody"><span class="mono">C4 · Folder tabs</span><br>Level switcher on the curriculum page, shaped like the kraft folder tabs on the board. The four tabs step up in height, echoing the logo bars.</div></div>
+    </div>
+    <p>Also kept from earlier: the green "continue" sheet, the course-contents list with dotted leaders, the exceptions row, and the level cover field (FIG. 05.2–05.5).</p>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 09</span><span class="mono">Illustration</span></div>
+  <div class="body">
+    <h2>Three kinds of drawing, each with its own place</h2>
+    <p>The board has three illustration styles worth keeping. The four faces with loose ink lines, the ink-line character on the magazine contents page, and the billboard figures share one trick: a flat colour shape with a single loose black line for the face and limbs. The health-ecosystem page shows the other good style: people drawn in ink line with muted fills, one per role, in labelled columns. Generic flat-vector people (the clinic scene, the nurse and doctor on purple) are the look to avoid.</p>
+    <div class="tiers">
+      <div class="tier"><span class="mono">Tier 1 · Diagrams</span><h3>Every lesson and report</h3><p>One line weight, numbered steps, mono callouts, coral on the failure point. No people. This is most of the drawing on the site.</p></div>
+      <div class="tier"><span class="mono">Tier 2 · Role figures</span><h3>Course pages and the public site</h3><p>Ink-line people with flat navy, green and mint fills, one per RCM role: front desk, coder, biller, AR specialist, manager. Shown in labelled columns, like the board's health-ecosystem page.</p></div>
+      <div class="tier"><span class="mono">Tier 3 · Mascot</span><h3>Student moments only</h3><p>"The Bars": four characters made from the logo's rising bars, with ink-line faces. They appear for welcome, quiz feedback, empty states, streaks and certificates. Never on admin screens, never inside lesson content.</p></div>
+    </div>
+    <div class="cast">
+      <div class="actor">
+        <svg viewBox="0 0 140 160" role="img" aria-label="Short mint bar character waving"><line x1="18" y1="140" x2="122" y2="140" class="ink" stroke-width="1.5"/><rect x="45" y="80" width="50" height="60" rx="4" style="fill:var(--mint)"/><g class="ink" fill="none" stroke-width="2" stroke-linecap="round"><path d="M57 96 q4 -4 8 0"/><path d="M75 96 q4 -4 8 0"/><path d="M62 106 q8 7 16 0"/><path d="M95 104 L110 84"/><circle cx="112" cy="80" r="3.5"/><path d="M45 108 L35 120"/><path d="M68 78 c-6 -14 10 -18 8 -6 c-2 8 -12 2 -6 -6"/></g></svg>
+        <b>Welcome</b><small>First sign-in, new level</small></div>
+      <div class="actor">
+        <svg viewBox="0 0 140 160" role="img" aria-label="Medium mint bar character thinking"><line x1="18" y1="140" x2="122" y2="140" class="ink" stroke-width="1.5"/><rect x="45" y="60" width="50" height="80" rx="4" style="fill:var(--mint)"/><circle cx="62" cy="77" r="2.4" style="fill:var(--ink)"/><circle cx="78" cy="77" r="2.4" style="fill:var(--ink)"/><g class="ink" fill="none" stroke-width="2" stroke-linecap="round"><path d="M63 90 l14 -3"/><path d="M45 102 L56 99 L64 94"/><path d="M100 46 c6 -10 18 -4 12 4 c-4 6 -14 2 -8 -6"/></g><circle cx="102" cy="56" r="2" style="fill:var(--ink)"/><circle cx="97" cy="62" r="1.4" style="fill:var(--ink)"/></svg>
+        <b>Thinking</b><small>Quiz question open</small></div>
+      <div class="actor">
+        <svg viewBox="0 0 140 160" role="img" aria-label="Tall green bar character cheering"><line x1="18" y1="140" x2="122" y2="140" class="ink" stroke-width="1.5"/><rect x="45" y="40" width="50" height="100" rx="4" style="fill:var(--green)"/><g fill="none" stroke="#eaf4ef" stroke-width="2" stroke-linecap="round"><path d="M58 58 l4 -4 l4 4"/><path d="M74 58 l4 -4 l4 4"/></g><ellipse cx="70" cy="70" rx="6" ry="5" style="fill:#eaf4ef"/><g class="ink" fill="none" stroke-width="2" stroke-linecap="round"><path d="M45 66 L30 42"/><path d="M95 66 L110 42"/><path d="M120 24 v10 M115 29 h10"/></g></svg>
+        <b>Correct</b><small>Right answer, lesson done</small></div>
+      <div class="actor">
+        <svg viewBox="0 0 140 160" role="img" aria-label="Short coral-tinted bar character scratching head"><line x1="18" y1="140" x2="122" y2="140" class="ink" stroke-width="1.5"/><rect x="45" y="70" width="50" height="70" rx="4" style="fill:var(--coral-soft)"/><circle cx="62" cy="86" r="2.4" style="fill:var(--ink)"/><circle cx="78" cy="86" r="2.4" style="fill:var(--ink)"/><g class="ink" fill="none" stroke-width="2" stroke-linecap="round"><path d="M61 99 q3 -3 6 0 t6 0 t6 0"/><path d="M95 104 L106 88 L97 74"/><path d="M90 62 l4 -5 M99 64 l6 -3"/></g></svg>
+        <b>Not quite</b><small>Wrong answer, kind retry</small></div>
+      <div class="actor">
+        <svg viewBox="0 0 140 160" role="img" aria-label="Tallest green bar character holding a certificate"><line x1="18" y1="140" x2="122" y2="140" class="ink" stroke-width="1.5"/><rect x="45" y="20" width="50" height="120" rx="4" style="fill:var(--green)"/><g fill="none" stroke="#eaf4ef" stroke-width="2" stroke-linecap="round"><path d="M57 38 q4 -4 8 0"/><path d="M75 38 q4 -4 8 0"/><path d="M62 47 q8 7 16 0"/></g><rect x="55" y="60" width="30" height="36" style="fill:var(--sheet);stroke:var(--ink);stroke-width:1.5"/><g class="ink" stroke-width="1.2"><line x1="60" y1="68" x2="80" y2="68"/><line x1="60" y1="74" x2="76" y2="74"/><line x1="60" y1="80" x2="78" y2="80"/></g><circle cx="78" cy="90" r="4" style="fill:var(--coral)"/><g fill="none" stroke="#eaf4ef" stroke-width="2" stroke-linecap="round"><path d="M45 82 L55 80"/><path d="M95 82 L85 80"/></g></svg>
+        <b>Certified</b><small>Certificate earned</small></div>
+    </div>
+    <p class="dashNote">Rough sketches to show the idea. A finished set would be drawn by an illustrator in this style: flat bar, loose single ink line, no gradients, no shading.</p>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 10</span><span class="mono">Components</span></div>
+  <div class="body">
+    <h2>Every component found, and where it goes</h2>
+    <p>From the board (B), from top-tier product sites I checked (W: Mercury, Ramp, R1 RCM, Making Software) and from what RCMExcel already has. Status tells you what is new work and what is a restyle.</p>
+    <div class="tableWrap">
+      <table class="compTable">
+        <thead><tr><th>Component</th><th>Seen on</th><th>RCMExcel use</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Collapsible side rail</td><td>B: reporting dashboard with project list · W: Mercury app</td><td>Admin nav, lesson player</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>Period selector chips</td><td>B: finance dashboard "12 months" · W: Mercury "Last 30 days"</td><td>Admin overview, reports</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>KPI strip of counts</td><td>B: reporting dashboard, 9356 bento</td><td>Admin overview</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>KPI cards K1–K6</td><td>B: stat tiles, workflow performance, share tiles · W: Mercury cards</td><td>All dashboards</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Quick action chips</td><td>W: Mercury home (Send, Request, Transfer)</td><td>Student desk: Resume, Slides, Reading, Help</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Summary card with "View →"</td><td>W: Mercury invoicing, card, bill pay cards</td><td>Student desk, admin side panels</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Ledger table with status pills</td><td>B: profile objectives, P&amp;L table, report grids</td><td>Course ledger, students, grading</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>Profile header + tabs</td><td>B: person profile with objectives</td><td>Admin learner record</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Course hero + contents + progress card</td><td>B: video-course page with "Completed 21 of 37"</td><td>Course page for students</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Contents list with dotted leaders</td><td>B: magazine contents page · W: Making Software</td><td>Curriculum, player rail</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Step tile path</td><td>B: lime process grid, numbered step infographics</td><td>RCM cycle map, level path</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Process flow diagram</td><td>B: process-flow sheets, red circle path</td><td>Lesson figures</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Gantt timeline</td><td>B: timeline with phases and notes</td><td>Learning plan, cohort schedule</td><td><span class="tag adapt">Later</span></td></tr>
+          <tr><td>Cohort date rows</td><td>B: "Available dates" academy screen</td><td>Live cohorts, if run</td><td><span class="tag adapt">Later</span></td></tr>
+          <tr><td>Case study document card</td><td>B: $37M case study in a binder</td><td>Case studies, outcomes page</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Folder tabs</td><td>B: kraft folder tabs</td><td>Level switcher</td><td><span class="tag keep">New</span></td></tr>
+          <tr><td>Brand field card</td><td>B: One Medical, Holistic Health, outcomes sheet</td><td>Level covers, continue sheet</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>Split sign-in</td><td>B: grey image + form sign-in screens</td><td>Sign in, two-factor</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>Video / Slides / Reading tabs</td><td>Existing app</td><td>Lesson player</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>Two-tone headline</td><td>W: Ramp ("Join 85,000 … growing 3.2x faster")</td><td>Public pages after launch</td><td><span class="tag adapt">Later</span></td></tr>
+          <tr><td>Live counter strip</td><td>W: Ramp "Agents at work today" ticker</td><td>Public home, real counts only</td><td><span class="tag adapt">Later</span></td></tr>
+          <tr><td>Proof strip</td><td>B: partner logos under the outcomes sheet</td><td>Accreditations, only if real</td><td><span class="tag adapt">Later</span></td></tr>
+          <tr><td>Single-weight line icons</td><td>B: two line icon sets</td><td>Everywhere, one set only</td><td><span class="tag adapt">Restyle</span></td></tr>
+          <tr><td>Mascot moments</td><td>B: ink-line faces, magazine character, billboard figures</td><td>Student feedback and empty states</td><td><span class="tag keep">New</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 11</span><span class="mono">Grid and surface</span></div>
+  <div class="body">
+    <h2>Grid, rules and corners</h2>
+    <div class="cols">
+      <ul class="list">
+        <li><span class="n">GRID</span><span><b>12 columns, 1320px max.</b> A 2-column margin holds section codes and figure labels, as on the board's Swiss report grids.</span></li>
+        <li><span class="n">SPACE</span><span><b>4px base:</b> 8, 12, 16, 24, 32, 48, 72. Sections separate with space and a rule, not boxes.</span></li>
+        <li><span class="n">RULES</span><span><b>1px hairlines</b> between rows. One 2px navy rule under each page title, like a report masthead.</span></li>
+      </ul>
+      <ul class="list">
+        <li><span class="n">CORNERS</span><span><b>0 to 4px.</b> Paper documents have square corners. Buttons get 4px.</span></li>
+        <li><span class="n">SHADOW</span><span><b>None,</b> except menus and the video player, which float.</span></li>
+        <li><span class="n">FIELDS</span><span><b>One solid colour field per screen at most:</b> the green "continue" sheet for students, nothing for admins.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="pages">
+  <div class="side"><span class="code">§ 12</span><span class="mono">Page by page</span></div>
+  <div class="body">
+    <h2>What changes on each screen</h2>
+    <ul class="list">
+      <li><span class="n">Coming soon</span><span>Paper ground, logo, one Newsreader line, the four levels as rising bars drawn in navy with the current one in green. Remove the gradient text, glows and drifting tiles.</span></li>
+      <li><span class="n">Sign in</span><span>Split page: left a green field with one statement and the level bars, right a plain white form. No gradient.</span></li>
+      <li><span class="n">Student desk</span><span>Green "continue" sheet, week streak, course contents in manual style with dotted leaders and lesson lengths, four-level path as rising bars.</span></li>
+      <li><span class="n">Lesson player</span><span>Keep the collapsible rail and Video / Slides / Reading tabs. Rail becomes the table of contents (FIG. 05.2). Lesson title in Newsreader, codes in mono.</span></li>
+      <li><span class="n">Admin overview</span><span>Annual-report spread: KPI strip with big light numbers (FIG. 05.1), one highlighted bar, exceptions list with Act / Watch / OK, course ledger table, activity log.</span></li>
+      <li><span class="n">Reports</span><span>Each report reads as a printed page: title, period, figures with one-line explanations, a ledger table, a footnote on how numbers are counted.</span></li>
+      <li><span class="n">Admins and students</span><span>Two ledger tables, search on top. No avatars-and-cards grid.</span></li>
+      <li><span class="n">Course editor</span><span>Format status (Video / Slides / Reading) as a three-cell row per lesson, filled in navy when present, coral outline when missing.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 13</span><span class="mono">Motion</span></div>
+  <div class="body">
+    <h2>Motion only where it explains something</h2>
+    <ul class="list">
+      <li><span class="n">01</span><span><b>Bars grow once</b> on first load of a chart, 400ms, then stay still.</span></li>
+      <li><span class="n">02</span><span><b>Process diagrams step through</b> when a lesson figure scrolls into view, one node at a time, so the order is the lesson.</span></li>
+      <li><span class="n">03</span><span><b>Rail and tabs</b> slide 180ms. Everything else is instant. Reduced-motion users get no animation.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 14</span><span class="mono">Reference set</span></div>
+  <div class="body">
+    <h2>Top ten references</h2>
+    <div class="cols">
+      <ul class="list">
+        <li><span class="n">BOARD</span><span><b>$37M health-system case study in a binder.</b> Outcome as the headline, document as the format.</span></li>
+        <li><span class="n">BOARD</span><span><b>Stat tiles in sand, olive and coral.</b> Light-weight giant numerals.</span></li>
+        <li><span class="n">BOARD</span><span><b>Black Swiss report grid with red construction lines.</b> Ledger tables and 75 / 123 / £73 figures.</span></li>
+        <li><span class="n">BOARD</span><span><b>One Medical green stationery.</b> One colour field, tiny mark, total calm.</span></li>
+        <li><span class="n">BOARD</span><span><b>ease: "Fewer clicks. More care."</b> Serif headline on mint for a health B2B product.</span></li>
+      </ul>
+      <ul class="list">
+        <li><span class="n">BOARD</span><span><b>Dark-green "proven outcomes" sheet.</b> Charts and figures on a green field.</span></li>
+        <li><span class="n">BOARD</span><span><b>Holistic Health type card.</b> Neo-grotesk specimen on deep green.</span></li>
+        <li><span class="n">WEB</span><span><b>Making Software reference manual.</b> Numbered chapters, dotted leaders, FIG. labels, one-colour diagrams.</span></li>
+        <li><span class="n">WEB</span><span><b>R1 RCM homepage.</b> Market leader already speaks serif + mono + off-white.</span></li>
+        <li><span class="n">WEB</span><span><b>A4 annual-report grid (Behance).</b> Big figure plus one sentence, monochrome charts.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="avoid">
+  <div class="side"><span class="code">§ 15</span><span class="mono">Avoid</span></div>
+  <div class="body">
+    <h2>Never on RCMExcel</h2>
+    <ul class="list">
+      <li><span class="n">✕</span><span>Gradients, glows, glass panels, purple, neon, 3D renders and blobs.</span></li>
+      <li><span class="n">✕</span><span>Stock doctors with stethoscopes, smiling-patient heroes, and generic flat-vector people with tiny heads and long limbs.</span></li>
+      <li><span class="n">✕</span><span>Mascots on admin screens or inside lesson content. They belong to student moments only.</span></li>
+      <li><span class="n">✕</span><span>Rows of identical rounded cards with icons in coloured circles.</span></li>
+      <li><span class="n">✕</span><span>Coral or green used as decoration. Each colour has one job.</span></li>
+      <li><span class="n">✕</span><span>Retail promo tone (banners, 50% OFF, carousels) as seen on competitor sites.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="side"><span class="code">§ 16</span><span class="mono">Sign-off</span></div>
+  <div class="body">
+    <div class="ask">
+      <span class="mono">Three choices only you can make</span>
+      <ol>
+        <li><b>Green as the second brand colour?</b> The board is full of deep green; the logo is navy and teal. This direction uses green as the bridge.</li>
+        <li><b>Mascot "The Bars" for students?</b> Built from the logo bars, drawn in loose ink line (§ 09). Yes, no, or a different character.</li>
+        <li><b>Serif headlines?</b> Newsreader for titles gives the editorial, report feel. The alternative is all-grotesk, which reads more like software.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="mono">RCMExcel · Learner to leader</span>
+  <span class="mono">Sources: owner's Cosmos board, research log in docs/design-research</span>
+</footer>
+
+</div>

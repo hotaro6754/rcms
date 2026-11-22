@@ -52,7 +52,7 @@ export default async function SettingsPage() {
                     <input type="hidden" name="key" value={key} />
                     <input name="value" required placeholder="New value" aria-label={`New value for ${def.label}`} className={`${FIELD} w-32`} />
                     <input name="reason" required placeholder="Reason" aria-label="Reason" className={`${FIELD} w-44`} />
-                    <button className="rounded-[3px] border border-input px-2.5 text-[12.5px]">Request</button>
+                    <button className="rounded-xl border border-input px-2.5 text-[12.5px]">Request</button>
                   </ActionForm>
                 )}
               </Td>

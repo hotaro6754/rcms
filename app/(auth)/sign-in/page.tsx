@@ -1,23 +1,27 @@
 import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { comingSoon } from "@/lib/launch";
 
 export const metadata = { title: "Sign in" };
 
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ reset?: string }> }) {
   const { reset } = await searchParams;
+  const closed = comingSoon();
   return (
     <>
-      <p className="text-data text-[11px] tracking-[0.14em] text-subtle">YOUR ACADEMY</p>
-      <h1 className="mt-3 text-[clamp(2.2rem,3.4vw,2.9rem)] leading-[1.02]">Welcome back.</h1>
-      <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">Pick up where you left off.</p>
+      <p className="x-kicker">{closed ? "Staff only" : "Welcome back"}</p>
+      <h1 className="x-display mt-2 text-[40px]">{closed ? "Admin sign in" : "Sign in"}</h1>
+      <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
+        {closed ? "The Academy is not open yet. Only administrators can sign in." : "Use the email and password for your RCMExcel account."}
+      </p>
       {reset && (
         <p role="status" className="mt-6 border-l-2 border-brand pl-3 text-[14px] text-foreground">
           Password updated. Sign in with the new one.
         </p>
       )}
-      <div className="mt-10">
+      <div className="mt-7">
         <Suspense>
-          <AuthForm mode="sign-in" />
+          <AuthForm mode="sign-in" allowSignUp={!closed} home={closed ? "/admin" : "/academy"} />
         </Suspense>
       </div>
     </>

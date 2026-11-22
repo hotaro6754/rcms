@@ -1,138 +1,217 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { addMaterial, deleteMaterial, setMaterialDownloadable } from "@/lib/actions/materials";
+import { BookOpen, Eye, MonitorPlay, Presentation, Trash2, Upload } from "lucide-react";
+import { addMaterial, deleteMaterial } from "@/lib/actions/materials";
+import { DocumentReader } from "@/components/cms/DocumentReader";
 
 export interface MaterialRow {
   id: string;
   title: string;
-  type: string;
+  format: "SLIDES" | "READING" | "OTHER";
   size: string;
-  downloadable: boolean;
+  source: string | null;
+  pages: number;
 }
 
+const FORMATS = {
+  SLIDES: {
+    label: "Slides",
+    icon: Presentation,
+    help: "The deck with the additional points, in clear bullets. Upload the PowerPoint (.pptx) or the PDF exported from it. Learners see it slide by slide.",
+    accept: ".pptx,.pdf",
+    placeholder: "Claim lifecycle — slide deck",
+  },
+  READING: {
+    label: "Reading",
+    icon: BookOpen,
+    help: "The extensive study material. Upload a PDF or a Word (.docx) file. Learners read it page by page.",
+    accept: ".pdf,.docx",
+    placeholder: "Claim lifecycle — study material",
+  },
+} as const;
+
 /**
- * Trainer Studio: attach materials to a lesson. Upload a file (PDF, Office, CSV, ZIP,
- * image, up to 25 MB) or paste an https link to one held elsewhere. Students download
- * through the access-checked route; nothing here is ever public.
+ * The lesson's three formats in the CMS: the video (a Video block in the lesson content), the
+ * slide deck and the reading material. Learners choose which to use; every format is view-only.
+ * Files are converted to PDF on upload and shown to learners only as page images.
  */
-export function MaterialsManager({ lessonId, rows }: { lessonId: string; rows: MaterialRow[] }) {
-  const form = useRef<HTMLFormElement>(null);
-  const [mode, setMode] = useState<"file" | "link">("file");
-  const [error, setError] = useState<string | null>(null);
+export function LessonFormats({ lessonId, rows, videos, canEdit }: { lessonId: string; rows: MaterialRow[]; videos: number; canEdit: boolean }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-3 md:grid-cols-3">
+        <Status icon={MonitorPlay} label="Video" ok={videos > 0} detail={videos > 0 ? `${videos} video${videos > 1 ? "s" : ""} in the content` : "Add a Video block under Content"} />
+        <Status icon={Presentation} label="Slides" ok={rows.some((r) => r.format === "SLIDES")} detail={summary(rows, "SLIDES")} />
+        <Status icon={BookOpen} label="Reading" ok={rows.some((r) => r.format === "READING")} detail={summary(rows, "READING")} />
+      </div>
+      <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+        Learners pick the format that suits them. Nothing is downloadable: the video plays in the protected player, and slides and reading are shown as page images with the
+        learner&apos;s account watermarked across them. Copying, printing and saving are blocked in the lesson.
+      </p>
+      {(["SLIDES", "READING"] as const).map((f) => (
+        <FormatSection key={f} lessonId={lessonId} format={f} rows={rows.filter((r) => r.format === f)} canEdit={canEdit} />
+      ))}
+      {rows.some((r) => r.format === "OTHER") && (
+        <div className="rounded-[var(--radius)] border border-dashed border-border px-4 py-3 text-[12.5px] text-muted-foreground">
+          <p className="font-medium text-foreground">Older attachments (not shown to learners)</p>
+          <ul className="mt-1.5">
+            {rows
+              .filter((r) => r.format === "OTHER")
+              .map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-3 py-1">
+                  <span className="truncate">{r.title}</span>
+                  {canEdit && <RemoveButton id={r.id} title={r.title} />}
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function summary(rows: MaterialRow[], f: "SLIDES" | "READING") {
+  const list = rows.filter((r) => r.format === f);
+  if (!list.length) return f === "SLIDES" ? "No deck yet" : "No reading yet";
+  const pages = list.reduce((n, r) => n + r.pages, 0);
+  return `${list.length} file${list.length > 1 ? "s" : ""} · ${pages} ${f === "SLIDES" ? "slides" : "pages"}`;
+}
+
+function Status({ icon: Icon, label, ok, detail }: { icon: typeof MonitorPlay; label: string; ok: boolean; detail: string }) {
+  return (
+    <div className={`flex items-start gap-3 rounded-[var(--radius)] border px-4 py-3 ${ok ? "border-brand/40 bg-brand/5" : "border-border"}`}>
+      <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${ok ? "text-brand" : "text-subtle"}`} aria-hidden />
+      <div className="min-w-0">
+        <p className="text-[13.5px] font-semibold">
+          {label} <span className={`text-data ml-1 text-[10px] tracking-[0.12em] ${ok ? "text-brand" : "text-subtle"}`}>{ok ? "READY" : "MISSING"}</span>
+        </p>
+        <p className="mt-0.5 text-[12.5px] text-muted-foreground">{detail}</p>
+      </div>
+    </div>
+  );
+}
+
+function RemoveButton({ id, title }: { id: string; title: string }) {
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <span className="flex items-center gap-2">
+      {error && <span className="text-[12px] text-danger">{error}</span>}
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (!confirm(`Remove “${title}” from this lesson?`)) return;
+          start(async () => {
+            const res = await deleteMaterial(id);
+            if (!res.ok) setError(res.error);
+          });
+        }}
+        className="inline-flex items-center gap-1 text-[12px] text-danger hover:underline disabled:opacity-40"
+        aria-label={`Remove ${title}`}
+      >
+        <Trash2 className="h-3.5 w-3.5" aria-hidden /> Remove
+      </button>
+    </span>
+  );
+}
+
+function FormatSection({ lessonId, format, rows, canEdit }: { lessonId: string; format: "SLIDES" | "READING"; rows: MaterialRow[]; canEdit: boolean }) {
+  const meta = FORMATS[format];
+  const form = useRef<HTMLFormElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const Icon = meta.icon;
 
   return (
-    <section className="border-t-2 border-foreground pt-4">
-      <h2 className="text-data text-[10.5px] tracking-[0.14em] text-subtle">MATERIALS</h2>
+    <section className="rounded-[var(--radius)] border border-border bg-card px-4 py-4">
+      <h3 className="flex items-center gap-2 text-[14px] font-semibold">
+        <Icon className="h-4 w-4 text-brand" aria-hidden /> {meta.label}
+      </h3>
+      <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{meta.help}</p>
 
-      {rows.length === 0 ? (
-        <p className="mt-3 text-[13px] text-muted-foreground">None attached yet.</p>
-      ) : (
-        <ul className="mt-3">
+      {rows.length > 0 && (
+        <ul className="mt-3 divide-y divide-border border-y border-border">
           {rows.map((r) => (
-            <li key={r.id} className="flex items-baseline justify-between gap-3 border-b border-border py-2.5">
-              <a href={`/api/materials/${r.id}`} className="min-w-0 truncate text-[13.5px] underline-offset-4 hover:underline">
-                {r.title}
-              </a>
-              <span className="flex shrink-0 items-baseline gap-3">
-                <span className="text-data text-[10.5px] text-subtle">
-                  {r.type}
-                  {r.size && ` · ${r.size}`}
+            <li key={r.id} className="py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="block truncate text-[13.5px] font-medium">{r.title}</span>
+                  <span className="text-data text-[10.5px] text-subtle">
+                    {r.pages} {format === "SLIDES" ? "SLIDES" : "PAGES"} · {r.size}
+                    {r.source ? ` · FROM ${r.source}` : ""} · VIEW ONLY
+                  </span>
                 </span>
-                <button
-                  type="button"
-                  disabled={pending}
-                  aria-pressed={r.downloadable}
-                  title={r.downloadable ? "Learners can download this file. Click to make it view-only." : "View-only: learners cannot download it. Click to allow downloading."}
-                  onClick={() =>
-                    start(async () => {
-                      const res = await setMaterialDownloadable(r.id, !r.downloadable);
-                      if (!res.ok) setError(res.error);
-                    })
-                  }
-                  className="text-data text-[10.5px] tracking-[0.08em] hover:underline disabled:opacity-40"
-                >
-                  {r.downloadable ? "DOWNLOADABLE" : "VIEW ONLY"}
-                </button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    start(async () => {
-                      const res = await deleteMaterial(r.id);
-                      if (!res.ok) setError(res.error);
-                    })
-                  }
-                  className="text-data text-[10.5px] tracking-[0.08em] text-danger hover:underline disabled:opacity-40"
-                  aria-label={`Remove ${r.title}`}
-                >
-                  REMOVE
-                </button>
-              </span>
+                <span className="flex items-center gap-4">
+                  <button type="button" onClick={() => setPreview(preview === r.id ? null : r.id)} className="inline-flex items-center gap-1 text-[12px] hover:underline" aria-expanded={preview === r.id}>
+                    <Eye className="h-3.5 w-3.5" aria-hidden /> {preview === r.id ? "Hide" : "Preview"}
+                  </button>
+                  {canEdit && <RemoveButton id={r.id} title={r.title} />}
+                </span>
+              </div>
+              {preview === r.id && (
+                <div className="mt-3">
+                  <DocumentReader mediaId={r.id} pages={r.pages} title={r.title} base={`/api/material-pages/${r.id}`} variant={format === "SLIDES" ? "slides" : "pages"} />
+                </div>
+              )}
             </li>
           ))}
         </ul>
       )}
 
-      <form
-        ref={form}
-        action={(fd) =>
-          start(async () => {
-            setError(null);
-            const res = await addMaterial(lessonId, fd);
-            if (res.ok) form.current?.reset();
-            else setError(res.error);
-          })
-        }
-        className="mt-5 flex flex-col gap-3"
-      >
-        <div role="radiogroup" aria-label="Material source" className="text-data flex gap-4 text-[11px] tracking-[0.1em]">
-          {(["file", "link"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="radio"
-              aria-checked={mode === m}
-              onClick={() => setMode(m)}
-              className={mode === m ? "text-foreground underline underline-offset-4" : "text-subtle hover:text-foreground"}
-            >
-              {m === "file" ? "UPLOAD A FILE" : "LINK TO A FILE"}
-            </button>
-          ))}
-        </div>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[12.5px] text-muted-foreground">Title students will see</span>
-          <input name="title" required minLength={3} className="min-h-10 border-b border-input bg-transparent text-[14px] outline-none focus:border-foreground" placeholder="Denial reason code sheet" />
-        </label>
-        {mode === "file" ? (
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[12.5px] text-muted-foreground">File, up to 25 MB</span>
-            <input name="file" type="file" required accept=".pdf,.docx,.xlsx,.pptx,.csv,.txt,.zip,.png,.jpg,.jpeg" className="text-[13px] file:mr-3 file:rounded-[3px] file:border file:border-input file:bg-transparent file:px-3 file:py-1.5 file:text-[12.5px]" />
-          </label>
-        ) : (
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[12.5px] text-muted-foreground">Link (https)</span>
-            <input name="url" type="url" required className="min-h-10 border-b border-input bg-transparent text-[14px] outline-none focus:border-foreground" placeholder="https://" />
-          </label>
-        )}
-        <label className="flex items-start gap-2 text-[12.5px] text-muted-foreground">
-          <input type="checkbox" name="downloadable" value="true" className="mt-0.5" />
-          Learners may download this file. Leave unticked to keep it view-only: PDFs are read in the lesson, page by page.
-        </label>
-        <button
-          type="submit"
-          disabled={pending}
-          className="mt-1 inline-flex min-h-10 w-fit items-center rounded-[3px] bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+      {canEdit && (
+        <form
+          ref={form}
+          action={(fd) =>
+            start(async () => {
+              setError(null);
+              setNote(null);
+              fd.set("format", format);
+              const res = await addMaterial(lessonId, fd);
+              if (res.ok) {
+                form.current?.reset();
+                setNote(res.data.note);
+              } else setError(res.error);
+            })
+          }
+          className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end"
         >
-          {pending ? "Saving…" : "Attach"}
-        </button>
-        {error && (
-          <p role="alert" className="text-[13px] text-danger">
-            {error}
-          </p>
-        )}
-      </form>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[12px] text-muted-foreground">Title learners see</span>
+            <input name="title" required minLength={3} maxLength={160} className="min-h-10 rounded-xl border border-input bg-transparent px-3 text-[14px] outline-none focus:border-foreground" placeholder={meta.placeholder} />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[12px] text-muted-foreground">File ({format === "SLIDES" ? "PPTX or PDF" : "PDF or DOCX"}, up to 25 MB)</span>
+            <input
+              name="file"
+              type="file"
+              required
+              accept={meta.accept}
+              className="text-[13px] file:mr-3 file:rounded-xl file:border file:border-input file:bg-transparent file:px-3 file:py-1.5 file:text-[12.5px]"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={pending}
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+          >
+            <Upload className="h-4 w-4" aria-hidden />
+            {pending ? (format === "SLIDES" ? "Converting…" : "Saving…") : `Add ${meta.label.toLowerCase()}`}
+          </button>
+          {error && (
+            <p role="alert" className="text-[13px] text-danger md:col-span-3">
+              {error}
+            </p>
+          )}
+          {note && (
+            <p role="status" className="text-[12.5px] text-warning md:col-span-3">
+              {note}
+            </p>
+          )}
+        </form>
+      )}
     </section>
   );
 }

@@ -48,12 +48,12 @@ export function CertificateSheet({ cert, origin, className }: { cert: Certificat
         <div className="flex flex-1 flex-col justify-center pb-[2%]">
           <p className="text-data text-[1.15cqw] tracking-[0.22em] text-subtle">CERTIFICATE OF COMPLETION</p>
           <p className="mt-[2.4cqw] text-[1.5cqw] text-muted-foreground">This certifies that</p>
-          <p className="font-serif-display mt-[0.8cqw] text-[6.6cqw] italic leading-[1] tracking-[-0.02em]">{cert.holderName}</p>
+          <p className="x-display mt-[0.8cqw] text-[6.6cqw] italic leading-[1] tracking-[-0.02em]">{cert.holderName}</p>
           <div aria-hidden="true" className="mt-[1.6cqw] h-px w-[58%] bg-foreground/40" />
           <p className="mt-[2cqw] max-w-[60%] text-[1.45cqw] leading-relaxed text-muted-foreground">
             has completed every lesson and assessment of the program
           </p>
-          <p className="font-serif-display mt-[0.6cqw] text-[3.6cqw] leading-tight">{cert.programName}</p>
+          <p className="x-display mt-[0.6cqw] text-[3.6cqw] leading-tight">{cert.programName}</p>
         </div>
 
         <footer className="grid grid-cols-[1fr_1fr_auto] items-end gap-[3cqw]">

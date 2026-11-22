@@ -91,7 +91,7 @@ export default async function SupportSettings() {
                   <div className="flex flex-wrap items-center gap-4 sm:col-span-3">
                     <Checkbox name="active" label="Active" defaultChecked={team.active} />
                     <Checkbox name="autoAssign" label="Assign new cases automatically" defaultChecked={team.autoAssign} />
-                    {editable && <button className="rounded-[3px] border border-input px-3 py-1.5 text-[13px]">Save team</button>}
+                    {editable && <button className="rounded-xl border border-input px-3 py-1.5 text-[13px]">Save team</button>}
                   </div>
                 </fieldset>
               </ActionForm>
@@ -111,7 +111,7 @@ export default async function SupportSettings() {
                             <Checkbox name="isLead" label="Lead" defaultChecked={m.isLead} />
                             <Checkbox name="available" label="Available" defaultChecked={m.available} />
                             <input name="maxOpen" type="number" min={1} max={500} defaultValue={m.maxOpen} aria-label="Case limit" className={`${FIELD} w-20`} />
-                            {editable && <button className="rounded-[3px] border border-input px-2 py-1 text-[12.5px]">Update</button>}
+                            {editable && <button className="rounded-xl border border-input px-2 py-1 text-[12.5px]">Update</button>}
                           </fieldset>
                         </ActionForm>
                       </Td>
@@ -198,7 +198,7 @@ export default async function SupportSettings() {
                         </select>
                         <Checkbox name="active" label="Shown" defaultChecked={s?.active ?? true} />
                         {editable && (
-                          <button id={f} className="rounded-[3px] border border-input px-2 py-1 text-[12.5px]">
+                          <button id={f} className="rounded-xl border border-input px-2 py-1 text-[12.5px]">
                             Save
                           </button>
                         )}
@@ -233,7 +233,7 @@ export default async function SupportSettings() {
                   <div className="pb-2">
                     <Checkbox name="businessHours" label="Support hours only" defaultChecked={p.businessHours} />
                   </div>
-                  {editable && <button className="mb-1 rounded-[3px] border border-input px-2 py-1 text-[12.5px]">Save</button>}
+                  {editable && <button className="mb-1 rounded-xl border border-input px-2 py-1 text-[12.5px]">Save</button>}
                 </fieldset>
               </ActionForm>
             ))}

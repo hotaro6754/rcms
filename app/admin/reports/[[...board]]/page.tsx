@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Download } from "lucide-react";
 import { requireActor, can } from "@/lib/actor";
 import { PageHead } from "@/components/platform/PlatformShell";
 import { BoardView } from "@/components/admin/BoardView";
@@ -10,7 +11,7 @@ export const metadata = { title: "Reports" };
 
 const PERIODS = [7, 30, 90, 365];
 
-/** The seven dashboards, each limited to the people whose role covers it. */
+/** The dashboards, each limited to the people whose role covers it. */
 export default async function ReportsPage({ params, searchParams }: { params: Promise<{ board?: string[] }>; searchParams: Promise<{ days?: string }> }) {
   const actor = await requireActor();
   const allowed = boardsFor(actor);
@@ -22,29 +23,42 @@ export default async function ReportsPage({ params, searchParams }: { params: Pr
   const data = await board(actor, key, days);
 
   return (
-    <div className="mx-auto max-w-[1320px] px-6 py-10">
-      <PageHead kicker="Reports and dashboards" title={`${BOARDS[key]} dashboard`} lede="Every figure is counted from stored records at the moment the page loads. Open a figure's definition to see exactly what it includes." />
-      <nav aria-label="Dashboards" className="mt-6 flex flex-wrap gap-x-1 border-b border-border">
-        {allowed.map((b) => (
-          <Link key={b} href={`/admin/reports/${b}?days=${days}`} aria-current={b === key ? "page" : undefined} className={cn("-mb-px border-b-2 px-3 py-2.5 text-[13px]", b === key ? "border-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
-            {BOARDS[b]}
-          </Link>
-        ))}
-      </nav>
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-[13px]">
-        <span className="text-muted-foreground">Period:</span>
-        {PERIODS.map((p) => (
-          <Link key={p} href={`/admin/reports/${key}?days=${p}`} className={cn("underline-offset-4", p === days ? "font-semibold underline" : "hover:underline")}>
-            {p} days
-          </Link>
-        ))}
-        {can(actor, "reports.export") && (
-          <a href={`/api/reports/${key}?days=${days}`} className="ml-auto rounded-[3px] border border-input px-3 py-1.5 hover:bg-secondary">
-            Export CSV
-          </a>
-        )}
+    <div className="mx-auto max-w-[1440px] px-[clamp(16px,2.4vw,32px)] pb-16 pt-4">
+      <PageHead kicker="Reports and dashboards" title={`${BOARDS[key]} dashboard`} lede="Every figure is counted from stored records when the page loads. Open “How it is counted” on any figure to see exactly what it includes." />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Dashboards" className="flex flex-wrap gap-1 rounded-full bg-secondary p-1">
+          {allowed.map((b) => (
+            <Link
+              key={b}
+              href={`/admin/reports/${b}?days=${days}`}
+              aria-current={b === key ? "page" : undefined}
+              className={cn("rounded-full px-4 py-2 text-[13px] font-semibold transition-colors", b === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+            >
+              {BOARDS[b]}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex flex-wrap items-center gap-2">
+          <div role="group" aria-label="Period" className="flex gap-1 rounded-full bg-secondary p-1">
+            {PERIODS.map((p) => (
+              <Link
+                key={p}
+                href={`/admin/reports/${key}?days=${p}`}
+                aria-current={p === days ? "true" : undefined}
+                className={cn("rounded-full px-3.5 py-2 text-[12.5px] font-semibold", p === days ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+              >
+                {p === 365 ? "1Y" : `${p}D`}
+              </Link>
+            ))}
+          </div>
+          {can(actor, "reports.export") && (
+            <a href={`/api/reports/${key}?days=${days}`} className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-[13px] font-semibold text-primary-foreground transition-transform hover:-translate-y-px">
+              <Download className="h-4 w-4" aria-hidden /> Export CSV
+            </a>
+          )}
+        </div>
       </div>
-      <div className="mt-8">
+      <div className="mt-4">
         <BoardView board={data} />
       </div>
     </div>

@@ -13,10 +13,10 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
       </p>
       {error.digest && <p className="text-data mt-3 text-[12px] text-subtle">Reference {error.digest}</p>}
       <div className="mt-6 flex gap-3">
-        <button onClick={reset} className="rounded-[3px] bg-primary px-4 py-2 text-[13.5px] text-primary-foreground">
+        <button onClick={reset} className="rounded-xl bg-primary px-4 py-2 text-[13.5px] text-primary-foreground">
           Try again
         </button>
-        <Link href="/admin" className="rounded-[3px] border border-input px-4 py-2 text-[13.5px]">
+        <Link href="/admin" className="rounded-xl border border-input px-4 py-2 text-[13.5px]">
           Dashboard
         </Link>
       </div>

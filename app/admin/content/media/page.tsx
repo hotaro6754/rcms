@@ -59,9 +59,9 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
               <li key={a.id} className="flex flex-col gap-2 rounded-[var(--radius)] border border-border bg-card p-3">
                 {a.kind === "IMAGE" ? (
                   // eslint-disable-next-line @next/next/no-img-element -- served through an access-checked route
-                  <img src={`/api/media/${a.id}?c=preview`} alt={a.altText ?? ""} className="h-40 w-full rounded-[3px] bg-secondary object-contain" />
+                  <img src={`/api/media/${a.id}?c=preview`} alt={a.altText ?? ""} className="h-40 w-full rounded-xl bg-secondary object-contain" />
                 ) : (
-                  <a href={`/api/media/${a.id}?c=preview`} className="flex h-40 items-center justify-center rounded-[3px] bg-secondary text-[13px] underline">
+                  <a href={`/api/media/${a.id}?c=preview`} className="flex h-40 items-center justify-center rounded-xl bg-secondary text-[13px] underline">
                     Open document
                   </a>
                 )}
@@ -77,7 +77,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
                     <input name="title" defaultValue={a.title} aria-label="Title" className={FIELD} />
                     <input name="altText" defaultValue={a.altText ?? ""} aria-label="Alternative text" placeholder="Alternative text" className={FIELD} />
                     <Checkbox name="isPublic" label="Public" defaultChecked={a.isPublic} />
-                    <button className="w-fit rounded-[3px] border border-input px-3 py-1.5 text-[12.5px] hover:bg-secondary">Save</button>
+                    <button className="w-fit rounded-xl border border-input px-3 py-1.5 text-[12.5px] hover:bg-secondary">Save</button>
                   </ActionForm>
                 ) : (
                   <p className="text-[13px]">{a.title}</p>

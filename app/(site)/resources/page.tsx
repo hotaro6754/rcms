@@ -7,6 +7,7 @@ import { SiteLink } from "@/components/site/SiteLink";
 import { getPageContent } from "@/lib/site/content";
 import { resourcesPage } from "@/lib/site/pages/resources";
 import { pageMeta } from "@/lib/seo";
+import pageArt from "@/public/images/art3d/learn-watch.png";
 
 export async function generateMetadata() {
   const c = await getPageContent(resourcesPage);
@@ -20,7 +21,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
   const pathOf = (kind: keyof typeof c.sections) => SECTIONS.find((s) => s.kind === kind)!.path;
   return (
     <>
-      <PageHeader eyebrow={c.header.eyebrow} title={c.header.title} lead={c.header.lead} />
+      <PageHeader art={pageArt} artAlt="A learner watching a video lesson at a desk." eyebrow={c.header.eyebrow} title={c.header.title} lead={c.header.lead} />
       <Section>
         <form role="search" className="flex max-w-xl flex-col gap-2 sm:flex-row">
           <input name="q" defaultValue={q} placeholder={c.search.placeholder} aria-label="Search the library" className="min-h-12 flex-1 rounded-md border border-input bg-background px-4 text-[15px] outline-none focus:border-foreground" />

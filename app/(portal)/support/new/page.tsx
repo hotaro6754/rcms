@@ -30,7 +30,7 @@ export default async function NewTicket({ searchParams }: { searchParams: Promis
   return (
     <div className="mx-auto max-w-[760px] px-6 py-12">
       <PageHead kicker="Support" title="Start a conversation" lede={`Support hours: ${hours}. We reply in the conversation and notify you.`} />
-      <p role="note" className="mt-6 rounded-[3px] border border-warning/40 bg-warning-bg px-4 py-3 text-[13.5px] text-warning">
+      <p role="note" className="mt-6 rounded-xl border border-warning/40 bg-warning-bg px-4 py-3 text-[13.5px] text-warning">
         {PHI_WARNING}
       </p>
       <ActionForm action={openTicketAction} className="mt-6 flex flex-col gap-4">
